@@ -1172,7 +1172,7 @@ function App() {
                         <img src={card.imageUrl} alt={card.name} />
                       </div>
                       <div className="grid-card-name">
-                        {card.name}
+                        {card.name.split(' (')[0]}
                       </div>
                     </div>
                   ))}
