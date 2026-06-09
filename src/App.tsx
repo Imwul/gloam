@@ -1033,12 +1033,7 @@ export default function App() {
 
         {/* CHARACTER SHEET TAB */}
         {activeTab === "character" && (
-          <div className="sheet-container woodcut-border parchment-container">
-            {/* Corner Ornaments */}
-            <div className="sheet-corner-decor corner-tl"></div>
-            <div className="sheet-corner-decor corner-tr"></div>
-            <div className="sheet-corner-decor corner-bl"></div>
-            <div className="sheet-corner-decor corner-br"></div>
+          <div className="sheet-container parchment-container">
 
             {/* Top Banner Header */}
             <div className="medieval-banner-header crenellation-header">
