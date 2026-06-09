@@ -921,7 +921,7 @@ export default function App() {
             GLOAM <span className="title-ko-sub">어스름의 동반자</span>
           </h1>
           <p className="subtitle">
-            1인 전용 타로카드 RPG 컴패니언 &bull; 한글판 가이드북 수록
+            1인 전용 타로카드 RPG 컴패니언
           </p>
         </div>
 

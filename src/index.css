@@ -1109,6 +1109,10 @@ h1, h2, h3, h4, h5, h6, .gothic-title, .gothic-sub {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+  height: 38px;
+  box-sizing: border-box;
+  line-height: 1;
 }
 
 .btn-medieval:hover:not(:disabled) {
@@ -1150,6 +1154,13 @@ h1, h2, h3, h4, h5, h6, .gothic-title, .gothic-sub {
   font-size: 0.75rem;
   border-radius: 3px;
   cursor: pointer;
+  white-space: nowrap;
+  height: 28px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .btn-medieval-small:hover {
@@ -1171,15 +1182,23 @@ h1, h2, h3, h4, h5, h6, .gothic-title, .gothic-sub {
   background-color: var(--bg-panel-light);
   border: 1px solid var(--border-color);
   color: var(--text-bright);
-  padding: 4px 8px;
+  padding: 0 8px;
   border-radius: var(--border-radius);
   font-family: var(--sans);
   outline: none;
   font-size: 0.85rem;
+  height: 38px;
+  box-sizing: border-box;
 }
 
 .inline-select:focus {
   border-color: var(--color-gold);
+}
+
+.monster-spawner-row select.inline-select {
+  height: 28px;
+  font-size: 0.75rem;
+  padding: 0 6px;
 }
 
 /* Utilities */
