@@ -1348,144 +1348,98 @@ export default function App() {
                   </h4>
                   
                   <div className="wounds-anatomy-grid">
-                    {/* SVG Skeleton */}
-                    <div className="skeleton-svg-holder">
-                      <svg viewBox="0 0 100 140" style={{ width: "100%", height: "auto", maxHeight: "250px" }}>
-                        {/* Decorative background rings for medieval woodcut style */}
-                        <circle cx="50" cy="70" r="48" fill="none" stroke="var(--border-color)" strokeWidth="0.5" strokeDasharray="2,4" opacity="0.45" style={{ pointerEvents: "none" }} />
-                        <circle cx="50" cy="70" r="54" fill="none" stroke="var(--border-color)" strokeWidth="0.8" opacity="0.3" style={{ pointerEvents: "none" }} />
-
+                    {/* SVG Skeleton replaced by interactive medieval image overlay */}
+                    <div className="skeleton-svg-holder" style={{ position: "relative", padding: 0, border: "none", background: "transparent" }}>
+                      <img 
+                        src="/anatomy_woodcut.png" 
+                        alt="Anatomy & Injuries" 
+                        style={{ 
+                          width: "100%", 
+                          height: "auto", 
+                          maxHeight: "320px", 
+                          display: "block",
+                          border: "1px solid var(--border-color)",
+                          backgroundColor: "var(--bg-panel-light)",
+                          filter: "sepia(0.08) contrast(1.02)"
+                        }} 
+                      />
+                      <svg 
+                        viewBox="0 0 100 100" 
+                        style={{ 
+                          position: "absolute", 
+                          top: 0, 
+                          left: 0, 
+                          width: "100%", 
+                          height: "100%" 
+                        }}
+                      >
                         {/* Head (Skull) */}
                         <g 
                           onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, head: !s.character.wounds.head } } }))}
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 50 12 C 43 12 38 17 38 24 C 38 29 40 33 44 35 C 44 37 43 40 43 41 C 43 43 45 44 47 44 C 48 44 49 43 49 42 L 51 42 C 51 43 52 44 53 44 C 55 44 57 43 57 41 C 57 40 56 37 56 35 C 60 33 62 29 62 24 C 62 17 57 12 50 12 Z" 
+                            d="M 45 4 L 55 4 L 56 16 L 44 16 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.head ? "path-wounded" : ""}`}
                           />
-                          {/* Inner Skull details */}
-                          <g style={{ pointerEvents: "none" }}>
-                            {/* Eye sockets */}
-                            <path d="M 44 23 C 44 21 47 21 47 24 C 47 26 44 26 44 23 Z" fill="var(--text-bright)" opacity="0.8" />
-                            <path d="M 56 23 C 56 21 53 21 53 24 C 53 26 56 26 56 23 Z" fill="var(--text-bright)" opacity="0.8" />
-                            {/* Nose hole */}
-                            <path d="M 50 27 L 48 31 L 52 31 Z" fill="var(--text-bright)" opacity="0.8" />
-                            {/* Teeth grid */}
-                            <line x1="46" y1="37" x2="46" y2="41" stroke="var(--text-bright)" strokeWidth="0.8" />
-                            <line x1="48" y1="37" x2="48" y2="41" stroke="var(--text-bright)" strokeWidth="0.8" />
-                            <line x1="50" y1="37" x2="50" y2="41" stroke="var(--text-bright)" strokeWidth="0.8" />
-                            <line x1="52" y1="37" x2="52" y2="41" stroke="var(--text-bright)" strokeWidth="0.8" />
-                            <line x1="54" y1="37" x2="54" y2="41" stroke="var(--text-bright)" strokeWidth="0.8" />
-                          </g>
                         </g>
 
-                        {/* Torso (Ribcage / Spine) */}
+                        {/* Torso */}
                         <g
                           onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, torso: !s.character.wounds.torso } } }))}
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 38 48 C 42 48 44 50 50 50 C 56 50 58 48 62 48 L 59 85 C 59 85 50 90 50 90 C 50 90 41 85 41 85 Z" 
+                            d="M 41 18 L 59 18 L 56 48 L 44 48 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.torso ? "path-wounded" : ""}`}
                           />
-                          {/* Inner Torso details */}
-                          <g style={{ pointerEvents: "none" }}>
-                            <line x1="50" y1="48" x2="50" y2="88" stroke="var(--text-bright)" strokeWidth="2.5" strokeDasharray="3,3" opacity="0.8" />
-                            <path d="M 50 50 L 50 72" stroke="var(--text-bright)" strokeWidth="3" />
-                            {/* Rib pairs */}
-                            <path d="M 48 53 Q 40 50 39 58" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <path d="M 52 53 Q 60 50 61 58" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <path d="M 48 59 Q 38 56 38 65" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <path d="M 52 59 Q 62 56 62 65" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <path d="M 48 65 Q 39 63 39 72" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <path d="M 52 65 Q 61 63 61 72" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <path d="M 49 71 Q 40 70 41 78" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <path d="M 51 71 Q 60 70 59 78" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            {/* Pelvic details */}
-                            <path d="M 42 85 C 44 83, 46 80, 50 82 C 54 80, 56 83, 58 85 L 50 89 Z" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                          </g>
                         </g>
 
-                        {/* Left Arm */}
+                        {/* Left Arm (viewer's left) */}
                         <g 
                           onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lArm: !s.character.wounds.lArm } } }))}
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 38 44 L 20 62 L 10 82 L 18 86 L 28 66 L 42 50 Z" 
+                            d="M 40 20 L 32 23 L 30 50 L 37 60 L 40 45 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.lArm ? "path-wounded" : ""}`}
                           />
-                          <g style={{ pointerEvents: "none" }}>
-                            <circle cx="37" cy="48" r="4" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <path d="M 35 49 L 24 62" stroke="var(--text-bright)" strokeWidth="2.5" strokeLinecap="round" />
-                            <circle cx="23" cy="63" r="3" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <line x1="22" y1="64" x2="16" y2="79" stroke="var(--text-bright)" strokeWidth="1.2" />
-                            <line x1="24" y1="65" x2="18" y2="81" stroke="var(--text-bright)" strokeWidth="1.2" />
-                            <path d="M 17 80 L 13 86 M 17 80 L 15 88 M 17 80 L 17 89 M 17 80 L 19 88" stroke="var(--text-bright)" strokeWidth="1.2" />
-                            <circle cx="16" cy="82" r="3" fill={state.character.wounds.lArm ? "var(--color-crimson)" : "var(--text-bright)"} />
-                          </g>
                         </g>
 
-                        {/* Right Arm */}
+                        {/* Right Arm (viewer's right) */}
                         <g 
                           onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rArm: !s.character.wounds.rArm } } }))}
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 62 44 L 80 62 L 90 82 L 82 86 L 72 66 L 58 50 Z" 
+                            d="M 60 20 L 68 23 L 70 50 L 63 60 L 60 45 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.rArm ? "path-wounded" : ""}`}
                           />
-                          <g style={{ pointerEvents: "none" }}>
-                            <circle cx="63" cy="48" r="4" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <path d="M 65 49 L 76 62" stroke="var(--text-bright)" strokeWidth="2.5" strokeLinecap="round" />
-                            <circle cx="77" cy="63" r="3" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <line x1="78" y1="64" x2="84" y2="79" stroke="var(--text-bright)" strokeWidth="1.2" />
-                            <line x1="76" y1="65" x2="82" y2="81" stroke="var(--text-bright)" strokeWidth="1.2" />
-                            <path d="M 83 80 L 87 86 M 83 80 L 85 88 M 83 80 L 83 89 M 83 80 L 81 88" stroke="var(--text-bright)" strokeWidth="1.2" />
-                            <circle cx="84" cy="82" r="3" fill={state.character.wounds.rArm ? "var(--color-crimson)" : "var(--text-bright)"} />
-                          </g>
                         </g>
 
-                        {/* Left Leg */}
+                        {/* Left Leg (viewer's left) */}
                         <g 
                           onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lLeg: !s.character.wounds.lLeg } } }))}
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 41 86 L 31 108 L 29 135 L 39 135 L 43 108 L 49 90 Z" 
+                            d="M 42 49 L 49 49 L 48 70 L 47 95 L 39 95 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.lLeg ? "path-wounded" : ""}`}
                           />
-                          <g style={{ pointerEvents: "none" }}>
-                            <circle cx="44" cy="88" r="4.5" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <path d="M 43 90 L 36 107" stroke="var(--text-bright)" strokeWidth="3" strokeLinecap="round" />
-                            <circle cx="36" cy="108" r="3.5" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <line x1="35" y1="110" x2="33" y2="132" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <line x1="37" y1="111" x2="35" y2="132" stroke="var(--text-bright)" strokeWidth="0.8" />
-                            <path d="M 34 133 L 28 136 L 35 136 Z" fill="var(--text-bright)" />
-                          </g>
                         </g>
 
-                        {/* Right Leg */}
+                        {/* Right Leg (viewer's right) */}
                         <g 
                           onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rLeg: !s.character.wounds.rLeg } } }))}
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 59 86 L 69 108 L 71 135 L 61 135 L 57 108 L 51 90 Z" 
+                            d="M 51 49 L 58 49 L 52 70 L 53 95 L 61 95 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.rLeg ? "path-wounded" : ""}`}
                           />
-                          <g style={{ pointerEvents: "none" }}>
-                            <circle cx="56" cy="88" r="4.5" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <path d="M 57 90 L 64 107" stroke="var(--text-bright)" strokeWidth="3" strokeLinecap="round" />
-                            <circle cx="64" cy="108" r="3.5" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <line x1="65" y1="110" x2="67" y2="132" stroke="var(--text-bright)" strokeWidth="1.5" />
-                            <line x1="63" y1="111" x2="65" y2="132" stroke="var(--text-bright)" strokeWidth="0.8" />
-                            <path d="M 66 133 L 72 136 L 65 136 Z" fill="var(--text-bright)" />
-                          </g>
                         </g>
 
-                        {/* Shield Zone */}
+                        {/* Shield (Top-left floating coat of arms in blank space) */}
                         <g
                           onClick={() => {
                             updateState(s => {
@@ -1497,21 +1451,21 @@ export default function App() {
                           style={{ cursor: "pointer" }}
                         >
                           <path
-                            d="M 6 85 L 24 85 C 24 105, 20 115, 15 125 C 10 115, 6 105, 6 85 Z"
+                            d="M 10 12 L 28 12 C 28 24, 25 30, 19 36 C 13 30, 10 24, 10 12 Z"
                             className={`skeleton-interactive-path ${state.character.armorNotches.shield === 3 ? "path-wounded" : ""}`}
                             style={{ strokeWidth: "1.5px" }}
                           />
                           <g style={{ pointerEvents: "none" }}>
                             <path
-                              d="M 8 87 L 22 87 C 22 103, 19 112, 15 120 C 11 112, 8 103, 8 87 Z"
+                              d="M 12 14 L 26 14 C 26 23, 23 28, 19 33 C 15 28, 12 23, 12 14 Z"
                               fill="none"
                               stroke="var(--text-bright)"
                               strokeWidth="0.8"
-                              opacity="0.7"
+                              opacity="0.6"
                             />
-                            <line x1="15" y1="91" x2="15" y2="102" stroke="var(--text-bright)" strokeWidth="1.2" opacity="0.8" />
-                            <line x1="10" y1="96" x2="20" y2="96" stroke="var(--text-bright)" strokeWidth="1.2" opacity="0.8" />
-                            <text x="15" y="112" fontSize="5.5" fontFamily="var(--gothic)" fontWeight="bold" textAnchor="middle" fill="var(--text-bright)">SHIELD</text>
+                            <line x1="19" y1="17" x2="19" y2="26" stroke="var(--text-bright)" strokeWidth="1" opacity="0.7" />
+                            <line x1="14" y1="20" x2="24" y2="20" stroke="var(--text-bright)" strokeWidth="1" opacity="0.7" />
+                            <text x="19" y="30" fontSize="4.2" fontFamily="var(--gothic)" fontWeight="bold" textAnchor="middle" fill="var(--text-bright)">SHIELD</text>
                           </g>
                         </g>
                       </svg>
@@ -1842,37 +1796,37 @@ export default function App() {
                   <h4 className="gothic-sub" style={{ fontSize: "1.1rem" }}>카탈로그 구매 &amp; 전체 재능 해금</h4>
                   
                   {/* Shop section */}
-                  <div style={{ fontSize: "0.85rem" }}>
+                  <div style={{ fontSize: "0.95rem" }}>
                     <div style={{ fontWeight: "bold", borderBottom: "1px solid var(--border-color)", paddingBottom: "3px" }}>빠른 장비 판정 구매 (Coins Test)</div>
                     <div style={{ display: "flex", gap: "8px", margin: "10px 0" }}>
-                      <button className="btn-medieval-small" onClick={() => {
+                      <button className="btn-medieval-small" style={{ fontSize: "0.85rem", padding: "4px 8px" }} onClick={() => {
                         const item = prompt("장비 이름 (예: 단검):");
                         if (item) handleStartBuyTest({ name: item, nameKo: item, coinsMod: "0" });
                       }}>임의 아이템 Coins 판정</button>
                     </div>
 
-                    <div style={{ border: "1px solid var(--border-color)", maxHeight: "120px", overflowY: "auto", padding: "5px", backgroundColor: "var(--bg-panel-light)" }}>
-                      <strong style={{ fontSize: "0.75rem", color: "var(--color-gold)" }}>무기 목록:</strong>
+                    <div style={{ border: "1px solid var(--border-color)", maxHeight: "150px", overflowY: "auto", padding: "6px", backgroundColor: "var(--bg-panel-light)" }}>
+                      <strong style={{ fontSize: "0.85rem", color: "var(--color-gold)" }}>무기 목록:</strong>
                       {WEAPONS.map(w => (
-                        <div key={w.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", padding: "2px 0", borderBottom: "1px dashed rgba(0,0,0,0.05)" }}>
+                        <div key={w.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.88rem", padding: "3px 0", borderBottom: "1px dashed rgba(0,0,0,0.05)" }}>
                           <span>{w.nameKo} (Swords필요: {w.swordsReq})</span>
-                          <button className="btn-medieval-small" style={{ fontSize: "0.65rem", padding: "0 4px" }} onClick={() => handleStartBuyTest({ name: w.name, nameKo: w.nameKo, coinsMod: w.coins, swordsReq: w.swordsReq })}>Coins판정</button>
+                          <button className="btn-medieval-small" style={{ fontSize: "0.75rem", padding: "2px 6px" }} onClick={() => handleStartBuyTest({ name: w.name, nameKo: w.nameKo, coinsMod: w.coins, swordsReq: w.swordsReq })}>Coins판정</button>
                         </div>
                       ))}
-                      <strong style={{ fontSize: "0.75rem", color: "var(--color-gold)", display: "block", marginTop: "5px" }}>방어구 목록:</strong>
+                      <strong style={{ fontSize: "0.85rem", color: "var(--color-gold)", display: "block", marginTop: "8px" }}>방어구 목록:</strong>
                       {ARMOR.map(a => (
-                        <div key={a.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", padding: "2px 0", borderBottom: "1px dashed rgba(0,0,0,0.05)" }}>
+                        <div key={a.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.88rem", padding: "3px 0", borderBottom: "1px dashed rgba(0,0,0,0.05)" }}>
                           <span>{a.nameKo} (AP: {a.ap})</span>
-                          <button className="btn-medieval-small" style={{ fontSize: "0.65rem", padding: "0 4px" }} onClick={() => handleStartBuyTest({ name: a.name, nameKo: a.nameKo, coinsMod: a.coins })}>Coins판정</button>
+                          <button className="btn-medieval-small" style={{ fontSize: "0.75rem", padding: "2px 6px" }} onClick={() => handleStartBuyTest({ name: a.name, nameKo: a.nameKo, coinsMod: a.coins })}>Coins판정</button>
                         </div>
                       ))}
                     </div>
                   </div>
 
                   {/* Talents Purchase section */}
-                  <div style={{ marginTop: "15px", fontSize: "0.85rem" }}>
+                  <div style={{ marginTop: "15px", fontSize: "0.95rem" }}>
                     <div style={{ fontWeight: "bold", borderBottom: "1px solid var(--border-color)", paddingBottom: "3px" }}>재능 연마 해금 (XP 소모)</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "8px", maxHeight: "120px", overflowY: "auto" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px", maxHeight: "150px", overflowY: "auto" }}>
                       {["전령관", "방랑기사", "비술사", "소매치기"].map(v => {
                         const talents = v === "전령관" ? ["Disarming Presence (무장 해제)", "Academic (학술 지성)", "Duel of Wits (언쟁 달인)", "Inspire (격려 연설)", "Parley (평화 교섭)", "Verity & Guile (진실과 기만)"] :
                                         v === "방랑기사" ? ["Sally Forth (과감한 돌격)", "Geas (맹세 명령)", "Itinerant Hospitality (기사 환대)", "Martial Dominance (전투 지배)", "Oath-sworn (피의 맹세)", "Trial by Combat (결투 대결)"] :
@@ -1884,13 +1838,13 @@ export default function App() {
 
                         return (
                           <div key={v} style={{ paddingLeft: "5px" }}>
-                            <span style={{ fontSize: "0.75rem", fontWeight: "bold", color: isOwn ? "var(--color-gold)" : "inherit" }}>{v} ({isOwn ? "천직" : "타직"})</span>
+                            <span style={{ fontSize: "0.85rem", fontWeight: "bold", color: isOwn ? "var(--color-gold)" : "inherit" }}>{v} ({isOwn ? "천직" : "타직"})</span>
                             {talents.map((t, index) => {
                               const isUnlocked = state.character.unlockedTalents.includes(t);
                               const isStarting = index === 0;
                               if (isUnlocked) return null;
                               return (
-                                <div key={t} style={{ display: "flex", justifyContent: "space-between", paddingLeft: "10px", fontSize: "0.75rem", margin: "2px 0" }}>
+                                <div key={t} style={{ display: "flex", justifyContent: "space-between", paddingLeft: "10px", fontSize: "0.88rem", margin: "3px 0" }}>
                                   <span>{isStarting ? "◆" : "◇"} {t}</span>
                                   <button 
                                     className="btn-medieval-small" 
