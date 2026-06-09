@@ -1044,7 +1044,7 @@ export default function App() {
 
         {/* CHARACTER SHEET TAB */}
         {activeTab === "character" && (
-          <div className="sheet-container">
+          <div className="sheet-container woodcut-border parchment-container">
             {/* Corner Ornaments */}
             <div className="sheet-corner-decor corner-tl"></div>
             <div className="sheet-corner-decor corner-tr"></div>
@@ -1052,7 +1052,7 @@ export default function App() {
             <div className="sheet-corner-decor corner-br"></div>
 
             {/* Top Banner Header */}
-            <div className="medieval-banner-header">
+            <div className="medieval-banner-header crenellation-header">
               <span className="medieval-banner-logo">Gloam</span>
               <div className="medieval-banner-inputs">
                 <div className="banner-field">
@@ -1717,7 +1717,7 @@ export default function App() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
                   
                   {/* Friends Scroll */}
-                  <div className="hanging-scroll-box">
+                  <div className="hanging-scroll-box scroll-card">
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "3px", marginBottom: "10px" }}>
                       <h5 style={{ border: "none", margin: 0, fontSize: "0.9rem" }}>FRIENDS (인연)</h5>
                       <button 
@@ -1745,7 +1745,7 @@ export default function App() {
                   </div>
 
                   {/* Foes Scroll */}
-                  <div className="hanging-scroll-box" style={{ borderColor: "var(--color-crimson)" }}>
+                  <div className="hanging-scroll-box scroll-card" style={{ borderColor: "var(--color-crimson)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--color-crimson)", paddingBottom: "3px", marginBottom: "10px" }}>
                       <h5 style={{ border: "none", margin: 0, fontSize: "0.9rem", color: "var(--color-crimson)" }}>FOES (원수)</h5>
                       <button 
