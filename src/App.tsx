@@ -1379,7 +1379,7 @@ export default function App() {
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 45 4 L 55 4 L 56 16 L 44 16 Z" 
+                            d="M 45 5 L 55 5 L 57 11 L 55 18 L 45 18 L 43 11 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.head ? "path-wounded" : ""}`}
                           />
                         </g>
@@ -1390,7 +1390,7 @@ export default function App() {
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 41 18 L 59 18 L 56 48 L 44 48 Z" 
+                            d="M 44 18 L 56 18 L 57 32 L 55 49 L 45 49 L 43 32 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.torso ? "path-wounded" : ""}`}
                           />
                         </g>
@@ -1401,7 +1401,7 @@ export default function App() {
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 40 20 L 32 23 L 30 50 L 37 60 L 40 45 Z" 
+                            d="M 43 18 L 38 22 L 32 35 L 30 60 L 37 60 L 39 38 L 44 26 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.lArm ? "path-wounded" : ""}`}
                           />
                         </g>
@@ -1412,7 +1412,7 @@ export default function App() {
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 60 20 L 68 23 L 70 50 L 63 60 L 60 45 Z" 
+                            d="M 57 18 L 62 22 L 68 35 L 70 60 L 63 60 L 61 38 L 56 26 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.rArm ? "path-wounded" : ""}`}
                           />
                         </g>
@@ -1423,7 +1423,7 @@ export default function App() {
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 42 49 L 49 49 L 48 70 L 47 95 L 39 95 Z" 
+                            d="M 45 49 L 41 55 L 40 70 L 40 96 L 47 96 L 47 70 L 49 55 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.lLeg ? "path-wounded" : ""}`}
                           />
                         </g>
@@ -1434,7 +1434,7 @@ export default function App() {
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 51 49 L 58 49 L 52 70 L 53 95 L 61 95 Z" 
+                            d="M 55 49 L 59 55 L 60 70 L 60 96 L 53 96 L 53 70 L 51 55 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.rLeg ? "path-wounded" : ""}`}
                           />
                         </g>

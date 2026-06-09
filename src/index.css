@@ -1548,9 +1548,9 @@ h1, h2, h3, h4, h5, h6, .gothic-title, .gothic-sub {
 }
 
 .skeleton-interactive-path {
-  fill: rgba(42, 37, 33, 0.01);
-  stroke: rgba(42, 37, 33, 0.18);
-  stroke-width: 1.2px;
+  fill: rgba(42, 37, 33, 0.005);
+  stroke: transparent;
+  stroke-width: 1.5px;
   transition: all 0.2s;
   cursor: pointer;
 }
@@ -1558,13 +1558,13 @@ h1, h2, h3, h4, h5, h6, .gothic-title, .gothic-sub {
 .skeleton-interactive-path:hover {
   stroke: var(--color-crimson);
   stroke-width: 2.2px;
-  fill: rgba(128, 28, 29, 0.08);
+  fill: rgba(128, 28, 29, 0.1);
 }
 
 .skeleton-interactive-path.path-wounded {
   stroke: var(--color-crimson);
   stroke-width: 2.2px;
-  fill: rgba(128, 28, 29, 0.22);
+  fill: rgba(128, 28, 29, 0.25);
 }
 
 /* Vertical stats banners (Resolve, EXP, Speed) */
