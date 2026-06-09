@@ -1351,43 +1351,61 @@ export default function App() {
                     {/* SVG Skeleton */}
                     <div className="skeleton-svg-holder">
                       <svg viewBox="0 0 100 140" style={{ width: "100%", height: "auto", maxHeight: "250px" }}>
-                        {/* Spine */}
-                        <line x1="50" y1="35" x2="50" y2="75" stroke="#2C2621" strokeWidth="2" />
-                        {/* Pelvis */}
-                        <path d="M 40 75 L 60 75 L 50 85 Z" fill="none" stroke="#2C2621" strokeWidth="2" />
-                        
-                        {/* Ribs (circles) */}
-                        <ellipse cx="50" cy="48" rx="12" ry="7" fill="none" stroke="#2C2621" strokeWidth="1.5" />
-                        <ellipse cx="50" cy="58" rx="10" ry="6" fill="none" stroke="#2C2621" strokeWidth="1.5" />
-                        <ellipse cx="50" cy="66" rx="8" ry="5" fill="none" stroke="#2C2621" strokeWidth="1.5" />
-                        
-                        {/* Collar bone */}
-                        <line x1="38" y1="36" x2="62" y2="36" stroke="#2C2621" strokeWidth="2" />
+                        {/* Decorative background rings for medieval woodcut style */}
+                        <circle cx="50" cy="70" r="48" fill="none" stroke="var(--border-color)" strokeWidth="0.5" strokeDasharray="2,4" opacity="0.45" style={{ pointerEvents: "none" }} />
+                        <circle cx="50" cy="70" r="54" fill="none" stroke="var(--border-color)" strokeWidth="0.8" opacity="0.3" style={{ pointerEvents: "none" }} />
 
-                        {/* Head */}
+                        {/* Head (Skull) */}
                         <g 
                           onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, head: !s.character.wounds.head } } }))}
                           style={{ cursor: "pointer" }}
                         >
-                          <circle 
-                            cx="50" 
-                            cy="20" 
-                            r="10" 
+                          <path 
+                            d="M 50 12 C 43 12 38 17 38 24 C 38 29 40 33 44 35 C 44 37 43 40 43 41 C 43 43 45 44 47 44 C 48 44 49 43 49 42 L 51 42 C 51 43 52 44 53 44 C 55 44 57 43 57 41 C 57 40 56 37 56 35 C 60 33 62 29 62 24 C 62 17 57 12 50 12 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.head ? "path-wounded" : ""}`}
                           />
-                          {/* Eyes & Nose holes */}
-                          <circle cx="47" cy="18" r="1.2" fill="#2C2621" />
-                          <circle cx="53" cy="18" r="1.2" fill="#2C2621" />
-                          <polygon points="50,21 48,23 52,23" fill="#2C2621" />
-                          <line x1="47" y1="26" x2="53" y2="26" stroke="#2C2621" strokeWidth="1" />
+                          {/* Inner Skull details */}
+                          <g style={{ pointerEvents: "none" }}>
+                            {/* Eye sockets */}
+                            <path d="M 44 23 C 44 21 47 21 47 24 C 47 26 44 26 44 23 Z" fill="var(--text-bright)" opacity="0.8" />
+                            <path d="M 56 23 C 56 21 53 21 53 24 C 53 26 56 26 56 23 Z" fill="var(--text-bright)" opacity="0.8" />
+                            {/* Nose hole */}
+                            <path d="M 50 27 L 48 31 L 52 31 Z" fill="var(--text-bright)" opacity="0.8" />
+                            {/* Teeth grid */}
+                            <line x1="46" y1="37" x2="46" y2="41" stroke="var(--text-bright)" strokeWidth="0.8" />
+                            <line x1="48" y1="37" x2="48" y2="41" stroke="var(--text-bright)" strokeWidth="0.8" />
+                            <line x1="50" y1="37" x2="50" y2="41" stroke="var(--text-bright)" strokeWidth="0.8" />
+                            <line x1="52" y1="37" x2="52" y2="41" stroke="var(--text-bright)" strokeWidth="0.8" />
+                            <line x1="54" y1="37" x2="54" y2="41" stroke="var(--text-bright)" strokeWidth="0.8" />
+                          </g>
                         </g>
 
-                        {/* Torso */}
-                        <path 
-                          d="M 38 36 L 62 36 L 58 72 L 42 72 Z" 
-                          className={`skeleton-interactive-path ${state.character.wounds.torso ? "path-wounded" : ""}`}
+                        {/* Torso (Ribcage / Spine) */}
+                        <g
                           onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, torso: !s.character.wounds.torso } } }))}
-                        />
+                          style={{ cursor: "pointer" }}
+                        >
+                          <path 
+                            d="M 38 48 C 42 48 44 50 50 50 C 56 50 58 48 62 48 L 59 85 C 59 85 50 90 50 90 C 50 90 41 85 41 85 Z" 
+                            className={`skeleton-interactive-path ${state.character.wounds.torso ? "path-wounded" : ""}`}
+                          />
+                          {/* Inner Torso details */}
+                          <g style={{ pointerEvents: "none" }}>
+                            <line x1="50" y1="48" x2="50" y2="88" stroke="var(--text-bright)" strokeWidth="2.5" strokeDasharray="3,3" opacity="0.8" />
+                            <path d="M 50 50 L 50 72" stroke="var(--text-bright)" strokeWidth="3" />
+                            {/* Rib pairs */}
+                            <path d="M 48 53 Q 40 50 39 58" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <path d="M 52 53 Q 60 50 61 58" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <path d="M 48 59 Q 38 56 38 65" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <path d="M 52 59 Q 62 56 62 65" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <path d="M 48 65 Q 39 63 39 72" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <path d="M 52 65 Q 61 63 61 72" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <path d="M 49 71 Q 40 70 41 78" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <path d="M 51 71 Q 60 70 59 78" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            {/* Pelvic details */}
+                            <path d="M 42 85 C 44 83, 46 80, 50 82 C 54 80, 56 83, 58 85 L 50 89 Z" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                          </g>
+                        </g>
 
                         {/* Left Arm */}
                         <g 
@@ -1395,10 +1413,18 @@ export default function App() {
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 38 36 L 25 55 L 18 75" 
+                            d="M 38 44 L 20 62 L 10 82 L 18 86 L 28 66 L 42 50 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.lArm ? "path-wounded" : ""}`}
                           />
-                          <circle cx="18" cy="75" r="2.5" fill={state.character.wounds.lArm ? "var(--color-crimson)" : "#2C2621"} />
+                          <g style={{ pointerEvents: "none" }}>
+                            <circle cx="37" cy="48" r="4" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <path d="M 35 49 L 24 62" stroke="var(--text-bright)" strokeWidth="2.5" strokeLinecap="round" />
+                            <circle cx="23" cy="63" r="3" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <line x1="22" y1="64" x2="16" y2="79" stroke="var(--text-bright)" strokeWidth="1.2" />
+                            <line x1="24" y1="65" x2="18" y2="81" stroke="var(--text-bright)" strokeWidth="1.2" />
+                            <path d="M 17 80 L 13 86 M 17 80 L 15 88 M 17 80 L 17 89 M 17 80 L 19 88" stroke="var(--text-bright)" strokeWidth="1.2" />
+                            <circle cx="16" cy="82" r="3" fill={state.character.wounds.lArm ? "var(--color-crimson)" : "var(--text-bright)"} />
+                          </g>
                         </g>
 
                         {/* Right Arm */}
@@ -1407,10 +1433,18 @@ export default function App() {
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 62 36 L 75 55 L 82 75" 
+                            d="M 62 44 L 80 62 L 90 82 L 82 86 L 72 66 L 58 50 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.rArm ? "path-wounded" : ""}`}
                           />
-                          <circle cx="82" cy="75" r="2.5" fill={state.character.wounds.rArm ? "var(--color-crimson)" : "#2C2621"} />
+                          <g style={{ pointerEvents: "none" }}>
+                            <circle cx="63" cy="48" r="4" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <path d="M 65 49 L 76 62" stroke="var(--text-bright)" strokeWidth="2.5" strokeLinecap="round" />
+                            <circle cx="77" cy="63" r="3" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <line x1="78" y1="64" x2="84" y2="79" stroke="var(--text-bright)" strokeWidth="1.2" />
+                            <line x1="76" y1="65" x2="82" y2="81" stroke="var(--text-bright)" strokeWidth="1.2" />
+                            <path d="M 83 80 L 87 86 M 83 80 L 85 88 M 83 80 L 83 89 M 83 80 L 81 88" stroke="var(--text-bright)" strokeWidth="1.2" />
+                            <circle cx="84" cy="82" r="3" fill={state.character.wounds.rArm ? "var(--color-crimson)" : "var(--text-bright)"} />
+                          </g>
                         </g>
 
                         {/* Left Leg */}
@@ -1419,10 +1453,17 @@ export default function App() {
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 43 78 L 36 108 L 34 135" 
+                            d="M 41 86 L 31 108 L 29 135 L 39 135 L 43 108 L 49 90 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.lLeg ? "path-wounded" : ""}`}
                           />
-                          <path d="M 30 135 L 35 135 L 37 138 Z" fill={state.character.wounds.lLeg ? "var(--color-crimson)" : "#2C2621"} />
+                          <g style={{ pointerEvents: "none" }}>
+                            <circle cx="44" cy="88" r="4.5" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <path d="M 43 90 L 36 107" stroke="var(--text-bright)" strokeWidth="3" strokeLinecap="round" />
+                            <circle cx="36" cy="108" r="3.5" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <line x1="35" y1="110" x2="33" y2="132" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <line x1="37" y1="111" x2="35" y2="132" stroke="var(--text-bright)" strokeWidth="0.8" />
+                            <path d="M 34 133 L 28 136 L 35 136 Z" fill="var(--text-bright)" />
+                          </g>
                         </g>
 
                         {/* Right Leg */}
@@ -1431,17 +1472,21 @@ export default function App() {
                           style={{ cursor: "pointer" }}
                         >
                           <path 
-                            d="M 57 78 L 64 108 L 66 135" 
+                            d="M 59 86 L 69 108 L 71 135 L 61 135 L 57 108 L 51 90 Z" 
                             className={`skeleton-interactive-path ${state.character.wounds.rLeg ? "path-wounded" : ""}`}
                           />
-                          <path d="M 70 135 L 65 135 L 63 138 Z" fill={state.character.wounds.rLeg ? "var(--color-crimson)" : "#2C2621"} />
+                          <g style={{ pointerEvents: "none" }}>
+                            <circle cx="56" cy="88" r="4.5" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <path d="M 57 90 L 64 107" stroke="var(--text-bright)" strokeWidth="3" strokeLinecap="round" />
+                            <circle cx="64" cy="108" r="3.5" fill="none" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <line x1="65" y1="110" x2="67" y2="132" stroke="var(--text-bright)" strokeWidth="1.5" />
+                            <line x1="63" y1="111" x2="65" y2="132" stroke="var(--text-bright)" strokeWidth="0.8" />
+                            <path d="M 66 133 L 72 136 L 65 136 Z" fill="var(--text-bright)" />
+                          </g>
                         </g>
 
                         {/* Shield Zone */}
-                        <path
-                          d="M 7 90 L 23 90 L 23 105 L 15 115 L 7 105 Z"
-                          className={`skeleton-interactive-path ${state.character.armorNotches.shield === 3 ? "path-wounded" : ""}`}
-                          style={{ strokeWidth: "1.2px" }}
+                        <g
                           onClick={() => {
                             updateState(s => {
                               const curr = s.character.armorNotches.shield;
@@ -1449,13 +1494,31 @@ export default function App() {
                               return { ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, shield: next } } };
                             });
                           }}
-                        />
-                        <text x="15" y="103" fontSize="5" fontFamily="var(--gothic)" textAnchor="middle" fill="var(--text-bright)">SHIELD</text>
+                          style={{ cursor: "pointer" }}
+                        >
+                          <path
+                            d="M 6 85 L 24 85 C 24 105, 20 115, 15 125 C 10 115, 6 105, 6 85 Z"
+                            className={`skeleton-interactive-path ${state.character.armorNotches.shield === 3 ? "path-wounded" : ""}`}
+                            style={{ strokeWidth: "1.5px" }}
+                          />
+                          <g style={{ pointerEvents: "none" }}>
+                            <path
+                              d="M 8 87 L 22 87 C 22 103, 19 112, 15 120 C 11 112, 8 103, 8 87 Z"
+                              fill="none"
+                              stroke="var(--text-bright)"
+                              strokeWidth="0.8"
+                              opacity="0.7"
+                            />
+                            <line x1="15" y1="91" x2="15" y2="102" stroke="var(--text-bright)" strokeWidth="1.2" opacity="0.8" />
+                            <line x1="10" y1="96" x2="20" y2="96" stroke="var(--text-bright)" strokeWidth="1.2" opacity="0.8" />
+                            <text x="15" y="112" fontSize="5.5" fontFamily="var(--gothic)" fontWeight="bold" textAnchor="middle" fill="var(--text-bright)">SHIELD</text>
+                          </g>
+                        </g>
                       </svg>
                     </div>
 
                     {/* Interactive List Controls */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.82rem" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.92rem" }}>
                       {/* Head control */}
                       <div>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: "bold" }}>
@@ -1466,7 +1529,7 @@ export default function App() {
                           />
                           <span style={{ color: state.character.wounds.head ? "var(--color-crimson)" : "inherit" }}>머리 (Head) [기절]</span>
                         </div>
-                        <div style={{ marginLeft: "20px", display: "flex", alignItems: "center", gap: "5px", fontSize: "0.78rem" }}>
+                        <div style={{ marginLeft: "20px", display: "flex", alignItems: "center", gap: "5px", fontSize: "0.88rem" }}>
                           <span>투구 AP2:</span>
                           {[1, 2].map(n => (
                             <input key={n} type="checkbox" checked={state.character.armorNotches.helmet >= n} onChange={() => {
@@ -1490,7 +1553,7 @@ export default function App() {
                           />
                           <span style={{ color: state.character.wounds.torso ? "var(--color-crimson)" : "inherit" }}>몸통 (Torso) [-3 판정]</span>
                         </div>
-                        <div style={{ marginLeft: "20px", display: "flex", alignItems: "center", gap: "5px", fontSize: "0.78rem" }}>
+                        <div style={{ marginLeft: "20px", display: "flex", alignItems: "center", gap: "5px", fontSize: "0.88rem" }}>
                           <span>흉갑 AP3:</span>
                           {[1, 2, 3].map(n => (
                             <input key={n} type="checkbox" checked={state.character.armorNotches.cuirass >= n} onChange={() => {
@@ -1507,7 +1570,7 @@ export default function App() {
                       {/* Arms control */}
                       <div>
                         <div style={{ fontWeight: "bold", marginBottom: "2px" }}>양팔 (Arms) [장비 떨어뜨림]</div>
-                        <div style={{ marginLeft: "10px", display: "flex", flexDirection: "column", gap: "2px", fontSize: "0.78rem" }}>
+                        <div style={{ marginLeft: "10px", display: "flex", flexDirection: "column", gap: "2px", fontSize: "0.88rem" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                             <input 
                               type="checkbox" 
@@ -1536,7 +1599,7 @@ export default function App() {
                       {/* Legs control */}
                       <div>
                         <div style={{ fontWeight: "bold", marginBottom: "2px" }}>양다리 (Legs) [이동력 -2/개]</div>
-                        <div style={{ marginLeft: "10px", display: "flex", flexDirection: "column", gap: "2px", fontSize: "0.78rem" }}>
+                        <div style={{ marginLeft: "10px", display: "flex", flexDirection: "column", gap: "2px", fontSize: "0.88rem" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                             <input 
                               type="checkbox" 
