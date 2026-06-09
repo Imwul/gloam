@@ -20,11 +20,11 @@
   --border-radius: 2px;
   
   --sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --serif: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --gothic: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --blackletter: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --serif: 'EB Garamond', 'IM Fell English', 'Pretendard', Georgia, serif;
+  --gothic: 'Cinzel', 'MedievalSharp', 'Pretendard', serif;
+  --blackletter: 'UnifrakturMaguntia', 'Pretendard', serif;
   
-  font-family: var(--sans);
+  font-family: var(--serif);
   background-color: var(--bg-dark);
   color: var(--text-normal);
   line-height: 1.5;
