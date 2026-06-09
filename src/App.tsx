@@ -13,22 +13,19 @@ import {
   MAP_DUNGEON, 
   MAP_SETTLEMENT, 
   ORACLE_SUITS, 
-  ORACLE_SUBJECTS, 
-  RULEBOOK_PAGES
+  ORACLE_SUBJECTS
 } from "./gameData";
 import { 
   BookOpen, 
   User as UserIcon, 
   Compass, 
   Sparkles, 
-  Book, 
   Map as MapIcon,
   Trash2, 
   LogOut, 
   LogIn, 
   Upload, 
-  RotateCcw,
-  Search
+  RotateCcw
 } from "lucide-react";
 
 // =================================================================
@@ -333,14 +330,12 @@ const getCardDisplayName = (card: Card) => {
 // =================================================================
 export default function App() {
   const [state, setState] = useState<GameState | null>(null);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "character" | "oracles" | "map" | "journal" | "guidebook">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "character" | "oracles" | "map" | "journal">("dashboard");
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   
   // Modals / Temporary states
   const [newJournalText, setNewJournalText] = useState("");
-  const [guideSearch, setGuideSearch] = useState("");
-  const [selectedGuidePage, setSelectedGuidePage] = useState<number>(1);
   const [buyCatalogItem, setBuyCatalogItem] = useState<{ name: string; nameKo: string; coinsMod: string; swordsReq?: number } | null>(null);
   const [buyTestResult, setBuyTestResult] = useState<{ success: boolean; total: number; card: Card; statUsed: number } | null>(null);
 
@@ -987,9 +982,6 @@ export default function App() {
         <button className={`tab-btn ${activeTab === "journal" ? "active" : ""}`} onClick={() => setActiveTab("journal")}>
           <Compass size={16} /> 모험 연대기
         </button>
-        <button className={`tab-btn ${activeTab === "guidebook" ? "active" : ""}`} onClick={() => setActiveTab("guidebook")}>
-          <Book size={16} /> 룰북 (Guide)
-        </button>
       </nav>
 
       {/* Main Panel Routing */}
@@ -1017,9 +1009,6 @@ export default function App() {
                 </button>
                 <button className="btn-medieval" onClick={() => setActiveTab("oracles")}>
                   타로 드로우
-                </button>
-                <button className="btn-medieval" onClick={() => setActiveTab("guidebook")}>
-                  한글판 가이드북
                 </button>
               </div>
             </div>
@@ -2283,92 +2272,6 @@ export default function App() {
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 6: RULEBOOK GUIDE */}
-        {activeTab === "guidebook" && (
-          <div className="guidebook-layout">
-            {/* Guide sidebar */}
-            <div className="card-panel flex-1 max-height-600">
-              <h3 className="gothic-sub">가이드북 차례</h3>
-              
-              <div className="search-box">
-                <Search size={14} className="search-icon" />
-                <input 
-                  type="text" 
-                  placeholder="규칙 단어 검색..." 
-                  value={guideSearch}
-                  onChange={e => setGuideSearch(e.target.value)}
-                />
-              </div>
-
-              <div className="guidebook-page-list scrollable">
-                {RULEBOOK_PAGES.filter(p => 
-                  p.titleKo.toLowerCase().includes(guideSearch.toLowerCase()) || 
-                  p.content.toLowerCase().includes(guideSearch.toLowerCase())
-                ).map(page => (
-                  <button 
-                    key={page.pageNumber} 
-                    className={`guide-page-btn ${selectedGuidePage === page.pageNumber ? "active" : ""}`}
-                    onClick={() => setSelectedGuidePage(page.pageNumber)}
-                  >
-                    <span className="page-num">p.{page.pageNumber}</span>
-                    <span className="page-title">{page.titleKo}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Guide Viewer */}
-            <div className="card-panel gold-border flex-2 max-height-600 scrollable">
-              {RULEBOOK_PAGES.find(p => p.pageNumber === selectedGuidePage) ? (
-                (() => {
-                  const p = RULEBOOK_PAGES.find(x => x.pageNumber === selectedGuidePage)!;
-                  return (
-                    <div className="guidebook-page-content">
-                      <div className="flex-row justify-between align-center" style={{ borderBottom: "1px solid #333", paddingBottom: "10px", marginBottom: "15px" }}>
-                        <h2 className="gothic-sub" style={{ fontSize: "1.6rem" }}>{p.titleKo}</h2>
-                        <span className="page-badge">Page {p.pageNumber} / 60</span>
-                      </div>
-                      
-                      <div className="guidebook-raw-content">
-                        {p.content.split("\n").map((line, lIdx) => {
-                          if (line.startsWith("•") || line.startsWith("-")) {
-                            return <li key={lIdx} style={{ marginLeft: "15px", marginBottom: "8px", color: "#ddd" }}>{line.slice(1).trim()}</li>;
-                          }
-                          if (line.includes(":") && line.trim().endsWith("]")) {
-                            return <h4 key={lIdx} style={{ color: "var(--gold)", marginTop: "12px", borderLeft: "2px solid var(--gold)", paddingLeft: "10px" }}>{line}</h4>;
-                          }
-                          return <p key={lIdx} style={{ marginBottom: "10px", lineHeight: "1.8", color: "#ccc" }}>{line}</p>;
-                        })}
-                      </div>
-
-                      {/* Navigation at bottom of page */}
-                      <div className="guidebook-nav-row">
-                        <button 
-                          className="btn-medieval-small" 
-                          disabled={selectedGuidePage === 1}
-                          onClick={() => setSelectedGuidePage(prev => Math.max(1, prev - 1))}
-                        >
-                          &larr; 이전 페이지
-                        </button>
-                        <span>p.{p.pageNumber}</span>
-                        <button 
-                          className="btn-medieval-small" 
-                          disabled={selectedGuidePage === 60}
-                          onClick={() => setSelectedGuidePage(prev => Math.min(60, prev + 1))}
-                        >
-                          다음 페이지 &rarr;
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })()
-              ) : (
-                <p className="empty-text">페이지를 찾을 수 없습니다.</p>
-              )}
             </div>
           </div>
         )}
