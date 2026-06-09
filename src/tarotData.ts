@@ -137,7 +137,7 @@ export function generateTarotDeck(): TarotCard[] {
     else if (suit === 'Pentacles') suitKr = "동전";
 
     for (let value = 1; value <= 14; value++) {
-      let name = "";
+      let name: string;
       let valStr = `${value}`;
       if (value === 1) {
         name = `${suitKr}의 에이스`;

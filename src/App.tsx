@@ -1,1651 +1,2413 @@
-import { useState, useEffect } from 'react';
-import {
-  Compass, BookOpen, Settings, LogOut, LogIn,
-  Shuffle, Trash2, Download, Cloud, CloudOff, Check, AlertCircle, X
-} from 'lucide-react';
-import {
-  generateTarotDeck,
-  getYesNoOutcome,
-  getAmountOutcome,
-  ArcaneMagickVerbs,
-  ArcaneMagickNouns,
-  FolkNPCTable
-} from './tarotData';
-import type { TarotCard } from './tarotData';
-import {
-  auth,
-  db,
-  googleProvider,
-  isFirebaseConfigured,
-  saveFirebaseConfig,
-  getSavedFirebaseConfig
-} from './firebase';
-import type { FirebaseConfig } from './firebase';
-import {
-  signInWithPopup,
-  signOut,
-  onAuthStateChanged
-} from 'firebase/auth';
-import type { User } from 'firebase/auth';
-import {
-  doc,
-  setDoc,
-  getDoc
-} from 'firebase/firestore';
-import './App.css';
+import { useState, useEffect } from "react";
+import { db, isFirebaseConfigured, auth, googleProvider } from "./firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { signInWithPopup, signOut, onAuthStateChanged, type User } from "firebase/auth";
+import { 
+  WEAPONS, 
+  ARMOR, 
+  BESTIARY, 
+  WILDERNESS_EVENTS, 
+  DUNGEON_EVENTS, 
+  SETTLEMENT_EVENTS,
+  MAP_WILDERNESS, 
+  MAP_DUNGEON, 
+  MAP_SETTLEMENT, 
+  ORACLE_SUITS, 
+  ORACLE_SUBJECTS, 
+  RULEBOOK_PAGES
+} from "./gameData";
+import { 
+  BookOpen, 
+  User as UserIcon, 
+  Compass, 
+  Sparkles, 
+  Book, 
+  Map as MapIcon,
+  Trash2, 
+  LogOut, 
+  LogIn, 
+  Upload, 
+  RotateCcw,
+  Search
+} from "lucide-react";
 
-interface JournalEntry {
-  id: string;
-  timestamp: number;
-  type: 'draw_player' | 'draw_referee' | 'oracle_yesno' | 'oracle_amount' | 'oracle_action_subject' | 'select' | 'system';
-  cardName: string;
-  cardId: string;
-  imageUrl: string;
-  isReversed?: boolean;
-  // For action-subject pairs
-  cardName2?: string;
-  cardId2?: string;
-  imageUrl2?: string;
-  isReversed2?: boolean;
-  interpretation: string;
-  note: string;
-}
+// =================================================================
+// 1. SYNC & STORAGE SYSTEM
+// =================================================================
+const withTimeout = (promise: Promise<any>, ms: number = 8000) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), ms))
+  ]);
+};
 
-function App() {
-  // --- States ---
-  const [deck, setDeck] = useState<TarotCard[]>([]);
-  const [playerDeck, setPlayerDeck] = useState<TarotCard[]>([]);
-  const [refereeDeck, setRefereeDeck] = useState<TarotCard[]>([]);
-  
-  // Active states
-  const [activeCard, setActiveCard] = useState<TarotCard | null>(null);
-  const [activeCardReversed, setActiveCardReversed] = useState(false);
-  
-  // For Action-Subject Oracle showing 2 cards side by side
-  const [activeCard2, setActiveCard2] = useState<TarotCard | null>(null);
-  const [activeCardReversed2, setActiveCardReversed2] = useState(false);
-  const [isActionSubjectView, setIsActionSubjectView] = useState(false);
-  
-  // Options
-  const [allowReversed, setAllowReversed] = useState(true);
-  const [manualReversed, setManualReversed] = useState(false); // For manual offline logging
-  
-  // Preloading states
-  const [isPreloading, setIsPreloading] = useState(true);
-  const [preloadProgress, setPreloadProgress] = useState(0);
-  
-  // UI Panels / Navigation
-  const [activeTab, setActiveTab] = useState<'browser' | 'journal' | 'rules'>('browser');
-  const [browserFilter, setBrowserFilter] = useState<string>('All');
-  const [expandedSection, setExpandedSection] = useState<string | null>('lore');
-  
-  // Log / Journal
-  const [journal, setJournal] = useState<JournalEntry[]>([]);
-  
-  // Auth & Cloud state
-  const [user, setUser] = useState<User | null>(null);
-  const [cloudSyncing, setCloudSyncing] = useState(false);
-  
-  // Modals
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showFoolModal, setShowFoolModal] = useState(false);
-  
-  // Settings Form
-  const [settingsForm, setSettingsForm] = useState<FirebaseConfig>({
-    apiKey: '',
-    authDomain: '',
-    projectId: '',
-    storageBucket: '',
-    messagingSenderId: '',
-    appId: ''
-  });
-
-  // --- Initialize Deck & Preloader ---
-  useEffect(() => {
-    const allCards = generateTarotDeck();
-    setDeck(allCards);
-
-    // Initial shuffle
-    resetDecks(allCards);
-
-    // Preload Images
-    let loadedCount = 0;
-    const totalImages = allCards.length;
-
-    // Load dynamic settings form if saved
-    const savedConfig = getSavedFirebaseConfig();
-    if (savedConfig) {
-      setSettingsForm(savedConfig);
-    }
-
-    const handleImageLoad = () => {
-      loadedCount++;
-      const progress = Math.round((loadedCount / totalImages) * 100);
-      setPreloadProgress(progress);
-      if (loadedCount >= totalImages) {
-        setIsPreloading(false);
+const store = {
+  set: async (key: string, value: any) => {
+    const jsonString = JSON.stringify(value);
+    if (isFirebaseConfigured && db) {
+      try {
+        const currentUser = auth?.currentUser;
+        if (currentUser) {
+          const docRef = doc(db, "saves", `gloam_${currentUser.uid}`);
+          await withTimeout(setDoc(docRef, { [key]: jsonString }, { merge: true }));
+        }
+      } catch (e) {
+        console.error("Firebase save error:", e);
       }
-    };
-
-    allCards.forEach((card) => {
-      const img = new Image();
-      img.src = card.imageUrl;
-      img.onload = handleImageLoad;
-      img.onerror = handleImageLoad; // Don't get stuck if an image fails
-    });
-  }, []);
-
-  // --- Auth Observer ---
-  useEffect(() => {
-    if (!isFirebaseConfigured || !auth) return;
-
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      if (firebaseUser) {
-        loadJournalFromCloud(firebaseUser);
-      } else {
-        const localData = localStorage.getItem('gloam_journal_log');
-        if (localData) {
-          try {
-            setJournal(JSON.parse(localData));
-          } catch (e) {
-            console.error(e);
+    }
+    try {
+      localStorage.setItem(key, jsonString);
+    } catch (e) {}
+  },
+  load: async (key: string, fallback: any) => {
+    if (isFirebaseConfigured && db) {
+      try {
+        const currentUser = auth?.currentUser;
+        if (currentUser) {
+          const docRef = doc(db, "saves", `gloam_${currentUser.uid}`);
+          const snap = await withTimeout(getDoc(docRef));
+          if (snap.exists() && snap.data()[key]) {
+            return JSON.parse(snap.data()[key]);
           }
         }
+      } catch (e) {
+        console.error("Firebase load error:", e);
+      }
+    }
+    try {
+      const r = localStorage.getItem(key);
+      if (r) return JSON.parse(r);
+    } catch {}
+    return fallback;
+  }
+};
+
+// =================================================================
+// 2. INTERFACES & INITIAL STATE
+// =================================================================
+export interface Card {
+  type: "minor" | "major";
+  suit?: "cups" | "wands" | "swords" | "coins";
+  card: string; // "A", "2"-"10", "Page", "Knight", "Queen", "King" / Roman numbers for Major
+  reversed?: boolean;
+}
+
+export interface Character {
+  name: string;
+  vocation: string;
+  age: number;
+  portrait: string;
+  xp: number;
+  resolve: number;
+  stats: {
+    cups: number;
+    wands: number;
+    swords: number;
+    coins: number;
+  };
+  wounds: {
+    head: boolean;
+    torso: boolean;
+    lArm: boolean;
+    rArm: boolean;
+    lLeg: boolean;
+    rLeg: boolean;
+  };
+  armorNotches: {
+    helmet: number;
+    cuirass: number;
+    gambeson: number;
+    chainmail: number;
+    gauntletL: number;
+    gauntletR: number;
+    greaveL: number;
+    greaveR: number;
+    shield: number;
+  };
+  inventory: string[];
+  instincts: string[];
+  goals: string[];
+  friends: { name: string; info: string }[];
+  foes: { name: string; info: string }[];
+  unlockedTalents: string[];
+  lifepathLogs: string[];
+}
+
+export interface MapCell {
+  x: number;
+  y: number;
+  card?: Card;
+  type?: "wilderness" | "dungeon" | "settlement";
+  description?: string;
+}
+
+export interface CombatMonster {
+  id: string;
+  monsterId: number;
+  name: string;
+  woundsTaken: number;
+  initiativeCard?: Card;
+}
+
+export interface GameState {
+  character: Character;
+  playerDeck: Card[];
+  playerDiscard: Card[];
+  refereeDeck: Card[];
+  refereeDiscard: Card[];
+  hand: Card[];
+  mapGrid: MapCell[];
+  journals: { id: string; text: string; date: string }[];
+  combatMonsters: CombatMonster[];
+  combatRound: number;
+  mapType: "wilderness" | "dungeon" | "settlement";
+}
+
+const INITIAL_CHARACTER: Character = {
+  name: "알릭 (Alaric)",
+  vocation: "방랑기사 (Knight-Errant)",
+  age: 18,
+  portrait: "",
+  xp: 0,
+  resolve: 3,
+  stats: {
+    cups: 1,
+    wands: 2,
+    swords: 4,
+    coins: 3
+  },
+  wounds: {
+    head: false,
+    torso: false,
+    lArm: false,
+    rArm: false,
+    lLeg: false,
+    rLeg: false
+  },
+  armorNotches: {
+    helmet: 0,
+    cuirass: 0,
+    gambeson: 0,
+    chainmail: 0,
+    gauntletL: 0,
+    gauntletR: 0,
+    greaveL: 0,
+    greaveR: 0,
+    shield: 0
+  },
+  inventory: ["검 (Sword)", "흉갑 (Cuirass)", "방패 (Shield)", "침낭 (Bedroll)", "휴대 식량 (7일분)"],
+  instincts: [
+    "위험을 감지하면 무조건 아끼는 검을 빼 든다.",
+    "돈을 요구하는 자를 만나면 일단 속내를 의심한다.",
+    "밤이 되면 항상 은신처를 찾아 횃불을 끈다."
+  ],
+  goals: [
+    "어릴 적 고향을 파괴한 도적 두목을 추적해 처단한다.",
+    "잃어버린 가문의 명검 아스칼론을 폐허에서 찾아낸다.",
+    "황혼의 거점 성채에 갇힌 친구를 구출한다."
+  ],
+  friends: [{ name: "아이리스 (Iris)", info: "마을 약초꾼. 다쳤을 때 안전한 잠자리를 제공해 줍니다." }],
+  foes: [{ name: "마옌스 경 (Sir Mayence)", info: "기사 서약을 저버린 배역자 기사. 사사건건 도전을 걸어옵니다." }],
+  unlockedTalents: ["Sally Forth (과감한 돌격)"],
+  lifepathLogs: [
+    "출생: 검(Swords) 문양의 전시 상황 속에서 소수의 몰락 영지 기사의 가문에 태어났습니다.",
+    "청년기: 믿었던 가장 가까운 동료 기사에게 배신당해 큰 마음의 상처를 입었습니다. (+9세)",
+    "청년기: 고고학적이고 역사적인 고문헌을 밤낮으로 치열하게 탐구하며 지식을 마스터했습니다. (+14세)"
+  ]
+};
+
+const INITIAL_STATE: GameState = {
+  character: INITIAL_CHARACTER,
+  playerDeck: [],
+  playerDiscard: [],
+  refereeDeck: [],
+  refereeDiscard: [],
+  hand: [],
+  mapGrid: Array.from({ length: 16 }, (_, i) => ({
+    x: i % 4,
+    y: Math.floor(i / 4)
+  })),
+  journals: [
+    { id: "1", text: "세상이 황혼(Gloaming) 속으로 저물어 가고 있다. 타로 카드의 이끌림을 따라 나의 맹세를 지키기 위한 여정을 기록해 나간다. 오늘은 성 아래 여관에서 방랑자들과 술잔을 기울였다.", date: new Date().toLocaleString() }
+  ],
+  combatMonsters: [],
+  combatRound: 1,
+  mapType: "wilderness"
+};
+
+// =================================================================
+// 3. TAROT CARD HELPERS
+// =================================================================
+const SUITS = ["cups", "wands", "swords", "coins"] as const;
+const VALUES = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Page", "Knight", "Queen", "King"];
+const MAJORS = [
+  "0", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", 
+  "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX", "XXI"
+];
+
+// Returns the local image path for each card
+const getCardImageUrl = (card: Card) => {
+  if (card.type === "minor") {
+    const suitFolder = card.suit === "wands" ? "Wands" :
+                       card.suit === "cups" ? "Cups" :
+                       card.suit === "swords" ? "Swords" :
+                       card.suit === "coins" ? "Pentacles" : "";
+    const valStr = card.card === "A" ? "1" : card.card;
+    return `/tarot/${suitFolder}_${valStr}.jpg`;
+  } else {
+    const romanToNum: { [key: string]: number } = {
+      "0": 0, "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6, "VII": 7, "VIII": 8, "IX": 9, "X": 10,
+      "XI": 11, "XII": 12, "XIII": 13, "XIV": 14, "XV": 15, "XVI": 16, "XVII": 17, "XVIII": 18, "XIX": 19, "XX": 20, "XXI": 21
+    };
+    const majorNum = romanToNum[card.card] !== undefined ? romanToNum[card.card] : 0;
+    return `/tarot/Major_${majorNum}.jpg`;
+  }
+};
+
+// Preload all tarot images to memory for zero-lag drawing
+const preloadAllTarotImages = () => {
+  const urls: string[] = [];
+  SUITS.forEach(suit => {
+    VALUES.forEach(val => {
+      urls.push(getCardImageUrl({ type: "minor", suit, card: val }));
+    });
+  });
+  MAJORS.forEach(major => {
+    urls.push(getCardImageUrl({ type: "major", card: major }));
+  });
+
+  urls.forEach(url => {
+    const img = new Image();
+    img.src = url;
+  });
+};
+
+const createPlayerDeck = (): Card[] => {
+  const deck: Card[] = [];
+  // 56 Minor cards
+  SUITS.forEach(suit => {
+    VALUES.forEach(card => {
+      deck.push({ type: "minor", suit, card, reversed: false });
+    });
+  });
+  // The Fool
+  deck.push({ type: "major", card: "0", reversed: false });
+  return shuffle(deck);
+};
+
+const createRefereeDeck = (): Card[] => {
+  const deck: Card[] = [];
+  // Major cards I to XXI
+  MAJORS.filter(m => m !== "0").forEach(card => {
+    deck.push({ type: "major", card, reversed: false });
+  });
+  return shuffle(deck);
+};
+
+const shuffle = (arr: Card[]): Card[] => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+const getCardDisplayName = (card: Card) => {
+  const suitKo = card.suit === "cups" ? "컵" :
+                 card.suit === "wands" ? "완드" :
+                 card.suit === "swords" ? "소드" :
+                 card.suit === "coins" ? "코인" : "";
+  const valKo = card.card === "A" ? "에이스" : card.card;
+  const orientation = card.reversed ? " (역방향)" : "";
+  
+  if (card.type === "major") {
+    const majorInfo = ORACLE_SUBJECTS[card.card];
+    return `${majorInfo ? majorInfo.name : "메이저"} ${card.card}${orientation}`;
+  }
+  return `${suitKo} ${valKo}${orientation}`;
+};
+
+// =================================================================
+// 4. MAIN APP COMPONENT
+// =================================================================
+export default function App() {
+  const [state, setState] = useState<GameState | null>(null);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "character" | "oracles" | "map" | "journal" | "guidebook">("dashboard");
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Modals / Temporary states
+  const [newJournalText, setNewJournalText] = useState("");
+  const [guideSearch, setGuideSearch] = useState("");
+  const [selectedGuidePage, setSelectedGuidePage] = useState<number>(1);
+  const [buyCatalogItem, setBuyCatalogItem] = useState<{ name: string; nameKo: string; coinsMod: string; swordsReq?: number } | null>(null);
+  const [buyTestResult, setBuyTestResult] = useState<{ success: boolean; total: number; card: Card; statUsed: number } | null>(null);
+
+  // Oracle drawn states
+  const [drawnOracleCard, setDrawnOracleCard] = useState<Card | null>(null);
+  const [oracleYesNo, setOracleYesNo] = useState<string | null>(null);
+  const [oracleAmount, setOracleAmount] = useState<string | null>(null);
+  const [oracleActionSubject, setOracleActionSubject] = useState<{ action: string; subject: string; card1: Card; card2: Card } | null>(null);
+
+  // Combat States
+  const [selectedMonsterToSpawn, setSelectedMonsterToSpawn] = useState<number>(1);
+
+  // Init Auth State
+  useEffect(() => {
+    if (!auth) return;
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
+      setUser(u);
+      if (u) {
+        try {
+          const userDocRef = doc(db!, "saves", `gloam_${u.uid}`);
+          const snap = await getDoc(userDocRef);
+          if (snap.exists()) {
+            const cloudData = snap.data();
+            if (cloudData && cloudData["gloam_rpg_state"]) {
+              const parsed = JSON.parse(cloudData["gloam_rpg_state"]);
+              const localStr = localStorage.getItem("gloam_rpg_state");
+              if (localStr) {
+                const localParsed = JSON.parse(localStr);
+                const isLocalDefault = !localParsed.character?.name || localParsed.character.name === "알릭 (Alaric)";
+                if (isLocalDefault || confirm("구글 클라우드 백업 데이터를 발견했습니다. 불러오시겠습니까?")) {
+                  setState(parsed);
+                  localStorage.setItem("gloam_rpg_state", JSON.stringify(parsed));
+                }
+              } else {
+                setState(parsed);
+                localStorage.setItem("gloam_rpg_state", JSON.stringify(parsed));
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Failed to check cloud save during login:", err);
+        }
       }
     });
-
-    return () => unsubscribe();
+    return unsubscribe;
   }, []);
 
-  // --- Firestore Journal Sync ---
-  const saveJournal = async (updatedJournal: JournalEntry[]) => {
-    setJournal(updatedJournal);
-    localStorage.setItem('gloam_journal_log', JSON.stringify(updatedJournal));
-
-    if (isFirebaseConfigured && auth && db && user) {
-      setCloudSyncing(true);
-      try {
-        await setDoc(doc(db, 'users', user.uid), {
-          journal: updatedJournal,
-          lastUpdated: Date.now()
-        });
-      } catch (e) {
-        console.error("Firestore sync failed:", e);
-      } finally {
-        setCloudSyncing(false);
-      }
-    }
-  };
-
-  const loadJournalFromCloud = async (currentUser: User) => {
-    if (!db) return;
-    setCloudSyncing(true);
-    try {
-      const docSnap = await getDoc(doc(db, 'users', currentUser.uid));
-      if (docSnap.exists() && docSnap.data().journal) {
-        const cloudJournal = docSnap.data().journal as JournalEntry[];
-        const localData = localStorage.getItem('gloam_journal_log');
-        let localJournal: JournalEntry[] = [];
-        if (localData) {
-          try { localJournal = JSON.parse(localData); } catch (e) {}
+  // Load Initial State
+  useEffect(() => {
+    const loadState = async () => {
+      preloadAllTarotImages();
+      const loaded = await store.load("gloam_rpg_state", null);
+      if (loaded) {
+        // Safe checks/migrations
+        if (!loaded.character) loaded.character = INITIAL_CHARACTER;
+        if (!loaded.mapGrid) {
+          loaded.mapGrid = Array.from({ length: 16 }, (_, i) => ({
+            x: i % 4,
+            y: Math.floor(i / 4)
+          }));
         }
-
-        if (cloudJournal.length >= localJournal.length) {
-          setJournal(cloudJournal);
-          localStorage.setItem('gloam_journal_log', JSON.stringify(cloudJournal));
-        } else if (localJournal.length > 0) {
-          await setDoc(doc(db, 'users', currentUser.uid), {
-            journal: localJournal,
-            lastUpdated: Date.now()
-          });
-          setJournal(localJournal);
-        }
+        setState(loaded);
       } else {
-        const localData = localStorage.getItem('gloam_journal_log');
-        if (localData) {
-          try {
-            const parsed = JSON.parse(localData);
-            await setDoc(doc(db, 'users', currentUser.uid), {
-              journal: parsed,
-              lastUpdated: Date.now()
-            });
-            setJournal(parsed);
-          } catch (e) {}
-        }
+        // Initialize state and decks
+        setState({
+          ...INITIAL_STATE,
+          playerDeck: createPlayerDeck(),
+          refereeDeck: createRefereeDeck()
+        });
       }
-    } catch (e) {
-      console.error("Failed to load journal from cloud:", e);
-    } finally {
-      setCloudSyncing(false);
-    }
-  };
-
-  // --- Decks Shuffling ---
-  const resetDecks = (allCards: TarotCard[]) => {
-    // Player Deck: Minor Arcana + The Fool
-    const playerBase = allCards.filter(c => c.suit !== 'Major' || c.value === 0);
-    // Referee Deck: Major Arcana I-XXI
-    const refereeBase = allCards.filter(c => c.suit === 'Major' && c.value > 0);
-
-    const shuffledPlayer = shuffle(playerBase);
-    const shuffledReferee = shuffle(refereeBase);
-
-    setPlayerDeck(shuffledPlayer);
-    setRefereeDeck(shuffledReferee);
-  };
-
-  const shuffle = (array: TarotCard[]): TarotCard[] => {
-    const copy = [...array];
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [copy[i], copy[j]] = [copy[j], copy[i]];
-    }
-    return copy;
-  };
-
-  const triggerReshuffle = () => {
-    resetDecks(deck);
-    setShowFoolModal(false);
-    
-    const newEntry: JournalEntry = {
-      id: `system_${Date.now()}`,
-      timestamp: Date.now(),
-      type: 'system',
-      cardName: '덱 셔플 완료',
-      cardId: 'shuffle',
-      imageUrl: '',
-      interpretation: '모든 카드가 안전하게 회수되어 다시 셔플되었습니다.',
-      note: '광대(The Fool)가 드로우되어 플레이어 및 레프리 덱을 초기화했습니다.'
+      setLoading(false);
     };
-    saveJournal([newEntry, ...journal]);
-  };
-
-  // --- Draw Mechanisms ---
-  const drawPlayerCard = () => {
-    if (playerDeck.length === 0) {
-      alert("플레이어 덱이 비어 있습니다. 덱을 회수하여 다시 셔플하세요!");
-      return;
-    }
-
-    setIsActionSubjectView(false);
-    const copy = [...playerDeck];
-    const card = copy.shift()!;
-    setPlayerDeck(copy);
-
-    const isReversed = allowReversed && Math.random() < 0.5;
-    setActiveCard(card);
-    setActiveCardReversed(isReversed);
-
-    let interpretation = `스탯 분야: ${card.statAssociation || '없음'}. `;
-    if (card.actionKeyword) {
-      interpretation += `Gloam 액션 키워드: "${card.actionKeyword}"`;
-    }
-
-    const newEntry: JournalEntry = {
-      id: `draw_${Date.now()}`,
-      timestamp: Date.now(),
-      type: 'draw_player',
-      cardName: card.name,
-      cardId: card.id,
-      imageUrl: card.imageUrl,
-      isReversed,
-      interpretation,
-      note: ''
-    };
-
-    saveJournal([newEntry, ...journal]);
-
-    if (card.suit === 'Major' && card.value === 0) {
-      setTimeout(() => {
-        setShowFoolModal(true);
-      }, 700);
-    }
-  };
-
-  const drawRefereeCard = () => {
-    if (refereeDeck.length === 0) {
-      alert("레프리 덱이 비어 있습니다. 덱을 회수하여 다시 셔플하세요!");
-      return;
-    }
-
-    setIsActionSubjectView(false);
-    const copy = [...refereeDeck];
-    const card = copy.shift()!;
-    setRefereeDeck(copy);
-
-    const isReversed = allowReversed && Math.random() < 0.5;
-    setActiveCard(card);
-    setActiveCardReversed(isReversed);
-
-    const keyword = isReversed ? card.subjectKeywordReversed : card.subjectKeywordUpright;
-    const interpretation = `Gloam 레프리 대상 키워드: "${keyword}" (${isReversed ? '역방향' : '정방향'})`;
-
-    const newEntry: JournalEntry = {
-      id: `draw_${Date.now()}`,
-      timestamp: Date.now(),
-      type: 'draw_referee',
-      cardName: card.name,
-      cardId: card.id,
-      imageUrl: card.imageUrl,
-      isReversed,
-      interpretation,
-      note: ''
-    };
-
-    saveJournal([newEntry, ...journal]);
-  };
-
-  // Yes/No Oracle
-  const rollYesNoOracle = () => {
-    if (playerDeck.length === 0) {
-      alert("플레이어 덱이 비어 있습니다. 덱을 회수하여 다시 셔플하세요!");
-      return;
-    }
-
-    setIsActionSubjectView(false);
-    const copy = [...playerDeck];
-    const card = copy.shift()!;
-    setPlayerDeck(copy);
-
-    const isReversed = allowReversed && Math.random() < 0.5;
-    setActiveCard(card);
-    setActiveCardReversed(isReversed);
-
-    const answer = getYesNoOutcome(card);
-    const interpretation = `Yes/No 오라클: [${answer.outcome}] - ${answer.note}`;
-
-    const newEntry: JournalEntry = {
-      id: `oracle_yn_${Date.now()}`,
-      timestamp: Date.now(),
-      type: 'oracle_yesno',
-      cardName: card.name,
-      cardId: card.id,
-      imageUrl: card.imageUrl,
-      isReversed,
-      interpretation,
-      note: ''
-    };
-
-    saveJournal([newEntry, ...journal]);
-
-    if (card.suit === 'Major' && card.value === 0) {
-      setTimeout(() => {
-        setShowFoolModal(true);
-      }, 700);
-    }
-  };
-
-  // Amount Oracle
-  const rollAmountOracle = () => {
-    if (playerDeck.length === 0) {
-      alert("플레이어 덱이 비어 있습니다. 덱을 회수하여 다시 셔플하세요!");
-      return;
-    }
-
-    setIsActionSubjectView(false);
-    const copy = [...playerDeck];
-    const card = copy.shift()!;
-    setPlayerDeck(copy);
-
-    const isReversed = allowReversed && Math.random() < 0.5;
-    setActiveCard(card);
-    setActiveCardReversed(isReversed);
-
-    const amount = getAmountOutcome(card);
-    const interpretation = `수량 오라클: [${amount.outcome}] - ${amount.note}`;
-
-    const newEntry: JournalEntry = {
-      id: `oracle_amt_${Date.now()}`,
-      timestamp: Date.now(),
-      type: 'oracle_amount',
-      cardName: card.name,
-      cardId: card.id,
-      imageUrl: card.imageUrl,
-      isReversed,
-      interpretation,
-      note: ''
-    };
-
-    saveJournal([newEntry, ...journal]);
-
-    if (card.suit === 'Major' && card.value === 0) {
-      setTimeout(() => {
-        setShowFoolModal(true);
-      }, 700);
-    }
-  };
-
-  // Action-Subject Combined Oracle
-  const rollActionSubjectOracle = () => {
-    if (playerDeck.length === 0) {
-      alert("플레이어 덱이 비어 있습니다. 덱을 회수하여 다시 셔플하세요!");
-      return;
-    }
-    if (refereeDeck.length === 0) {
-      alert("레프리 덱이 비어 있습니다. 덱을 회수하여 다시 셔플하세요!");
-      return;
-    }
-
-    setIsActionSubjectView(true);
-
-    const playerCopy = [...playerDeck];
-    const actCard = playerCopy.shift()!;
-    setPlayerDeck(playerCopy);
-    const actReversed = allowReversed && Math.random() < 0.5;
-
-    const refCopy = [...refereeDeck];
-    const subCard = refCopy.shift()!;
-    setRefereeDeck(refCopy);
-    const subReversed = allowReversed && Math.random() < 0.5;
-
-    setActiveCard(actCard);
-    setActiveCardReversed(actReversed);
-    setActiveCard2(subCard);
-    setActiveCardReversed2(subReversed);
-
-    const actionWord = actCard.actionKeyword || "혼돈 (Chaos)";
-    const subjectWord = subReversed ? subCard.subjectKeywordReversed : subCard.subjectKeywordUpright;
-    
-    const interpretation = `행동-대상 오라클 결과: "${actionWord} / ${subjectWord}"`;
-
-    const newEntry: JournalEntry = {
-      id: `oracle_as_${Date.now()}`,
-      timestamp: Date.now(),
-      type: 'oracle_action_subject',
-      cardName: actCard.name,
-      cardId: actCard.id,
-      imageUrl: actCard.imageUrl,
-      isReversed: actReversed,
-      cardName2: subCard.name,
-      cardId2: subCard.id,
-      imageUrl2: subCard.imageUrl,
-      isReversed2: subReversed,
-      interpretation,
-      note: ''
-    };
-
-    saveJournal([newEntry, ...journal]);
-
-    if (actCard.suit === 'Major' && actCard.value === 0) {
-      setTimeout(() => {
-        setShowFoolModal(true);
-      }, 700);
-    }
-  };
-
-  // Arcane Magick Spell Formulator (Page 38)
-  const rollArcaneMagickSpell = () => {
-    if (playerDeck.length === 0) {
-      alert("플레이어 덱이 비어 있습니다. 덱을 회수하여 다시 셔플하세요!");
-      return;
-    }
-    if (refereeDeck.length === 0) {
-      alert("레프리 덱이 비어 있습니다. 덱을 회수하여 다시 셔플하세요!");
-      return;
-    }
-
-    setIsActionSubjectView(true);
-
-    const playerCopy = [...playerDeck];
-    const verbCard = playerCopy.shift()!;
-    setPlayerDeck(playerCopy);
-    const verbReversed = allowReversed && Math.random() < 0.5;
-
-    const refCopy = [...refereeDeck];
-    const nounCard = refCopy.shift()!;
-    setRefereeDeck(refCopy);
-    const nounReversed = allowReversed && Math.random() < 0.5;
-
-    setActiveCard(verbCard);
-    setActiveCardReversed(verbReversed);
-    setActiveCard2(nounCard);
-    setActiveCardReversed2(nounReversed);
-
-    const verb = ArcaneMagickVerbs[verbCard.suit]?.[verbCard.value] || "혼돈";
-    const nounData = ArcaneMagickNouns[nounCard.value] || { upright: "혼돈", reversed: "혼돈" };
-    const noun = nounReversed ? nounData.reversed : nounData.upright;
-
-    const interpretation = `비전 마법 주문 구성 완료: "${verb} ${noun}" (동사: ${verb} [${verbCard.name}로부터] | 명사: ${noun} [${nounCard.name}${nounReversed ? ' - 역방향' : ''}로부터]). 시전하려면 최소 1 Resolve가 필요합니다. 피해량: 소비한 Resolve당 1부상 (전투 테스트 성공 시).`;
-
-    const newEntry: JournalEntry = {
-      id: `magick_${Date.now()}`,
-      timestamp: Date.now(),
-      type: 'oracle_action_subject',
-      cardName: verbCard.name,
-      cardId: verbCard.id,
-      imageUrl: verbCard.imageUrl,
-      isReversed: verbReversed,
-      cardName2: nounCard.name,
-      cardId2: nounCard.id,
-      imageUrl2: nounCard.imageUrl,
-      isReversed2: nounReversed,
-      interpretation,
-      note: ''
-    };
-
-    saveJournal([newEntry, ...journal]);
-
-    if (verbCard.suit === 'Major' && verbCard.value === 0) {
-      setTimeout(() => {
-        setShowFoolModal(true);
-      }, 700);
-    }
-  };
-
-  // Folk Road traveler generator (Page 53)
-  const rollFolkTraveler = () => {
-    if (refereeDeck.length === 0) {
-      alert("레프리 덱이 비어 있습니다. 덱을 회수하여 다시 셔플하세요!");
-      return;
-    }
-
-    setIsActionSubjectView(false);
-
-    const refCopy = [...refereeDeck];
-    const card = refCopy.shift()!;
-    setRefereeDeck(refCopy);
-
-    const isReversed = allowReversed && Math.random() < 0.5;
-    setActiveCard(card);
-    setActiveCardReversed(isReversed);
-
-    if (card.value === 0) {
-      const interpretation = `길 위의 조우: 변신하며 형체를 알 수 없는 채 연기처럼 사라지는 신비로운 광대 나그네. (광대 카드가 뽑혀 즉시 모든 덱을 회수하여 다시 섞어야 합니다!)`;
-      const newEntry: JournalEntry = {
-        id: `traveler_${Date.now()}`,
-        timestamp: Date.now(),
-        type: 'draw_referee',
-        cardName: card.name,
-        cardId: card.id,
-        imageUrl: card.imageUrl,
-        isReversed,
-        interpretation,
-        note: '수동 셔플 필요.'
-      };
-      saveJournal([newEntry, ...journal]);
-      setTimeout(() => {
-        setShowFoolModal(true);
-      }, 700);
-      return;
-    }
-
-    const npc = FolkNPCTable[card.value];
-    if (npc) {
-      const isFemale = Math.random() < 0.5;
-      const name = isFemale ? npc.femaleName : npc.maleName;
-      const role = npc.occupation;
-      const trait = npc.personality;
-      
-      const interpretation = `길 위의 나그네: ${role}인 ${name}. 개인 성격/별자리 사인: ${trait} (${isReversed ? '역방향: 적대적이거나 방어적이며 상반된 행동 양식' : '정방향: 일반적인 성향'})`;
-
-      const newEntry: JournalEntry = {
-        id: `traveler_${Date.now()}`,
-        timestamp: Date.now(),
-        type: 'draw_referee',
-        cardName: card.name,
-        cardId: card.id,
-        imageUrl: card.imageUrl,
-        isReversed,
-        interpretation,
-        note: ''
-      };
-      saveJournal([newEntry, ...journal]);
-    }
-  };
-
-  // Card browser selection
-  const selectCardFromBrowser = (card: TarotCard) => {
-    setIsActionSubjectView(false);
-    setActiveCard(card);
-    setActiveCardReversed(false); // Browser defaults to upright
-
-    const description = card.suit === 'Major' 
-      ? `메이저 대상 키워드: "${card.subjectKeywordUpright}" (정방향), "${card.subjectKeywordReversed}" (역방향).`
-      : `마이너 행동 키워드: "${card.actionKeyword}". 스탯 연관성: ${card.statAssociation}`;
-
-    const newEntry: JournalEntry = {
-      id: `select_${Date.now()}`,
-      timestamp: Date.now(),
-      type: 'select',
-      cardName: card.name,
-      cardId: card.id,
-      imageUrl: card.imageUrl,
-      isReversed: false,
-      interpretation: `카탈로그 탐색: ${description}`,
-      note: ''
-    };
-
-    saveJournal([newEntry, ...journal]);
-  };
-
-  // --- Offline Manual Draw Log Actions ---
-  const handleManualPlayerLog = () => {
-    if (!activeCard) return;
-    setIsActionSubjectView(false);
-    setActiveCardReversed(manualReversed);
-
-    let interpretation = `(오프라인 수동 드로우) 스탯 연관성: ${activeCard.statAssociation || '없음'}. `;
-    if (activeCard.actionKeyword) {
-      interpretation += `Gloam 액션 키워드: "${activeCard.actionKeyword}"`;
-    }
-
-    const newEntry: JournalEntry = {
-      id: `manual_pl_${Date.now()}`,
-      timestamp: Date.now(),
-      type: 'draw_player',
-      cardName: activeCard.name,
-      cardId: activeCard.id,
-      imageUrl: activeCard.imageUrl,
-      isReversed: manualReversed,
-      interpretation,
-      note: '실물 타로 카드로 드로우하여 기록함.'
-    };
-
-    saveJournal([newEntry, ...journal]);
-    alert(`${activeCard.name}을(를) 플레이어 드로우로 기록했습니다.`);
-
-    if (activeCard.suit === 'Major' && activeCard.value === 0) {
-      setShowFoolModal(true);
-    }
-  };
-
-  const handleManualRefereeLog = () => {
-    if (!activeCard) return;
-    setIsActionSubjectView(false);
-    setActiveCardReversed(manualReversed);
-
-    const keyword = manualReversed ? activeCard.subjectKeywordReversed : activeCard.subjectKeywordUpright;
-    const interpretation = `(오프라인 수동 드로우) Gloam 레프리 대상 키워드: "${keyword}" (${manualReversed ? '역방향' : '정방향'})`;
-
-    const newEntry: JournalEntry = {
-      id: `manual_ref_${Date.now()}`,
-      timestamp: Date.now(),
-      type: 'draw_referee',
-      cardName: activeCard.name,
-      cardId: activeCard.id,
-      imageUrl: activeCard.imageUrl,
-      isReversed: manualReversed,
-      interpretation,
-      note: '실물 타로 카드로 드로우하여 기록함.'
-    };
-
-    saveJournal([newEntry, ...journal]);
-    alert(`${activeCard.name}을(를) 레프리 드로우로 기록했습니다.`);
-  };
-
-  const handleManualYesNoLog = () => {
-    if (!activeCard) return;
-    setIsActionSubjectView(false);
-    setActiveCardReversed(manualReversed);
-
-    const answer = getYesNoOutcome(activeCard);
-    const interpretation = `(오프라인 수동 드로우) Yes/No 오라클: [${answer.outcome}] - ${answer.note}`;
-
-    const newEntry: JournalEntry = {
-      id: `manual_yn_${Date.now()}`,
-      timestamp: Date.now(),
-      type: 'oracle_yesno',
-      cardName: activeCard.name,
-      cardId: activeCard.id,
-      imageUrl: activeCard.imageUrl,
-      isReversed: manualReversed,
-      interpretation,
-      note: '실물 타로 카드로 드로우하여 기록함.'
-    };
-
-    saveJournal([newEntry, ...journal]);
-    alert(`${activeCard.name}을(를) Yes/No 오라클 드로우로 평가하여 기록했습니다.`);
-
-    if (activeCard.suit === 'Major' && activeCard.value === 0) {
-      setShowFoolModal(true);
-    }
-  };
-
-  const handleManualAmountLog = () => {
-    if (!activeCard) return;
-    setIsActionSubjectView(false);
-    setActiveCardReversed(manualReversed);
-
-    const amount = getAmountOutcome(activeCard);
-    const interpretation = `(오프라인 수동 드로우) 수량 오라클: [${amount.outcome}] - ${amount.note}`;
-
-    const newEntry: JournalEntry = {
-      id: `manual_amt_${Date.now()}`,
-      timestamp: Date.now(),
-      type: 'oracle_amount',
-      cardName: activeCard.name,
-      cardId: activeCard.id,
-      imageUrl: activeCard.imageUrl,
-      isReversed: manualReversed,
-      interpretation,
-      note: '실물 타로 카드로 드로우하여 기록함.'
-    };
-
-    saveJournal([newEntry, ...journal]);
-    alert(`${activeCard.name}을(를) 수량 오라클 드로우로 평가하여 기록했습니다.`);
-
-    if (activeCard.suit === 'Major' && activeCard.value === 0) {
-      setShowFoolModal(true);
-    }
-  };
-
-  // --- Journal Helper Functions ---
-  const updateNote = (id: string, text: string) => {
-    const updated = journal.map(entry => {
-      if (entry.id === id) {
-        return { ...entry, note: text };
-      }
-      return entry;
+    loadState();
+  }, []);
+
+  // Safe State Updater
+  const updateState = (updater: (prev: GameState) => GameState) => {
+    setState(prev => {
+      if (!prev) return prev;
+      const next = updater(prev);
+      store.set("gloam_rpg_state", next);
+      return next;
     });
-    saveJournal(updated);
   };
 
-  const deleteEntry = (id: string) => {
-    if (confirm("이 모험 기록을 일지에서 삭제하시겠습니까?")) {
-      const updated = journal.filter(entry => entry.id !== id);
-      saveJournal(updated);
-    }
-  };
-
-  const clearJournal = () => {
-    if (confirm("정말로 모든 세션 모험 일지를 초기화하시겠습니까? 복구할 수 없습니다.")) {
-      saveJournal([]);
-    }
-  };
-
-  const exportJournal = () => {
-    if (journal.length === 0) {
-      alert("출력할 모험 일지 내용이 비어 있습니다!");
-      return;
-    }
-
-    let output = `GLOAM RPG 타로 세션 모험 일지 (Tarot Adventure Journal)\n`;
-    output += `출력 일시: ${new Date().toLocaleString()}\n`;
-    output += `==============================================\n\n`;
-
-    journal.forEach((entry, index) => {
-      const dateStr = new Date(entry.timestamp).toLocaleTimeString();
-      const num = journal.length - index;
-      
-      output += `[#${num}] ${dateStr} - ${entry.cardName}`;
-      if (entry.isReversed) output += ` (역방향)`;
-      if (entry.cardName2) {
-        output += ` + ${entry.cardName2}`;
-        if (entry.isReversed2) output += ` (역방향)`;
-      }
-      output += `\n`;
-      output += `결과/해석: ${entry.interpretation}\n`;
-      if (entry.note.trim()) {
-        output += `작성한 일지 기록:\n   ${entry.note.replace(/\n/g, '\n   ')}\n`;
-      }
-      output += `----------------------------------------------\n\n`;
-    });
-
-    const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `gloam-journal-${new Date().toISOString().slice(0, 10)}.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // --- Auth & Settings Functions ---
-  const handleGoogleLogin = async () => {
-    if (!isFirebaseConfigured || !auth) {
-      alert("Firebase 설정이 완료되지 않았습니다. 우측 상단 기어 모양 아이콘을 클릭하여 Firebase 정보를 등록하십시오.");
-      setShowSettingsModal(true);
-      return;
-    }
+  // Google Login / Logout
+  const handleSignIn = async () => {
+    if (!auth || !googleProvider) return;
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (e) {
-      console.error(e);
-      alert("구글 로그인 처리에 실패했습니다. Firebase Authorized Domains 설정을 다시 확인하십시오.");
+    } catch (e: any) {
+      alert("로그인 중 에러가 발생했습니다: " + e.message);
     }
   };
 
-  const handleLogout = async () => {
+  const handleSignOut = async () => {
     if (!auth) return;
-    try {
-      await signOut(auth);
-      setUser(null);
-    } catch (e) {
-      console.error(e);
+    if (confirm("로그아웃 하시겠습니까?")) {
+      try {
+        await signOut(auth);
+        const loaded = await store.load("gloam_rpg_state", null);
+        if (loaded) {
+          setState(loaded);
+        } else {
+          setState({
+            ...INITIAL_STATE,
+            playerDeck: createPlayerDeck(),
+            refereeDeck: createRefereeDeck()
+          });
+        }
+      } catch (e: any) {
+        console.error("Sign-out error:", e);
+      }
     }
   };
 
-  const handleSettingsSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    saveFirebaseConfig(settingsForm);
-    alert("설정 저장이 완료되었습니다. 구동 환경 갱신을 위해 페이지가 새로고침됩니다.");
-    window.location.reload();
-  };
-
-  const handleSettingsReset = () => {
-    if (confirm("Firebase 설정값을 기본값으로 되돌리시겠습니까? 웹 브라우저 내 저장 내역이 정리됩니다.")) {
-      saveFirebaseConfig(null);
-      window.location.reload();
+  const handleReset = () => {
+    if (window.confirm("⚠️ 경고: 정말 캐릭터 정보 및 지도를 포함한 모든 진행상황을 초기화하고 새로 시작하겠습니까?")) {
+      updateState(() => ({
+        ...INITIAL_STATE,
+        playerDeck: createPlayerDeck(),
+        refereeDeck: createRefereeDeck(),
+        hand: [],
+        journals: [{ id: "1", text: "새로운 글롬 탐험을 시작한다. 황혼의 맹세를 되새기며.", date: new Date().toLocaleString() }]
+      }));
+      setActiveTab("dashboard");
     }
   };
 
-  // Filtering browser cards
-  const filteredCards = deck.filter((card) => {
-    if (browserFilter === 'All') return true;
-    if (browserFilter === 'Major') return card.suit === 'Major';
-    return card.suit === browserFilter;
-  });
+  // Calculate dynamic character parameters based on wounds
+  const getDynamicAttributes = (char: Character) => {
+    // Torso wound = -3 penalty to all tests
+    const testPenalty = char.wounds.torso ? -3 : 0;
+    
+    // Legs wound = -2 Speed per leg. Base speed is Coins stat.
+    const legWoundsCount = (char.wounds.lLeg ? 1 : 0) + (char.wounds.rLeg ? 1 : 0);
+    const speed = Math.max(0, char.stats.coins - 2 * legWoundsCount);
+
+    // Max carry capacity is 10 + Coins (up to Coins = 4, capped at 14)
+    const carryCapacity = Math.min(14, 10 + char.stats.coins);
+
+    // Vocation mapping based on stat value 4
+    let detectedVocation = char.vocation;
+    if (char.stats.cups === 4) detectedVocation = "전령관 (Herald)";
+    else if (char.stats.swords === 4) detectedVocation = "방랑기사 (Knight-Errant)";
+    else if (char.stats.wands === 4) detectedVocation = "비술사 (Mystic)";
+    else if (char.stats.coins === 4) detectedVocation = "소매치기 (Cutpurse)";
+
+    return { testPenalty, speed, carryCapacity, detectedVocation };
+  };
+
+  if (loading || !state) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-spinner">🔮</div>
+        <h2>GLOAM COMPANION LOADING...</h2>
+        <p>황혼의 카드들을 정비하는 중...</p>
+      </div>
+    );
+  }
+
+  const { testPenalty, speed, carryCapacity, detectedVocation } = getDynamicAttributes(state.character);
+
+  // =================================================================
+  // CORE FUNCTIONS
+  // =================================================================
+  const drawCardForPlayer = (count: number = 1) => {
+    updateState(s => {
+      let deck = [...s.playerDeck];
+      let discard = [...s.playerDiscard];
+      let hand = [...s.hand];
+
+      for (let i = 0; i < count; i++) {
+        if (deck.length === 0) {
+          if (discard.length === 0) break; // no cards at all
+          deck = shuffle(discard);
+          discard = [];
+        }
+        const card = deck.shift();
+        if (card) {
+          // 25% chance of being reversed
+          const isReversed = Math.random() < 0.25;
+          hand.push({ ...card, reversed: isReversed });
+        }
+      }
+
+      return {
+        ...s,
+        playerDeck: deck,
+        playerDiscard: discard,
+        hand
+      };
+    });
+  };
+
+  const playCardFromHand = (idx: number, purpose: string) => {
+    updateState(s => {
+      const card = s.hand[idx];
+      const nextHand = s.hand.filter((_, i) => i !== idx);
+      const nextDiscard = [...s.playerDiscard, card];
+
+      return {
+        ...s,
+        hand: nextHand,
+        playerDiscard: nextDiscard,
+        journals: [
+          {
+            id: Date.now().toString(),
+            text: `[카드 사용] 손패에서 ${getCardDisplayName(card)} 카드를 '${purpose}' 목적을 위해 제출했습니다.`,
+            date: new Date().toLocaleString()
+          },
+          ...s.journals
+        ]
+      };
+    });
+  };
+
+  const drawRefereeCard = (onDraw: (card: Card) => void) => {
+    let cardDrawn: Card | null = null;
+    updateState(s => {
+      let deck = [...s.refereeDeck];
+      let discard = [...s.refereeDiscard];
+
+      if (deck.length === 0) {
+        if (discard.length === 0) return s; // empty
+        deck = shuffle(discard);
+        discard = [];
+      }
+      const c = deck.shift();
+      if (c) {
+        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
+        discard.push(cardDrawn);
+      }
+
+      return {
+        ...s,
+        refereeDeck: deck,
+        refereeDiscard: discard
+      };
+    });
+    if (cardDrawn) {
+      onDraw(cardDrawn);
+    }
+  };
+
+  const reshuffleAllDecks = () => {
+    updateState(s => {
+      const fullPlayerDeck = createPlayerDeck();
+      const fullRefereeDeck = createRefereeDeck();
+      return {
+        ...s,
+        playerDeck: fullPlayerDeck,
+        playerDiscard: [],
+        refereeDeck: fullRefereeDeck,
+        refereeDiscard: [],
+        hand: []
+      };
+    });
+    alert("🔄 광대(The Fool)가 소집되었습니다! 플레이어 덱과 레프리 덱의 버린 카드 더미를 모두 모아 새로 섞어 손패를 초기화했습니다.");
+  };
+
+  // Yes/No oracle logic
+  const rollYesNoOracle = () => {
+    // Draw card from player deck
+    let cardDrawn: Card | null = null;
+    updateState(s => {
+      let deck = [...s.playerDeck];
+      let discard = [...s.playerDiscard];
+      if (deck.length === 0) {
+        deck = shuffle(discard);
+        discard = [];
+      }
+      const c = deck.shift();
+      if (c) {
+        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
+        discard.push(c);
+      }
+      return { ...s, playerDeck: deck, playerDiscard: discard };
+    });
+
+    if (cardDrawn) {
+      const card = cardDrawn as Card;
+      setDrawnOracleCard(card);
+      
+      if (card.type === "major" && card.card === "0") {
+        setOracleYesNo("광대(The Fool) 카드입니다! 즉시 다시 섞기(Reshuffle)를 가동하십시오.");
+        return;
+      }
+
+      // Logic
+      // Ace = extreme
+      // 3,5,7,9 = No
+      // 2,4,6,8,10 = Yes
+      // Page/Knight = No, but
+      // Queen/King = Yes, but
+      const val = card.card;
+      if (val === "A") {
+        setOracleYesNo("극단적인 운명 (Extreme)! [1장을 즉시 새로 뽑아 상황을 더 깊게 전개해 보십시오.]");
+      } else if (["3", "5", "7", "9"].includes(val)) {
+        setOracleYesNo("아니오 (No)");
+      } else if (["2", "4", "6", "8", "10"].includes(val)) {
+        setOracleYesNo("예 (Yes)");
+      } else if (["Page", "Knight"].includes(val)) {
+        setOracleYesNo("아니오, 그러나... (No, but...)");
+      } else if (["Queen", "King"].includes(val)) {
+        setOracleYesNo("예, 하지만... (Yes, but...)");
+      } else {
+        setOracleYesNo("알 수 없음");
+      }
+      setOracleAmount(null);
+      setOracleActionSubject(null);
+    }
+  };
+
+  // Amount oracle logic
+  const rollAmountOracle = () => {
+    let cardDrawn: Card | null = null;
+    updateState(s => {
+      let deck = [...s.playerDeck];
+      let discard = [...s.playerDiscard];
+      if (deck.length === 0) {
+        deck = shuffle(discard);
+        discard = [];
+      }
+      const c = deck.shift();
+      if (c) {
+        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
+        discard.push(c);
+      }
+      return { ...s, playerDeck: deck, playerDiscard: discard };
+    });
+
+    if (cardDrawn) {
+      const card = cardDrawn as Card;
+      setDrawnOracleCard(card);
+      
+      // 2-5: None
+      // 6-10: Average
+      // Court: Considerable
+      // Ace: Excessive
+      const val = card.card;
+      if (val === "A") {
+        setOracleAmount("도를 지나치게 압도적인 스케일 (Excessive!)");
+      } else if (["2", "3", "4", "5"].includes(val)) {
+        setOracleAmount("미미함 / 거의 없음 (None)");
+      } else if (["6", "7", "8", "9", "10"].includes(val)) {
+        setOracleAmount("무난하고 평범한 정도 (Average)");
+      } else if (["Page", "Knight", "Queen", "King"].includes(val)) {
+        setOracleAmount("상당히 막대함 (Considerable)");
+      } else {
+        setOracleAmount("보통 수준");
+      }
+      setOracleYesNo(null);
+      setOracleActionSubject(null);
+    }
+  };
+
+  // Action-Subject Oracle
+  const rollActionSubjectOracle = () => {
+    let playerCard: Card | null = null;
+    let refereeCard: Card | null = null;
+
+    updateState(s => {
+      let pDeck = [...s.playerDeck];
+      let pDiscard = [...s.playerDiscard];
+      let rDeck = [...s.refereeDeck];
+      let rDiscard = [...s.refereeDiscard];
+
+      if (pDeck.length === 0) {
+        pDeck = shuffle(pDiscard);
+        pDiscard = [];
+      }
+      const c1 = pDeck.shift();
+      if (c1) {
+        playerCard = c1;
+        pDiscard.push(c1);
+      }
+
+      if (rDeck.length === 0) {
+        rDeck = shuffle(rDiscard);
+        rDiscard = [];
+      }
+      const c2 = rDeck.shift();
+      if (c2) {
+        refereeCard = { ...c2, reversed: Math.random() < 0.25 };
+        rDiscard.push(refereeCard);
+      }
+
+      return {
+        ...s,
+        playerDeck: pDeck,
+        playerDiscard: pDiscard,
+        refereeDeck: rDeck,
+        refereeDiscard: rDiscard
+      };
+    });
+
+    if (playerCard && refereeCard) {
+      const card1 = playerCard as Card;
+      const card2 = refereeCard as Card;
+
+      // Extract Action
+      let actionText = "임의의 조치";
+      if (card1.type === "minor" && card1.suit) {
+        const val = card1.card;
+        const suitMap = ORACLE_SUITS[card1.suit === "coins" ? "Coins" : card1.suit === "wands" ? "Wands" : card1.suit === "swords" ? "Swords" : "Cups"];
+        if (suitMap && (suitMap as any)[val]) {
+          actionText = (suitMap as any)[val];
+        }
+      }
+
+      // Extract Subject
+      let subjectText = "미지의 대상";
+      const majorInfo = ORACLE_SUBJECTS[card2.card];
+      if (majorInfo) {
+        subjectText = card2.reversed ? `${majorInfo.name}의 역방향 (${majorInfo.reversed})` : `${majorInfo.name} (${majorInfo.meaning})`;
+      }
+
+      setOracleActionSubject({
+        action: actionText,
+        subject: subjectText,
+        card1,
+        card2
+      });
+      setDrawnOracleCard(null);
+      setOracleYesNo(null);
+      setOracleAmount(null);
+    }
+  };
+
+  // Add Item to Journal
+  const addJournalEntry = (textOverride?: string) => {
+    const entryText = textOverride || newJournalText;
+    if (!entryText.trim()) return;
+
+    updateState(s => ({
+      ...s,
+      journals: [
+        {
+          id: Date.now().toString(),
+          text: entryText,
+          date: new Date().toLocaleString()
+        },
+        ...s.journals
+      ]
+    }));
+    if (!textOverride) setNewJournalText("");
+  };
+
+  // Buy item coin test logic
+  const handleStartBuyTest = (item: { name: string; nameKo: string; coinsMod: string; swordsReq?: number }) => {
+    setBuyCatalogItem(item);
+    setBuyTestResult(null);
+  };
+
+  const handleResolveBuyTest = () => {
+    if (!buyCatalogItem) return;
+
+    let cardDrawn: Card | null = null;
+    updateState(s => {
+      let deck = [...s.playerDeck];
+      let discard = [...s.playerDiscard];
+      if (deck.length === 0) {
+        deck = shuffle(discard);
+        discard = [];
+      }
+      const c = deck.shift();
+      if (c) {
+        cardDrawn = c;
+        discard.push(c);
+      }
+      return { ...s, playerDeck: deck, playerDiscard: discard };
+    });
+
+    if (cardDrawn) {
+      const card = cardDrawn as Card;
+      let cardVal: number;
+      const val = card.card;
+      if (val === "A") cardVal = 1;
+      else if (val === "Page") cardVal = 11;
+      else if (val === "Knight") cardVal = 12;
+      else if (val === "Queen") cardVal = 13;
+      else if (val === "King") cardVal = 14;
+      else cardVal = parseInt(val) || 0;
+
+      const mod = parseInt(buyCatalogItem.coinsMod) || 0;
+      const coinsStat = state.character.stats.coins;
+      const total = cardVal + coinsStat + mod + testPenalty;
+      const success = total >= 14;
+
+      setBuyTestResult({
+        success,
+        total,
+        card,
+        statUsed: coinsStat
+      });
+
+      // If successful, add to inventory automatically
+      if (success) {
+        updateState(s => {
+          if (s.character.inventory.length >= carryCapacity) {
+            alert(`성공하여 물건을 구매했지만, 소지품 공간(${carryCapacity}슬롯)이 부족하여 바닥에 보관합니다!`);
+            return s;
+          }
+          return {
+            ...s,
+            character: {
+              ...s.character,
+              inventory: [...s.character.inventory, `${buyCatalogItem.nameKo} (${buyCatalogItem.name})`]
+            }
+          };
+        });
+      }
+    }
+  };
+
+  const renderStatWreath = (statKey: "cups" | "swords" | "coins" | "wands", label: string, desc: string, icon: string) => {
+    const currentVal = (state.character.stats as any)[statKey];
+    return (
+      <div key={statKey} className="wreath-card">
+        <div className="wreath-svg-container">
+          <svg viewBox="0 0 100 100" style={{ width: "100%", height: "100%" }}>
+            <circle cx="50" cy="50" r="42" fill="none" stroke="var(--border-color)" strokeWidth="1" strokeDasharray="3 3"/>
+            <path d="M 50 8 C 30 8 8 30 8 50 C 8 70 30 92 50 92" fill="none" stroke="var(--border-color)" strokeWidth="1.5"/>
+            <path d="M 50 8 C 70 8 92 30 92 50 C 92 70 70 92 50 92" fill="none" stroke="var(--border-color)" strokeWidth="1.5"/>
+            
+            <path d="M 50 8 C 47 12 44 14 50 18 C 56 14 53 12 50 8" fill="var(--border-color)"/>
+            <path d="M 23 20 C 20 24 18 26 24 29 C 28 25 26 23 23 20" fill="var(--border-color)"/>
+            <path d="M 8 50 C 12 47 14 44 18 50 C 14 56 12 53 8 50" fill="var(--border-color)"/>
+            <path d="M 23 80 C 26 77 28 75 24 71 C 20 75 21 78 23 80" fill="var(--border-color)"/>
+            <path d="M 77 20 C 80 24 82 26 76 29 C 72 25 74 23 77 20" fill="var(--border-color)"/>
+            <path d="M 92 50 C 88 47 86 44 82 50 C 86 56 88 53 92 50" fill="var(--border-color)"/>
+            <path d="M 77 80 C 74 77 72 75 76 71 C 80 75 79 78 77 80" fill="var(--border-color)"/>
+            
+            {statKey === "cups" && <path d="M 42 42 L 58 42 L 58 46 C 58 52 54 56 50 56 C 46 56 42 52 42 46 Z M 46 56 L 54 56 L 54 62 L 46 62 Z M 40 62 L 60 62 L 60 65 L 40 65 Z" fill="rgba(150, 111, 35, 0.15)" />}
+            {statKey === "swords" && <path d="M 48 30 L 52 30 L 52 58 L 56 58 L 56 61 L 52 61 L 52 68 L 48 68 L 48 61 L 44 61 L 44 58 L 48 58 Z" fill="rgba(150, 111, 35, 0.15)" />}
+            {statKey === "coins" && <path d="M 50 32 C 40 32 32 40 32 50 C 32 60 40 68 50 68 C 60 68 68 60 68 50 C 68 40 60 32 50 32 Z M 50 38 L 54 46 L 62 48 L 56 54 L 58 62 L 50 58 L 42 62 L 44 54 L 38 48 L 46 46 Z" fill="rgba(150, 111, 35, 0.15)" />}
+            {statKey === "wands" && <path d="M 46 30 L 54 30 L 52 65 L 48 65 Z M 44 26 L 56 26 L 56 29 L 44 29 Z" fill="rgba(150, 111, 35, 0.15)" />}
+          </svg>
+          <div className="wreath-value-overlay">{currentVal}</div>
+        </div>
+        <span className="wreath-label">{label} {icon}</span>
+        
+        <div className="wreath-adjusters">
+          <button className="wreath-adjust-btn" onClick={() => updateState(s => {
+            const prevVal = (s.character.stats as any)[statKey];
+            return {
+              ...s,
+              character: {
+                ...s.character,
+                stats: { ...s.character.stats, [statKey]: Math.max(1, prevVal - 1) }
+              }
+            };
+          })}>-</button>
+          <button className="wreath-adjust-btn" onClick={() => updateState(s => {
+            const prevVal = (s.character.stats as any)[statKey];
+            if (prevVal >= 6) return s;
+            if (s.character.xp < 10) {
+              alert("경험치 10 XP가 소모됩니다. 현재 XP가 부족합니다!");
+              return s;
+            }
+            return {
+              ...s,
+              character: {
+                ...s.character,
+                xp: s.character.xp - 10,
+                stats: { ...s.character.stats, [statKey]: prevVal + 1 }
+              }
+            };
+          })}>+</button>
+        </div>
+        <p className="wreath-desc">{desc}</p>
+      </div>
+    );
+  };
 
   return (
     <div className="app-container">
-      {/* 1. Preloader Overlay */}
-      {isPreloading && (
-        <div className="preloader-overlay">
-          <div className="preloader-content">
-            <h2>Gloam 타로 컴패니언</h2>
-            <div className="progress-bar-container">
-              <div
-                className="progress-bar-fill"
-                style={{ width: `${preloadProgress}%` }}
-              ></div>
-            </div>
-            <p>타로 덱을 동조시키는 중... {preloadProgress}%</p>
-            <button
-              className="btn-secondary"
-              style={{ marginTop: '20px' }}
-              onClick={() => setIsPreloading(false)}
-            >
-              사전 로딩 건너뛰기
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 2. Header */}
-      <header className="app-header">
-        <div className="header-title-group">
-          <h1>Gloam</h1>
-          <p>솔로 타로 RPG 오라클 & 기록 컴패니언</p>
+      {/* Gothic Aesthetic Header */}
+      <header className="header-decor">
+        <div className="header-title-container">
+          <h1 className="gothic-title">
+            GLOAM <span className="title-ko-sub">어스름의 동반자</span>
+          </h1>
+          <p className="subtitle">
+            1인 전용 타로카드 RPG 컴패니언 &bull; 한글판 가이드북 수록
+          </p>
         </div>
 
-        <div className="header-actions">
-          {/* Cloud Sync Status Indicator */}
-          {isFirebaseConfigured ? (
+        <div className="auth-bar">
+          {isFirebaseConfigured && auth ? (
             user ? (
-              <div className="user-profile">
-                {user.photoURL && (
-                  <img
-                    src={user.photoURL}
-                    alt={user.displayName || 'User'}
-                    className="user-avatar"
-                  />
-                )}
-                <span className="user-name">{user.displayName || '플레이어'}</span>
-                {cloudSyncing ? (
-                  <Cloud className="animate-pulse text-indigo-400" size={16} />
-                ) : (
-                  <span title="구글 클라우드 동기화 완료"><Check className="text-emerald-400" size={16} /></span>
-                )}
-                <button onClick={handleLogout} className="btn-icon" title="로그아웃">
-                  <LogOut size={16} />
+              <>
+                <span className="auth-badge online">
+                  <span className="dot success"></span>
+                  동기화 ({user.displayName || "플레이어"})
+                </span>
+                <button className="btn-medieval btn-medieval-primary" onClick={async () => {
+                  await store.set("gloam_rpg_state", state);
+                  alert("성공적으로 캐릭터 시트와 모험 지도가 클라우드 서버에 백업되었습니다!");
+                }}>
+                  <Upload size={14} /> 백업
                 </button>
-              </div>
+                <button className="btn-medieval" onClick={handleSignOut}>
+                  <LogOut size={14} /> 로그아웃
+                </button>
+              </>
             ) : (
-              <button onClick={handleGoogleLogin} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <LogIn size={16} /> 구글 계정 연동하기
-              </button>
+              <>
+                <span className="auth-badge offline">
+                  <span className="dot offline"></span>
+                  로컬 저장 중
+                </span>
+                <button className="btn-medieval" onClick={handleSignIn}>
+                  <LogIn size={14} /> 구글 연동
+                </button>
+              </>
             )
           ) : (
-            <div className="flex items-center text-xs text-zinc-500 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-md gap-2" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CloudOff size={14} className="text-zinc-600" />
-              <span>로컬 데이터 모드</span>
-            </div>
+            <span className="auth-badge unconfigured">
+              로컬 임시 모드
+            </span>
           )}
-
-          <button
-            onClick={() => setShowSettingsModal(true)}
-            className="btn-icon"
-            title="Firebase 연동 설정"
-          >
-            <Settings size={18} />
+          <button className="btn-medieval danger" onClick={handleReset}>
+            <RotateCcw size={14} /> 리셋
           </button>
         </div>
       </header>
 
-      {/* 3. Main Dashboard Grid */}
-      <main className="main-grid">
-        {/* Left: Decks & Active Card Board */}
-        <section className="board-column">
-          {/* Decks Panel */}
-          <div className="dashboard-card">
-            <div className="dashboard-card-title">타로 덱 상태</div>
-            <div className="decks-container">
-              <div className="deck-status-box">
-                <div className="deck-label">플레이어 덱</div>
-                <div className="deck-count">{playerDeck.length}</div>
-                <span style={{ fontSize: '10px', color: 'var(--text)' }}>마이너 아르카나 + 광대</span>
+      {/* Primary Tab Navigation */}
+      <nav className="tab-navigation">
+        <button className={`tab-btn ${activeTab === "dashboard" ? "active" : ""}`} onClick={() => setActiveTab("dashboard")}>
+          <BookOpen size={16} /> 황혼 요약
+        </button>
+        <button className={`tab-btn ${activeTab === "character" ? "active" : ""}`} onClick={() => setActiveTab("character")}>
+          <UserIcon size={16} /> 캐릭터 시트
+        </button>
+        <button className={`tab-btn ${activeTab === "oracles" ? "active" : ""}`} onClick={() => setActiveTab("oracles")}>
+          <Sparkles size={16} /> 타로 &amp; 신탁
+        </button>
+        <button className={`tab-btn ${activeTab === "map" ? "active" : ""}`} onClick={() => setActiveTab("map")}>
+          <MapIcon size={16} /> 지도 &amp; 전투
+        </button>
+        <button className={`tab-btn ${activeTab === "journal" ? "active" : ""}`} onClick={() => setActiveTab("journal")}>
+          <Compass size={16} /> 모험 연대기
+        </button>
+        <button className={`tab-btn ${activeTab === "guidebook" ? "active" : ""}`} onClick={() => setActiveTab("guidebook")}>
+          <Book size={16} /> 룰북 (Guide)
+        </button>
+      </nav>
+
+      {/* Main Panel Routing */}
+      <main className="main-content">
+        {activeTab === "dashboard" && (
+          <div className="dashboard-grid">
+            <div className="card-panel gold-border">
+              <h2 className="gothic-sub">글롬(GLOAM) companion에 오신 것을 환영합니다</h2>
+              <p style={{ lineHeight: "1.7", color: "var(--text-muted)" }}>
+                이 웹앱은 타로 카드 기반의 다크 판타지 솔로 저널링 RPG인 <strong>Gloam (v1.02)</strong>을 원활하게 
+                플레이할 수 있도록 설계된 전용 디지털 컴패니언입니다. 룰북 한 장 한 장의 세부 지침과 오라클, 
+                전투 매니저, 인터랙티브 캐릭터 시트를 지원합니다.
+              </p>
+              
+              <div className="alert alert-note" style={{ marginTop: "1rem", border: "1px solid var(--border-color)", padding: "10px", backgroundColor: "var(--bg-panel-light)" }}>
+                <strong>💡 캐릭터 시트 상태 안내:</strong> 현재 캐릭터는 <strong>{state.character.name} ({detectedVocation})</strong>입니다.<br />
+                속도(Speed): <strong>{speed}</strong>, 
+                소지 한도(Backpack): <strong>{carryCapacity}슬롯</strong>, 
+                판정 페널티(Torso): <strong>{testPenalty}</strong>.
               </div>
-              <div className="deck-status-box">
-                <div className="deck-label">레프리 덱</div>
-                <div className="deck-count">{refereeDeck.length}</div>
-                <span style={{ fontSize: '10px', color: 'var(--text)' }}>메이저 아르카나 I-XXI</span>
+
+              <div style={{ marginTop: "1.5rem", display: "flex", gap: "10px" }}>
+                <button className="btn-medieval" onClick={() => setActiveTab("character")}>
+                  시트 열기
+                </button>
+                <button className="btn-medieval" onClick={() => setActiveTab("oracles")}>
+                  타로 드로우
+                </button>
+                <button className="btn-medieval" onClick={() => setActiveTab("guidebook")}>
+                  한글판 가이드북
+                </button>
               </div>
             </div>
 
-            <div className="deck-controls">
-              <button className="btn-primary" onClick={drawPlayerCard}>
-                플레이어 카드 드로우
-              </button>
-              <button className="btn-primary" onClick={drawRefereeCard}>
-                레프리 카드 드로우
-              </button>
-              <button
-                className="btn-secondary reshuffle-btn"
-                onClick={() => {
-                  if (confirm("모든 카드를 수거하고 플레이어/레프리 덱을 즉시 새로 셔플하시겠습니까?")) {
-                    triggerReshuffle();
-                  }
-                }}
-              >
-                <Shuffle size={14} style={{ marginRight: '6px' }} /> 모든 카드 수거 및 다시 셔플
-              </button>
+            <div className="card-panel">
+              <h3 className="gothic-sub">최근 일지 요약</h3>
+              <div className="summary-journals">
+                {state.journals.slice(0, 3).map((j) => (
+                  <div key={j.id} className="summary-journal-item" style={{ borderLeft: "2px solid var(--border-color)", paddingLeft: "10px", marginBottom: "10px" }}>
+                    <span className="date" style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "block" }}>{j.date}</span>
+                    <p style={{ fontSize: "0.9rem" }}>{j.text}</p>
+                  </div>
+                ))}
+                {state.journals.length === 0 && <p className="empty-text">기록된 연대기가 없습니다.</p>}
+                <button className="btn-medieval text-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--color-gold)", padding: 0, marginTop: "10px" }} onClick={() => setActiveTab("journal")}>
+                  전체 기록 보기 &rarr;
+                </button>
+              </div>
             </div>
-
-            <label className="toggle-option">
-              <input
-                type="checkbox"
-                checked={allowReversed}
-                onChange={(e) => setAllowReversed(e.target.checked)}
-              />
-              역방향 (Reversed / 거꾸로 나온 카드) 사용 허용
-            </label>
           </div>
+        )}
 
-          {/* Active Card Board View */}
-          <div className="dashboard-card active-card-display">
-            <div className="dashboard-card-title" style={{ position: 'absolute', top: '20px', left: '20px', right: '20px' }}>
-              액티브 타로 테이블 보드
+        {/* CHARACTER SHEET TAB */}
+        {activeTab === "character" && (
+          <div className="sheet-container">
+            {/* Corner Ornaments */}
+            <div className="sheet-corner-decor corner-tl"></div>
+            <div className="sheet-corner-decor corner-tr"></div>
+            <div className="sheet-corner-decor corner-bl"></div>
+            <div className="sheet-corner-decor corner-br"></div>
+
+            {/* Top Banner Header */}
+            <div className="medieval-banner-header">
+              <span className="medieval-banner-logo">Gloam</span>
+              <div className="medieval-banner-inputs">
+                <div className="banner-field">
+                  <span>NAME:</span>
+                  <input 
+                    type="text" 
+                    className="banner-input" 
+                    value={state.character.name} 
+                    onChange={e => updateState(s => ({ ...s, character: { ...s.character, name: e.target.value } }))} 
+                  />
+                </div>
+                <div className="banner-field">
+                  <span>AGE:</span>
+                  <input 
+                    type="number" 
+                    className="banner-input" 
+                    value={state.character.age} 
+                    onChange={e => updateState(s => ({ ...s, character: { ...s.character, age: parseInt(e.target.value) || 0 } }))} 
+                  />
+                </div>
+                <div className="banner-field">
+                  <span>VOCATION:</span>
+                  <input 
+                    type="text" 
+                    className="banner-input" 
+                    value={state.character.vocation} 
+                    onChange={e => updateState(s => ({ ...s, character: { ...s.character, vocation: e.target.value } }))} 
+                  />
+                </div>
+                <div className="banner-field">
+                  <span>LIFEPATH:</span>
+                  <input 
+                    type="text" 
+                    className="banner-input" 
+                    placeholder="출생 및 배경 사건 요약"
+                    value={(state.character as any).lifepath || ""} 
+                    onChange={e => updateState(s => ({ ...s, character: { ...s.character, lifepath: e.target.value } as any }))} 
+                  />
+                </div>
+              </div>
             </div>
 
-            {activeCard ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', marginTop: '30px' }}>
-                {/* Visual rendering side-by-side if Action-Subject */}
-                {isActionSubjectView && activeCard2 ? (
-                  <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <span style={{ fontSize: '10px', textTransform: 'uppercase', marginBottom: '6px', color: 'var(--accent)' }}>행동 분야 (플레이어)</span>
-                      <div className="card-outer-wrapper">
-                        <div className="card-visual">
-                          <img
-                            src={activeCard.imageUrl}
-                            alt={activeCard.name}
-                            className={`card-image ${activeCardReversed ? 'card-reversed' : ''}`}
-                          />
-                        </div>
-                      </div>
-                      <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-h)' }}>{activeCard.name}</span>
-                    </div>
+            {/* Stats Block (Wreaths) & Portrait Flag */}
+            <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "20px", marginBottom: "25px" }}>
+              {/* Stat Wreaths */}
+              <div className="stat-wreaths-row" style={{ gridTemplateColumns: "repeat(4, 1fr)", marginBottom: 0 }}>
+                {[
+                  { key: "cups", label: "Cups (컵)", desc: "판단, 지식, 의술, 돌봄", icon: "🏆" },
+                  { key: "swords", label: "Swords (소드)", desc: "근력, 용기, 전투, 지구력", icon: "⚔️" },
+                  { key: "coins", label: "Coins (코인)", desc: "민첩, 은신, 교활, 자금", icon: "🪙" },
+                  { key: "wands", label: "Wands (완드)", desc: "의지, 마법, 정신, 오컬트", icon: "🪄" }
+                ].map(stat => renderStatWreath(stat.key as any, stat.label, stat.desc, stat.icon))}
+              </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <span style={{ fontSize: '10px', textTransform: 'uppercase', marginBottom: '6px', color: 'var(--accent)' }}>대상 분야 (레프리)</span>
-                      <div className="card-outer-wrapper">
-                        <div className="card-visual">
-                          <img
-                            src={activeCard2.imageUrl}
-                            alt={activeCard2.name}
-                            className={`card-image ${activeCardReversed2 ? 'card-reversed' : ''}`}
-                          />
-                        </div>
-                      </div>
-                      <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-h)' }}>{activeCard2.name}</span>
-                    </div>
+              {/* Hanging Portrait */}
+              <div className="portrait-hanging-banner">
+                <span className="portrait-banner-title">PORTRAIT</span>
+                {state.character.portrait ? (
+                  <div style={{ position: "relative", width: "100%", height: "100px", overflow: "hidden", border: "1px solid var(--border-color)" }}>
+                    <img src={state.character.portrait} alt="Portrait" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <button 
+                      style={{ position: "absolute", top: 2, right: 2, background: "rgba(255,255,255,0.8)", border: "1px solid #000", padding: "1px 4px", fontSize: "0.65rem", cursor: "pointer" }}
+                      onClick={() => updateState(s => ({ ...s, character: { ...s.character, portrait: "" } }))}
+                    >삭제</button>
                   </div>
                 ) : (
-                  <div className="card-outer-wrapper">
-                    <div className="card-visual">
-                      <img
-                        src={activeCard.imageUrl}
-                        alt={activeCard.name}
-                        className={`card-image ${activeCardReversed ? 'card-reversed' : ''}`}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100px", textAlign: "center" }}>
+                    <svg viewBox="0 0 40 40" style={{ width: "40px", height: "40px", marginBottom: "5px", opacity: 0.6 }}>
+                      <path d="M 20 4 C 11.16 4 4 11.16 4 20 C 4 28.84 11.16 36 20 36 C 28.84 36 36 28.84 36 20 C 36 11.16 28.84 4 20 4 Z M 20 8 C 23.31 8 26 10.69 26 14 C 26 17.31 23.31 20 20 20 C 16.69 20 14 17.31 14 14 C 14 10.69 16.69 8 20 8 Z M 20 32 C 15.34 32 11.23 29.63 8.8 26.03 C 10.37 23.57 14.88 22 20 22 C 25.12 22 29.63 23.57 31.2 26.03 C 28.77 29.63 24.66 32 20 32 Z" fill="var(--border-color)"/>
+                    </svg>
+                    <button 
+                      className="btn-medieval-small" 
+                      onClick={() => {
+                        const url = prompt("초상화 이미지의 웹 URL 주소를 입력해주세요:");
+                        if (url) updateState(s => ({ ...s, character: { ...s.character, portrait: url } }));
+                      }}
+                    >초상화 설정</button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Open Book: Inventory (Left) & Goals/Instincts (Right) */}
+            <div className="open-book-container">
+              <div className="open-book-binding"></div>
+              
+              {/* Left Page: Inventory */}
+              <div className="book-page left-page">
+                <div className="book-page-header">
+                  <svg viewBox="0 0 24 24" style={{ width: "20px", height: "20px" }} fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                  <span>Inventory</span>
+                </div>
+                
+                <div className="ruled-book-lines">
+                  {Array.from({ length: 14 }).map((_, i) => {
+                    const item = state.character.inventory[i] || "";
+                    return (
+                      <div key={i} className="ruled-line-item">
+                        <span style={{ fontSize: "0.8rem", width: "22px", color: "var(--text-muted)", fontStyle: "italic" }}>{i + 1}.</span>
+                        <input 
+                          type="text" 
+                          placeholder={i + 1 <= carryCapacity ? "(비어 있음)" : "(소지 용량 초과)"} 
+                          value={item}
+                          disabled={i + 1 > carryCapacity}
+                          style={{ textDecoration: i + 1 > carryCapacity ? "line-through" : "none", opacity: i + 1 > carryCapacity ? 0.5 : 1 }}
+                          onChange={e => {
+                            const val = e.target.value;
+                            updateState(s => {
+                              const nextInv = [...s.character.inventory];
+                              while (nextInv.length <= i) nextInv.push("");
+                              nextInv[i] = val;
+                              return {
+                                ...s,
+                                character: {
+                                  ...s.character,
+                                  inventory: nextInv
+                                }
+                              };
+                            });
+                          }}
+                        />
+                        {item && (
+                          <button 
+                            className="delete-btn" 
+                            style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }}
+                            onClick={() => {
+                              updateState(s => {
+                                const nextInv = [...s.character.inventory];
+                                nextInv[i] = "";
+                                return {
+                                  ...s,
+                                  character: {
+                                    ...s.character,
+                                    inventory: nextInv
+                                  }
+                                };
+                              });
+                            }}
+                          >
+                            &times;
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop: "15px", fontSize: "0.82rem", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center" }}>
+                  * 가방 한도: {carryCapacity} 칸 (Coins 스탯 연동)
+                </div>
+              </div>
+
+              {/* Right Page: Goals & Instincts */}
+              <div className="book-page right-page">
+                {/* Goals Section */}
+                <div className="book-page-header">
+                  <span>Goals</span>
+                </div>
+                <div className="ruled-book-lines" style={{ marginBottom: "30px" }}>
+                  {state.character.goals.map((g, i) => (
+                    <div key={i} className="ruled-line-item">
+                      <input 
+                        type="text" 
+                        value={g} 
+                        onChange={e => {
+                          const val = e.target.value;
+                          updateState(s => {
+                            const nextGoals = [...s.character.goals];
+                            nextGoals[i] = val;
+                            return { ...s, character: { ...s.character, goals: nextGoals } };
+                          });
+                        }} 
                       />
+                      <button 
+                        style={{ background: "transparent", border: "1px solid var(--border-color)", padding: "1px 6px", fontSize: "0.75rem", cursor: "pointer", fontFamily: "var(--gothic)" }}
+                        onClick={() => {
+                          if (confirm(`'${g}' 목표를 성공적으로 이행 완료하였습니까?\n경험치 1 XP와 결의 1점을 획득합니다.`)) {
+                            updateState(s => ({
+                              ...s,
+                              character: {
+                                ...s.character,
+                                xp: s.character.xp + 1,
+                                resolve: Math.min(10, s.character.resolve + 1)
+                              },
+                              journals: [{ id: Date.now().toString(), text: `[목표 완료] '${g}' 목표를 달성하여 1 XP와 결의 1점을 얻었습니다!`, date: new Date().toLocaleString() }, ...s.journals]
+                            }));
+                          }
+                        }}
+                      >달성</button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Instincts Section */}
+                <div className="book-page-header">
+                  <span>Instincts</span>
+                </div>
+                <div className="ruled-book-lines">
+                  {state.character.instincts.map((inst, i) => (
+                    <div key={i} className="ruled-line-item">
+                      <input 
+                        type="text" 
+                        value={inst} 
+                        onChange={e => {
+                          const val = e.target.value;
+                          updateState(s => {
+                            const nextInsts = [...s.character.instincts];
+                            nextInsts[i] = val;
+                            return { ...s, character: { ...s.character, instincts: nextInsts } };
+                          });
+                        }} 
+                      />
+                      <button 
+                        style={{ background: "transparent", border: "1px solid var(--color-crimson)", color: "var(--color-crimson)", padding: "1px 6px", fontSize: "0.75rem", cursor: "pointer", fontFamily: "var(--gothic)" }}
+                        onClick={() => {
+                          updateState(s => ({
+                            ...s,
+                            character: { ...s.character, resolve: Math.min(10, s.character.resolve + 1) },
+                            journals: [{ id: Date.now().toString(), text: `[본능 곤경] 본능 '${inst}'에 이끌려 시련이 가해졌으며, 결의 1점을 획득했습니다.`, date: new Date().toLocaleString() }, ...s.journals]
+                          }));
+                          alert("본능에 이끌려 서사가 꼬이고 시련을 겪어 결의 1점을 얻습니다!");
+                        }}
+                      >유발</button>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ marginTop: "auto", fontSize: "0.78rem", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center", lineHeight: "1.4" }}>
+                  * 목표 달성 시 결의 +1 / XP +1 <br />
+                  * 본능 곤경 격발 시 결의 +1
+                </p>
+              </div>
+            </div>
+
+            {/* Bottom Section: Anatomy Wounds & Sidebar */}
+            <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "25px" }}>
+              
+              {/* Anatomy (Left Column) */}
+              <div>
+                {/* Vertical Banners Row */}
+                <div className="vertical-banners-col">
+                  {/* Resolve Banner */}
+                  <div className="hanging-banner-box">
+                    <h5>RESOLVE (결의)</h5>
+                    <div className="hanging-banner-value">{state.character.resolve}</div>
+                    <div style={{ display: "flex", justifyContent: "center", gap: "2px", marginTop: "5px" }}>
+                      {Array.from({ length: 10 }).map((_, i) => (
+                        <input 
+                          key={i} 
+                          type="checkbox" 
+                          checked={state.character.resolve > i} 
+                          onChange={() => {
+                            updateState(s => {
+                              const val = s.character.resolve === i + 1 ? i : i + 1;
+                              return { ...s, character: { ...s.character, resolve: val } };
+                            });
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Speed Banner */}
+                  <div className="hanging-banner-box">
+                    <h5>SPEED (이동)</h5>
+                    <div className="hanging-banner-value">{speed}</div>
+                    <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+                      기본: {state.character.stats.coins}
+                    </span>
+                  </div>
+
+                  {/* EXP Banner */}
+                  <div className="hanging-banner-box">
+                    <h5>EXP (경험치)</h5>
+                    <div className="hanging-banner-value" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px" }}>
+                      <button 
+                        className="wreath-adjust-btn" 
+                        onClick={() => updateState(s => ({ ...s, character: { ...s.character, xp: Math.max(0, s.character.xp - 1) } }))}
+                      >-</button>
+                      <span>{state.character.xp}</span>
+                      <button 
+                        className="wreath-adjust-btn" 
+                        onClick={() => updateState(s => ({ ...s, character: { ...s.character, xp: s.character.xp + 1 } }))}
+                      >+</button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Anatomy Grid */}
+                <div className="card-panel" style={{ padding: "20px" }}>
+                  <h4 className="gothic-sub" style={{ borderBottom: "1px solid var(--border-color)", fontSize: "1.1rem" }}>
+                    Anatomy &amp; Injuries (신체 부위 및 부상)
+                  </h4>
+                  
+                  <div className="wounds-anatomy-grid">
+                    {/* SVG Skeleton */}
+                    <div className="skeleton-svg-holder">
+                      <svg viewBox="0 0 100 140" style={{ width: "100%", height: "auto", maxHeight: "250px" }}>
+                        {/* Spine */}
+                        <line x1="50" y1="35" x2="50" y2="75" stroke="#2C2621" strokeWidth="2" />
+                        {/* Pelvis */}
+                        <path d="M 40 75 L 60 75 L 50 85 Z" fill="none" stroke="#2C2621" strokeWidth="2" />
+                        
+                        {/* Ribs (circles) */}
+                        <ellipse cx="50" cy="48" rx="12" ry="7" fill="none" stroke="#2C2621" strokeWidth="1.5" />
+                        <ellipse cx="50" cy="58" rx="10" ry="6" fill="none" stroke="#2C2621" strokeWidth="1.5" />
+                        <ellipse cx="50" cy="66" rx="8" ry="5" fill="none" stroke="#2C2621" strokeWidth="1.5" />
+                        
+                        {/* Collar bone */}
+                        <line x1="38" y1="36" x2="62" y2="36" stroke="#2C2621" strokeWidth="2" />
+
+                        {/* Head */}
+                        <g 
+                          onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, head: !s.character.wounds.head } } }))}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <circle 
+                            cx="50" 
+                            cy="20" 
+                            r="10" 
+                            className={`skeleton-interactive-path ${state.character.wounds.head ? "path-wounded" : ""}`}
+                          />
+                          {/* Eyes & Nose holes */}
+                          <circle cx="47" cy="18" r="1.2" fill="#2C2621" />
+                          <circle cx="53" cy="18" r="1.2" fill="#2C2621" />
+                          <polygon points="50,21 48,23 52,23" fill="#2C2621" />
+                          <line x1="47" y1="26" x2="53" y2="26" stroke="#2C2621" strokeWidth="1" />
+                        </g>
+
+                        {/* Torso */}
+                        <path 
+                          d="M 38 36 L 62 36 L 58 72 L 42 72 Z" 
+                          className={`skeleton-interactive-path ${state.character.wounds.torso ? "path-wounded" : ""}`}
+                          onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, torso: !s.character.wounds.torso } } }))}
+                        />
+
+                        {/* Left Arm */}
+                        <g 
+                          onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lArm: !s.character.wounds.lArm } } }))}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <path 
+                            d="M 38 36 L 25 55 L 18 75" 
+                            className={`skeleton-interactive-path ${state.character.wounds.lArm ? "path-wounded" : ""}`}
+                          />
+                          <circle cx="18" cy="75" r="2.5" fill={state.character.wounds.lArm ? "var(--color-crimson)" : "#2C2621"} />
+                        </g>
+
+                        {/* Right Arm */}
+                        <g 
+                          onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rArm: !s.character.wounds.rArm } } }))}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <path 
+                            d="M 62 36 L 75 55 L 82 75" 
+                            className={`skeleton-interactive-path ${state.character.wounds.rArm ? "path-wounded" : ""}`}
+                          />
+                          <circle cx="82" cy="75" r="2.5" fill={state.character.wounds.rArm ? "var(--color-crimson)" : "#2C2621"} />
+                        </g>
+
+                        {/* Left Leg */}
+                        <g 
+                          onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lLeg: !s.character.wounds.lLeg } } }))}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <path 
+                            d="M 43 78 L 36 108 L 34 135" 
+                            className={`skeleton-interactive-path ${state.character.wounds.lLeg ? "path-wounded" : ""}`}
+                          />
+                          <path d="M 30 135 L 35 135 L 37 138 Z" fill={state.character.wounds.lLeg ? "var(--color-crimson)" : "#2C2621"} />
+                        </g>
+
+                        {/* Right Leg */}
+                        <g 
+                          onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rLeg: !s.character.wounds.rLeg } } }))}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <path 
+                            d="M 57 78 L 64 108 L 66 135" 
+                            className={`skeleton-interactive-path ${state.character.wounds.rLeg ? "path-wounded" : ""}`}
+                          />
+                          <path d="M 70 135 L 65 135 L 63 138 Z" fill={state.character.wounds.rLeg ? "var(--color-crimson)" : "#2C2621"} />
+                        </g>
+
+                        {/* Shield Zone */}
+                        <path
+                          d="M 7 90 L 23 90 L 23 105 L 15 115 L 7 105 Z"
+                          className={`skeleton-interactive-path ${state.character.armorNotches.shield === 3 ? "path-wounded" : ""}`}
+                          style={{ strokeWidth: "1.2px" }}
+                          onClick={() => {
+                            updateState(s => {
+                              const curr = s.character.armorNotches.shield;
+                              const next = curr === 3 ? 0 : 3;
+                              return { ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, shield: next } } };
+                            });
+                          }}
+                        />
+                        <text x="15" y="103" fontSize="5" fontFamily="var(--gothic)" textAnchor="middle" fill="var(--text-bright)">SHIELD</text>
+                      </svg>
+                    </div>
+
+                    {/* Interactive List Controls */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.82rem" }}>
+                      {/* Head control */}
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: "bold" }}>
+                          <input 
+                            type="checkbox" 
+                            checked={state.character.wounds.head} 
+                            onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, head: e.target.checked } } }))} 
+                          />
+                          <span style={{ color: state.character.wounds.head ? "var(--color-crimson)" : "inherit" }}>머리 (Head) [기절]</span>
+                        </div>
+                        <div style={{ marginLeft: "20px", display: "flex", alignItems: "center", gap: "5px", fontSize: "0.78rem" }}>
+                          <span>투구 AP2:</span>
+                          {[1, 2].map(n => (
+                            <input key={n} type="checkbox" checked={state.character.armorNotches.helmet >= n} onChange={() => {
+                              updateState(s => {
+                                const current = s.character.armorNotches.helmet;
+                                const next = current === n ? n - 1 : n;
+                                return { ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, helmet: next } } };
+                              });
+                            }} />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Torso control */}
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: "bold" }}>
+                          <input 
+                            type="checkbox" 
+                            checked={state.character.wounds.torso} 
+                            onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, torso: e.target.checked } } }))} 
+                          />
+                          <span style={{ color: state.character.wounds.torso ? "var(--color-crimson)" : "inherit" }}>몸통 (Torso) [-3 판정]</span>
+                        </div>
+                        <div style={{ marginLeft: "20px", display: "flex", alignItems: "center", gap: "5px", fontSize: "0.78rem" }}>
+                          <span>흉갑 AP3:</span>
+                          {[1, 2, 3].map(n => (
+                            <input key={n} type="checkbox" checked={state.character.armorNotches.cuirass >= n} onChange={() => {
+                              updateState(s => {
+                                const current = s.character.armorNotches.cuirass;
+                                const next = current === n ? n - 1 : n;
+                                return { ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, cuirass: next } } };
+                              });
+                            }} />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Arms control */}
+                      <div>
+                        <div style={{ fontWeight: "bold", marginBottom: "2px" }}>양팔 (Arms) [장비 떨어뜨림]</div>
+                        <div style={{ marginLeft: "10px", display: "flex", flexDirection: "column", gap: "2px", fontSize: "0.78rem" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                            <input 
+                              type="checkbox" 
+                              checked={state.character.wounds.lArm} 
+                              onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lArm: e.target.checked } } }))} 
+                            />
+                            <span>왼팔 건틀릿:</span>
+                            <input type="checkbox" checked={state.character.armorNotches.gauntletL >= 1} onChange={() => {
+                              updateState(s => ({ ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, gauntletL: s.character.armorNotches.gauntletL === 1 ? 0 : 1 } } }));
+                            }} />
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                            <input 
+                              type="checkbox" 
+                              checked={state.character.wounds.rArm} 
+                              onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rArm: e.target.checked } } }))} 
+                            />
+                            <span>오른팔 건틀릿:</span>
+                            <input type="checkbox" checked={state.character.armorNotches.gauntletR >= 1} onChange={() => {
+                              updateState(s => ({ ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, gauntletR: s.character.armorNotches.gauntletR === 1 ? 0 : 1 } } }));
+                            }} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Legs control */}
+                      <div>
+                        <div style={{ fontWeight: "bold", marginBottom: "2px" }}>양다리 (Legs) [이동력 -2/개]</div>
+                        <div style={{ marginLeft: "10px", display: "flex", flexDirection: "column", gap: "2px", fontSize: "0.78rem" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                            <input 
+                              type="checkbox" 
+                              checked={state.character.wounds.lLeg} 
+                              onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lLeg: e.target.checked } } }))} 
+                            />
+                            <span>왼다리 정강이:</span>
+                            {[1, 2].map(n => (
+                              <input key={n} type="checkbox" checked={state.character.armorNotches.greaveL >= n} onChange={() => {
+                                updateState(s => {
+                                  const current = s.character.armorNotches.greaveL;
+                                  const next = current === n ? n - 1 : n;
+                                  return { ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, greaveL: next } } };
+                                });
+                              }} />
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                            <input 
+                              type="checkbox" 
+                              checked={state.character.wounds.rLeg} 
+                              onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rLeg: e.target.checked } } }))} 
+                            />
+                            <span>오른다리 정강이:</span>
+                            {[1, 2].map(n => (
+                              <input key={n} type="checkbox" checked={state.character.armorNotches.greaveR >= n} onChange={() => {
+                                updateState(s => {
+                                  const current = s.character.armorNotches.greaveR;
+                                  const next = current === n ? n - 1 : n;
+                                  return { ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, greaveR: next } } };
+                                });
+                              }} />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Shield control */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", borderTop: "1px dashed rgba(42,37,33,0.15)", paddingTop: "5px" }}>
+                        <strong>방패 마모 (Shield AP3):</strong>
+                        <div style={{ display: "flex", gap: "3px" }}>
+                          {[1, 2, 3].map(n => (
+                            <input key={n} type="checkbox" checked={state.character.armorNotches.shield >= n} onChange={() => {
+                              updateState(s => {
+                                const current = s.character.armorNotches.shield;
+                                const next = current === n ? n - 1 : n;
+                                return { ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, shield: next } } };
+                              });
+                            }} />
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Lifepath Event Generator */}
+                <div className="card-panel" style={{ padding: "20px", marginTop: "20px" }}>
+                  <div className="flex-row justify-between align-center" style={{ marginBottom: "12px" }}>
+                    <h4 className="gothic-sub" style={{ borderBottom: "none", marginBottom: 0, fontSize: "1.1rem" }}>
+                      과거 인생 경로 사건 (Lifepath Logs)
+                    </h4>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button className="btn-medieval-small" onClick={() => {
+                        drawRefereeCard((card) => {
+                          const suit = card.suit || "cups";
+                          const mapping: { [key: string]: string } = {
+                            "wands": "신비하고 기이한 영적 비술 환경 (Wands)",
+                            "swords": "전쟁과 참화, 중소 귀족 가문의 분란 환경 (Swords)",
+                            "cups": "학구적이며 비교적 유복하고 안전한 상업 환경 (Cups)",
+                            "coins": "빈민가와 거리, 뿌리 없는 떠돌이 환경 (Coins)"
+                          };
+                          const valNum = card.card === "A" ? 1 : card.card === "Page" ? 11 : card.card === "Knight" ? 12 : card.card === "Queen" ? 13 : card.card === "King" ? 14 : parseInt(card.card) || 0;
+                          const logText = `[출생배경] ${getCardDisplayName(card)}: ${mapping[suit]}. 나이 +${valNum}년`;
+                          
+                          updateState(s => ({
+                            ...s,
+                            character: {
+                              ...s.character,
+                              age: s.character.age + valNum,
+                              lifepathLogs: [...s.character.lifepathLogs, logText]
+                            }
+                          }));
+                        });
+                      }}>출생 결정</button>
+                      <button className="btn-medieval-small" onClick={() => {
+                        drawRefereeCard((card) => {
+                          const suit = card.suit || "cups";
+                          const val = card.card;
+                          const suitFolder = suit === "wands" ? "완드" : suit === "swords" ? "소드" : suit === "coins" ? "코인" : "컵";
+                          const foundEvent = `과거 사건 카드로 ${getCardDisplayName(card)}를 뽑았습니다. 가이드북 p.12-13의 ${suitFolder} 사건을 대조하십시오.`;
+                          const valNum = val === "A" ? 1 : val === "Page" ? 11 : val === "Knight" ? 12 : val === "Queen" ? 13 : val === "King" ? 14 : parseInt(val) || 0;
+                          const logText = `[과거사건] ${getCardDisplayName(card)}: ${foundEvent} 나이 +${valNum}년`;
+
+                          updateState(s => ({
+                            ...s,
+                            character: {
+                              ...s.character,
+                              age: s.character.age + valNum,
+                              lifepathLogs: [...s.character.lifepathLogs, logText]
+                            }
+                          }));
+                        });
+                      }}>사건 드로우</button>
+                    </div>
+                  </div>
+
+                  <div className="lifepath-log-list" style={{ maxHeight: "150px", overflowY: "auto", padding: "8px", fontSize: "0.85rem", border: "1px solid var(--border-color)" }}>
+                    {state.character.lifepathLogs.map((log, i) => (
+                      <div key={i} className="lifepath-item" style={{ borderBottom: "1px dashed rgba(42,37,33,0.15)", padding: "4px 0" }}>
+                        <span>{log}</span>
+                        <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, lifepathLogs: s.character.lifepathLogs.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                      </div>
+                    ))}
+                    {state.character.lifepathLogs.length === 0 && <p className="empty-text">기록된 행적이 없습니다.</p>}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Sidebar: Notes & Talents, Friends & Foes (Right Column) */}
+              <div>
+                
+                {/* Notes & Talents Book Page mockup */}
+                <div className="open-book-container" style={{ gridTemplateColumns: "1fr", marginBottom: "20px" }}>
+                  <div className="book-page" style={{ minHeight: "360px" }}>
+                    
+                    {/* Notes text area */}
+                    <div className="book-page-header" style={{ fontSize: "1.2rem", marginBottom: "10px" }}>
+                      <span>Character Notes</span>
+                    </div>
+                    <textarea
+                      placeholder="여기에 모험가의 소견, 메모, 수수께끼 풀이 등을 펜으로 기록하십시오..."
+                      style={{ 
+                        width: "100%", 
+                        height: "100px", 
+                        background: "transparent", 
+                        border: "none", 
+                        backgroundImage: "linear-gradient(rgba(42, 37, 33, 0.1) 1px, transparent 1px)", 
+                        backgroundSize: "100% 24px", 
+                        lineHeight: "24px",
+                        fontFamily: "var(--serif)", 
+                        fontSize: "0.95rem", 
+                        outline: "none", 
+                        resize: "none",
+                        color: "var(--text-bright)"
+                      }}
+                      value={(state.character as any).notes || ""}
+                      onChange={e => updateState(s => ({ ...s, character: { ...s.character, notes: e.target.value } as any }))}
+                    />
+
+                    {/* Talents section */}
+                    <div className="book-page-header" style={{ fontSize: "1.2rem", marginTop: "15px", marginBottom: "10px" }}>
+                      <span>Unlocked Talents</span>
+                    </div>
+                    <div style={{ maxHeight: "160px", overflowY: "auto", fontSize: "0.85rem" }}>
+                      {state.character.unlockedTalents.map((t, idx) => (
+                        <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px dashed rgba(42,37,33,0.15)", padding: "3px 0" }}>
+                          <span style={{ color: "var(--color-gold)", fontWeight: "bold" }}>◆ {t}</span>
+                          <button 
+                            className="delete-btn" 
+                            style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }}
+                            onClick={() => updateState(s => ({ ...s, character: { ...s.character, unlockedTalents: s.character.unlockedTalents.filter((_, i) => i !== idx) } }))}
+                          >&times;</button>
+                        </div>
+                      ))}
+                      {state.character.unlockedTalents.length === 0 && (
+                        <p style={{ color: "var(--text-muted)", fontStyle: "italic" }}>습득된 고유 재능이 없습니다.</p>
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* Friends & Foes Hanging Scrolls Grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
+                  
+                  {/* Friends Scroll */}
+                  <div className="hanging-scroll-box">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "3px", marginBottom: "10px" }}>
+                      <h5 style={{ border: "none", margin: 0, fontSize: "0.9rem" }}>FRIENDS (인연)</h5>
+                      <button 
+                        className="btn-medieval-small" 
+                        onClick={() => {
+                          const name = prompt("친구 이름을 적으세요:");
+                          const info = prompt("설명을 적으세요:");
+                          if (name && info) {
+                            updateState(s => ({ ...s, character: { ...s.character, friends: [...s.character.friends, { name, info }] } }));
+                          }
+                        }}
+                      >+</button>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "160px", overflowY: "auto", fontSize: "0.8rem" }}>
+                      {state.character.friends.map((f, i) => (
+                        <div key={i} style={{ borderBottom: "1px dashed rgba(0,0,0,0.1)", paddingBottom: "4px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <strong>{f.name}</strong>
+                            <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, friends: s.character.friends.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                          </div>
+                          <span style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem" }}>{f.info}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Foes Scroll */}
+                  <div className="hanging-scroll-box" style={{ borderColor: "var(--color-crimson)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--color-crimson)", paddingBottom: "3px", marginBottom: "10px" }}>
+                      <h5 style={{ border: "none", margin: 0, fontSize: "0.9rem", color: "var(--color-crimson)" }}>FOES (원수)</h5>
+                      <button 
+                        className="btn-medieval-small danger" 
+                        onClick={() => {
+                          const name = prompt("원수 이름을 적으세요:");
+                          const info = prompt("설명을 적으세요:");
+                          if (name && info) {
+                            updateState(s => ({ ...s, character: { ...s.character, foes: [...s.character.foes, { name, info }] } }));
+                          }
+                        }}
+                      >+</button>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "160px", overflowY: "auto", fontSize: "0.8rem" }}>
+                      {state.character.foes.map((f, i) => (
+                        <div key={i} style={{ borderBottom: "1px dashed rgba(0,0,0,0.1)", paddingBottom: "4px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <strong style={{ color: "var(--color-crimson)" }}>{f.name}</strong>
+                            <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, foes: s.character.foes.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                          </div>
+                          <span style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem" }}>{f.info}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Quick Add shop & Talents List section */}
+                <div className="card-panel" style={{ padding: "20px", marginTop: "20px" }}>
+                  <h4 className="gothic-sub" style={{ fontSize: "1.1rem" }}>카탈로그 구매 &amp; 전체 재능 해금</h4>
+                  
+                  {/* Shop section */}
+                  <div style={{ fontSize: "0.85rem" }}>
+                    <div style={{ fontWeight: "bold", borderBottom: "1px solid var(--border-color)", paddingBottom: "3px" }}>빠른 장비 판정 구매 (Coins Test)</div>
+                    <div style={{ display: "flex", gap: "8px", margin: "10px 0" }}>
+                      <button className="btn-medieval-small" onClick={() => {
+                        const item = prompt("장비 이름 (예: 단검):");
+                        if (item) handleStartBuyTest({ name: item, nameKo: item, coinsMod: "0" });
+                      }}>임의 아이템 Coins 판정</button>
+                    </div>
+
+                    <div style={{ border: "1px solid var(--border-color)", maxHeight: "120px", overflowY: "auto", padding: "5px", backgroundColor: "var(--bg-panel-light)" }}>
+                      <strong style={{ fontSize: "0.75rem", color: "var(--color-gold)" }}>무기 목록:</strong>
+                      {WEAPONS.map(w => (
+                        <div key={w.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", padding: "2px 0", borderBottom: "1px dashed rgba(0,0,0,0.05)" }}>
+                          <span>{w.nameKo} (Swords필요: {w.swordsReq})</span>
+                          <button className="btn-medieval-small" style={{ fontSize: "0.65rem", padding: "0 4px" }} onClick={() => handleStartBuyTest({ name: w.name, nameKo: w.nameKo, coinsMod: w.coins, swordsReq: w.swordsReq })}>Coins판정</button>
+                        </div>
+                      ))}
+                      <strong style={{ fontSize: "0.75rem", color: "var(--color-gold)", display: "block", marginTop: "5px" }}>방어구 목록:</strong>
+                      {ARMOR.map(a => (
+                        <div key={a.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", padding: "2px 0", borderBottom: "1px dashed rgba(0,0,0,0.05)" }}>
+                          <span>{a.nameKo} (AP: {a.ap})</span>
+                          <button className="btn-medieval-small" style={{ fontSize: "0.65rem", padding: "0 4px" }} onClick={() => handleStartBuyTest({ name: a.name, nameKo: a.nameKo, coinsMod: a.coins })}>Coins판정</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Talents Purchase section */}
+                  <div style={{ marginTop: "15px", fontSize: "0.85rem" }}>
+                    <div style={{ fontWeight: "bold", borderBottom: "1px solid var(--border-color)", paddingBottom: "3px" }}>재능 연마 해금 (XP 소모)</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "8px", maxHeight: "120px", overflowY: "auto" }}>
+                      {["전령관", "방랑기사", "비술사", "소매치기"].map(v => {
+                        const talents = v === "전령관" ? ["Disarming Presence (무장 해제)", "Academic (학술 지성)", "Duel of Wits (언쟁 달인)", "Inspire (격려 연설)", "Parley (평화 교섭)", "Verity & Guile (진실과 기만)"] :
+                                        v === "방랑기사" ? ["Sally Forth (과감한 돌격)", "Geas (맹세 명령)", "Itinerant Hospitality (기사 환대)", "Martial Dominance (전투 지배)", "Oath-sworn (피의 맹세)", "Trial by Combat (결투 대결)"] :
+                                        v === "비술사" ? ["Magick (비술 각성)", "Augury (징조 읽기)", "Sixth Sense (영적 감지)", "Familiar (사역마 소환)", "Undo Magick (마법 해제)", "Bind Magick (마법 부여)"] :
+                                        ["Nimble (민첩 대처)", "One with the Shadows (그림자 동화)", "Sneak-Attack (급소 암습)", "Poisoner (독약 제조)", "Impersonate (변장 모사)", "Split (신속 퇴각)"];
+                        
+                        const isOwn = detectedVocation.includes(v);
+                        const cost = isOwn ? 5 : 10;
+
+                        return (
+                          <div key={v} style={{ paddingLeft: "5px" }}>
+                            <span style={{ fontSize: "0.75rem", fontWeight: "bold", color: isOwn ? "var(--color-gold)" : "inherit" }}>{v} ({isOwn ? "천직" : "타직"})</span>
+                            {talents.map((t, index) => {
+                              const isUnlocked = state.character.unlockedTalents.includes(t);
+                              const isStarting = index === 0;
+                              if (isUnlocked) return null;
+                              return (
+                                <div key={t} style={{ display: "flex", justifyContent: "space-between", paddingLeft: "10px", fontSize: "0.75rem", margin: "2px 0" }}>
+                                  <span>{isStarting ? "◆" : "◇"} {t}</span>
+                                  <button 
+                                    className="btn-medieval-small" 
+                                    onClick={() => {
+                                      if (isStarting && !isOwn) {
+                                        alert("타 천직의 시작 재능은 규칙상 배울 수 없습니다.");
+                                        return;
+                                      }
+                                      if (state.character.xp < cost) {
+                                        alert(`${cost} XP가 필요합니다.`);
+                                        return;
+                                      }
+                                      updateState(s => ({
+                                        ...s,
+                                        character: {
+                                          ...s.character,
+                                          xp: s.character.xp - cost,
+                                          unlockedTalents: [...s.character.unlockedTalents, t]
+                                        },
+                                        journals: [{ id: Date.now().toString(), text: `[재능 해금] ${cost} XP 소모, 재능 '${t}' 연마`, date: new Date().toLocaleString() }, ...s.journals]
+                                      }));
+                                    }}
+                                  >연마 ({cost}XP)</button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+        {/* TAB 3: TAROT & ORACLES */}
+        {activeTab === "oracles" && (
+          <div className="oracles-layout">
+            
+            {/* Left side: Card Drawer & Hand */}
+            <div className="card-panel gold-border flex-2">
+              <div className="flex-row justify-between align-center" style={{ borderBottom: "1px solid #333", paddingBottom: "10px" }}>
+                <h3 className="gothic-sub">타로 핸드 매니저 (Player Hand)</h3>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button className="btn-medieval" onClick={() => drawCardForPlayer(1)} disabled={state.hand.length >= 4}>
+                    카드 1장 드로우 (최대 4장)
+                  </button>
+                  <button className="btn-medieval" onClick={() => updateState(s => {
+                    const currentHand = [...s.hand];
+                    const nextDiscard = [...s.playerDiscard, ...currentHand];
+                    return { ...s, hand: [], playerDiscard: nextDiscard };
+                  })}>손패 전체 폐기</button>
+                  <button className="btn-medieval" onClick={reshuffleAllDecks}>덱 전체 셔플</button>
+                </div>
+              </div>
+
+              {/* Hand cards display */}
+              <div className="hand-display-area" style={{ marginTop: "1rem" }}>
+                {state.hand.map((card, idx) => (
+                  <div key={idx} className="tarot-card-container">
+                    <img 
+                      src={getCardImageUrl(card)} 
+                      alt={getCardDisplayName(card)} 
+                      className={`tarot-card-image ${card.reversed ? "reversed-image" : ""}`}
+                    />
+                    <div className="tarot-card-meta">
+                      <h5>{getCardDisplayName(card)}</h5>
+                      <div className="card-actions-row">
+                        <button className="btn-card-small" onClick={() => {
+                          const purpose = prompt("이 카드를 제출하는 목적/행동을 간단히 적으세요:");
+                          if (purpose) playCardFromHand(idx, purpose);
+                        }}>행동/판정에 내기</button>
+                        <button className="btn-card-small toggle" onClick={() => updateState(s => {
+                          const nextHand = [...s.hand];
+                          nextHand[idx].reversed = !nextHand[idx].reversed;
+                          return { ...s, hand: nextHand };
+                        })}>역방향 토글</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {state.hand.length === 0 && (
+                  <div className="empty-deck-spot">
+                    <p>손에 든 카드가 없습니다. 상단에서 카드를 뽑아 4장의 손패를 채워주십시오.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Decks counters */}
+              <div className="deck-counters-bar">
+                <span>플레이어 덱 잔여: <strong>{state.playerDeck.length}</strong>장</span> &bull;
+                <span>플레이어 버린 더미: <strong>{state.playerDiscard.length}</strong>장</span> &bull;
+                <span>레프리 덱 잔여: <strong>{state.refereeDeck.length}</strong>장</span> &bull;
+                <span>레프리 버린 더미: <strong>{state.refereeDiscard.length}</strong>장</span>
+              </div>
+            </div>
+
+            {/* Right side: Fate Oracles */}
+            <div className="card-panel flex-1">
+              <h3 className="gothic-sub">운명의 신탁 (Solo Oracles)</h3>
+              <p className="rules-helper-text">
+                마스터가 없을 때 무작위 질문에 답하거나, 황혼이 내린 계략을 해석하는 단어를 구성합니다.
+              </p>
+
+              <div className="oracle-button-list" style={{ marginTop: "1rem" }}>
+                <button className="btn-medieval w-100" onClick={rollYesNoOracle}>
+                  예 / 아니오 (Yes/No) 신탁
+                </button>
+                <button className="btn-medieval w-100" onClick={rollAmountOracle}>
+                  수량 / 강도 (Amount) 신탁
+                </button>
+                <button className="btn-medieval w-100" onClick={rollActionSubjectOracle}>
+                  행동 - 주제 (Action-Subject) 신탁
+                </button>
+              </div>
+
+              {/* Oracle display screen */}
+              <div className="oracle-output-screen" style={{ marginTop: "1.5rem" }}>
+                
+                {drawnOracleCard && (
+                  <div className="oracle-result-card">
+                    <h4>신탁 드로우 카드</h4>
+                    <div style={{ display: "flex", gap: "15px", alignItems: "center" }}>
+                      <img 
+                        src={getCardImageUrl(drawnOracleCard)} 
+                        alt="Oracle" 
+                        style={{ width: "80px", height: "auto", border: "1px solid #444" }} 
+                        className={drawnOracleCard.reversed ? "reversed-image" : ""}
+                      />
+                      <div>
+                        <h5>{getCardDisplayName(drawnOracleCard)}</h5>
+                        {oracleYesNo && (
+                          <div className="result-badge">
+                            결과: <strong>{oracleYesNo}</strong>
+                          </div>
+                        )}
+                        {oracleAmount && (
+                          <div className="result-badge">
+                            결과: <strong>{oracleAmount}</strong>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* Metadata Details Info Box */}
-                <div className="card-metadata" style={{ marginTop: '16px' }}>
-                  <div className="card-title-badge">
-                    <span>{isActionSubjectView ? "오라클 결합 해석 결과" : activeCard.name}</span>
-                    {!isActionSubjectView && (
-                      <span className={activeCardReversed ? 'badge-reversed' : 'badge-upright'}>
-                        {activeCardReversed ? '역방향 (Reversed)' : '정방향 (Upright)'}
-                      </span>
+                {oracleActionSubject && (
+                  <div className="oracle-result-card">
+                    <h4>행동 - 주제 결합 단어</h4>
+                    <div className="flex-row gap-10" style={{ margin: "10px 0" }}>
+                      <img 
+                        src={getCardImageUrl(oracleActionSubject.card1)} 
+                        alt="Action" 
+                        style={{ width: "65px", height: "auto", border: "1px solid #444" }} 
+                        className={oracleActionSubject.card1.reversed ? "reversed-image" : ""}
+                      />
+                      <img 
+                        src={getCardImageUrl(oracleActionSubject.card2)} 
+                        alt="Subject" 
+                        style={{ width: "65px", height: "auto", border: "1px solid #444" }} 
+                        className={oracleActionSubject.card2.reversed ? "reversed-image" : ""}
+                      />
+                    </div>
+                    <div className="result-sentence">
+                      행동 단어: <strong style={{ color: "var(--gold)" }}>{oracleActionSubject.action}</strong> <br />
+                      주제 단어: <strong style={{ color: "var(--gold)" }}>{oracleActionSubject.subject}</strong>
+                    </div>
+                    <p style={{ fontSize: "0.8rem", color: "#888", marginTop: "5px" }}>
+                      * 두 단어를 합쳐 상황이 당신에게 무엇을 직감하는지 해석하십시오. 처음 떠오른 상상이 가장 훌륭한 답입니다.
+                    </p>
+                    <button className="btn-medieval-small" style={{ marginTop: "8px" }} onClick={() => addJournalEntry(`[신탁 묘사] 행동: ${oracleActionSubject.action} | 주제: ${oracleActionSubject.subject} 카드를 뽑아 다음과 같은 계기를 맞이했다: `)}>
+                      일지에 기록하기
+                    </button>
+                  </div>
+                )}
+
+                {!drawnOracleCard && !oracleActionSubject && (
+                  <p className="empty-text" style={{ padding: "20px 0" }}>신탁 결과를 굴리지 않았습니다. 상단 버튼을 클릭하십시오.</p>
+                )}
+
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* TAB 4: ADVENTURE & MAP & COMBAT TRACKER */}
+        {activeTab === "map" && (
+          <div className="map-combat-layout">
+            
+            {/* Visual Tarot Grid Map */}
+            <div className="card-panel gold-border flex-2">
+              <div className="flex-row justify-between align-center" style={{ borderBottom: "1px solid #333", paddingBottom: "10px" }}>
+                <h3 className="gothic-sub">모험 유적 격자 지도 (4x4 Tarot Map)</h3>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <select className="inline-select" value={state.mapType} onChange={e => updateState(s => ({ ...s, mapType: e.target.value as any }))}>
+                    <option value="wilderness">야외 야생 (Wilderness)</option>
+                    <option value="dungeon">지하 던전 (Dungeon)</option>
+                    <option value="settlement">마을 정착지 (Settlement)</option>
+                  </select>
+                  <button className="btn-medieval" onClick={() => {
+                    updateState(s => ({
+                      ...s,
+                      mapGrid: Array.from({ length: 16 }, (_, i) => ({
+                        x: i % 4,
+                        y: Math.floor(i / 4)
+                      }))
+                    }));
+                  }}>지형 초기화</button>
+                </div>
+              </div>
+              
+              <div className="grid-map-board" style={{ marginTop: "1rem" }}>
+                {state.mapGrid.map((cell, idx) => (
+                  <div key={idx} className="map-grid-cell" onClick={() => {
+                    if (cell.card) {
+                      // Toggle description
+                      const nextDesc = prompt("이 격자 구역에 관한 스토리 묘사/노트를 저장합니다:", cell.description || "");
+                      updateState(s => {
+                        const nextGrid = [...s.mapGrid];
+                        nextGrid[idx].description = nextDesc || "";
+                        return { ...s, mapGrid: nextGrid };
+                      });
+                      return;
+                    }
+
+                    // Draw card from Referee deck to lay down terrain
+                    drawRefereeCard((card) => {
+                      // Map major to terrain
+                      const index = MAJORS.filter(m => m !== "0").indexOf(card.card);
+                      const terrainList = state.mapType === "wilderness" ? MAP_WILDERNESS : state.mapType === "dungeon" ? MAP_DUNGEON : MAP_SETTLEMENT;
+                      const terrain = terrainList[index] || "미지의 구역";
+
+                      updateState(s => {
+                        const nextGrid = [...s.mapGrid];
+                        nextGrid[idx] = {
+                          ...cell,
+                          card,
+                          type: s.mapType,
+                          description: terrain
+                        };
+                        return { ...s, mapGrid: nextGrid };
+                      });
+                    });
+                  }}>
+                    {cell.card ? (
+                      <div className="revealed-map-cell">
+                        <img 
+                          src={getCardImageUrl(cell.card)} 
+                          alt="map" 
+                          className={`map-card-thumbnail ${cell.card.reversed ? "reversed-image" : ""}`}
+                        />
+                        <div className="cell-overlay">
+                          <span>{cell.description}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="unrevealed-map-cell">
+                        <span className="coord">{cell.x + 1}, {cell.y + 1}</span>
+                        <span className="draw-prompt">카드 탐색</span>
+                      </div>
                     )}
                   </div>
+                ))}
+              </div>
+              <p className="rules-helper-text" style={{ marginTop: "10px" }}>
+                * 빈 격자 칸을 클릭하면 레프리 덱(메이저 아르카나)에서 카드를 한 장씩 뽑아 지형이 즉석 생성 배치됩니다. 지도를 클릭해 구역 스토리를 메모할 수도 있습니다.
+              </p>
+            </div>
 
-                  {isActionSubjectView && activeCard2 ? (
-                    <div>
-                      <div className="stat-box" style={{ background: '#18181b', borderLeftColor: '#c084fc' }}>
-                        <div className="info-label">결합된 키워드 해석</div>
-                        <div className="info-val" style={{ fontSize: '16px', fontWeight: 600 }}>
-                          {activeCard.actionKeyword} / {activeCardReversed2 ? activeCard2.subjectKeywordReversed : activeCard2.subjectKeywordUpright}
+            {/* Adventure Events & Combat Tracker */}
+            <div className="card-panel flex-1">
+              <h3 className="gothic-sub">돌발 인카운터 &amp; 전투 트래커</h3>
+              
+              {/* Event Drawer */}
+              <div className="event-drawer-box" style={{ marginTop: "1rem" }}>
+                <h4>무작위 이벤트 격발</h4>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button className="btn-medieval flex-1" onClick={() => {
+                    drawRefereeCard((card) => {
+                      const idx = MAJORS.filter(m => m !== "0").indexOf(card.card);
+                      const evList = state.mapType === "wilderness" ? WILDERNESS_EVENTS : state.mapType === "dungeon" ? DUNGEON_EVENTS : SETTLEMENT_EVENTS;
+                      const evText = evList[idx] || "무난한 조우가 발생합니다.";
+                      const desc = card.reversed ? `[역방향 비틀림] ${evText}의 반대나 부정적인 방향으로 꼬인 참화가 벌어집니다!` : evText;
+                      
+                      alert(`[이벤트 격발: ${getCardDisplayName(card)}]\n\n${desc}`);
+                      addJournalEntry(`[이벤트 격발 - ${state.mapType}] ${getCardDisplayName(card)}: ${desc}`);
+                    });
+                  }}>이벤트 카드 드로우</button>
+                </div>
+              </div>
+
+              {/* Combat Tracker */}
+              <div className="combat-tracker-box" style={{ marginTop: "1.5rem" }}>
+                <h4>⚔️ 전투 관리자 (Round: {state.combatRound})</h4>
+                
+                {/* Spawner */}
+                <div className="monster-spawner-row">
+                  <select className="inline-select" value={selectedMonsterToSpawn} onChange={e => setSelectedMonsterToSpawn(parseInt(e.target.value) || 1)}>
+                    {BESTIARY.map(m => (
+                      <option key={m.id} value={m.id}>{m.nameKo} (Stat: {m.stat}, HP: {m.wounds})</option>
+                    ))}
+                  </select>
+                  <button className="btn-medieval-small" onClick={() => {
+                    const template = BESTIARY.find(m => m.id === selectedMonsterToSpawn);
+                    if (template) {
+                      updateState(s => ({
+                        ...s,
+                        combatMonsters: [
+                          ...s.combatMonsters,
+                          {
+                            id: Date.now().toString(),
+                            monsterId: template.id,
+                            name: template.nameKo,
+                            woundsTaken: 0
+                          }
+                        ]
+                      }));
+                    }
+                  }}>전장 투입</button>
+                </div>
+
+                {/* Monster list in combat */}
+                <div className="combat-monsters-list" style={{ marginTop: "1rem" }}>
+                  {state.combatMonsters.map((mon, mIdx) => {
+                    const template = BESTIARY.find(b => b.id === mon.monsterId)!;
+                    return (
+                      <div key={mon.id} className="combat-monster-card">
+                        <div className="flex-row justify-between align-center">
+                          <strong>{mon.name}</strong>
+                          <span style={{ fontSize: "0.8rem", color: "#888" }}>Stat: {template.stat} &bull; Speed: {template.speed}</span>
                         </div>
+                        
+                        <div className="flex-row justify-between align-center" style={{ marginTop: "5px" }}>
+                          <span>Wounds: <strong>{mon.woundsTaken} / {template.wounds}</strong></span>
+                          <div style={{ display: "flex", gap: "5px" }}>
+                            <button className="btn-counter-small" onClick={() => updateState(s => {
+                              const nextMonsters = [...s.combatMonsters];
+                              nextMonsters[mIdx].woundsTaken = Math.max(0, mon.woundsTaken - 1);
+                              return { ...s, combatMonsters: nextMonsters };
+                            })}>-</button>
+                            <button className="btn-counter-small" onClick={() => updateState(s => {
+                              const nextMonsters = [...s.combatMonsters];
+                              nextMonsters[mIdx].woundsTaken = Math.min(template.wounds, mon.woundsTaken + 1);
+                              if (nextMonsters[mIdx].woundsTaken === template.wounds) {
+                                alert(`${mon.name}이(가) 치명적인 신체 부상을 입고 굴복했습니다!`);
+                              }
+                              return { ...s, combatMonsters: nextMonsters };
+                            })}>+</button>
+                          </div>
+                        </div>
+
+                        {/* Monster Initiative card */}
+                        <div className="flex-row justify-between align-center" style={{ marginTop: "8px", borderTop: "1px dashed #333", paddingTop: "5px" }}>
+                          <span>선제권: {mon.initiativeCard ? getCardDisplayName(mon.initiativeCard) : "미정"}</span>
+                          <button className="btn-medieval-small" onClick={() => {
+                            // Draw initiative for monster from player/referee logic
+                            drawRefereeCard((card) => {
+                              updateState(s => {
+                                const nextMonsters = [...s.combatMonsters];
+                                nextMonsters[mIdx].initiativeCard = card;
+                                return { ...s, combatMonsters: nextMonsters };
+                              });
+                            });
+                          }}>선제권 카드 결정</button>
+                        </div>
+
+                        <button className="btn-medieval-small danger w-100" style={{ marginTop: "10px" }} onClick={() => {
+                          updateState(s => ({
+                            ...s,
+                            combatMonsters: s.combatMonsters.filter((_, i) => i !== mIdx)
+                          }));
+                        }}>처치 / 퇴각 처리</button>
                       </div>
-                      <div style={{ fontSize: '11px', marginTop: '6px', color: 'var(--text)' }}>
-                        플레이어 덱 키워드: {activeCard.actionKeyword} (사용 카드: {activeCard.name}) <br />
-                        레프리 덱 키워드: {activeCardReversed2 ? activeCard2.subjectKeywordReversed : activeCard2.subjectKeywordUpright} ({activeCardReversed2 ? '역방향' : '정방향'} / 사용 카드: {activeCard2.name})
+                    );
+                  })}
+
+                  {state.combatMonsters.length === 0 && (
+                    <p className="empty-text">전투에 대치 중인 몬스터가 없습니다.</p>
+                  )}
+                </div>
+
+                {state.combatMonsters.length > 0 && (
+                  <div style={{ display: "flex", gap: "10px", marginTop: "1rem" }}>
+                    <button className="btn-medieval flex-1" onClick={() => updateState(s => ({ ...s, combatRound: s.combatRound + 1 }))}>다음 라운드 시작</button>
+                    <button className="btn-medieval" onClick={() => updateState(s => ({ ...s, combatRound: 1, combatMonsters: [] }))}>전투 종료</button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* TAB 5: JOURNAL */}
+        {activeTab === "journal" && (
+          <div className="journal-layout">
+            <div className="card-panel gold-border">
+              <h3 className="gothic-sub">모험 기록 및 서사 일지</h3>
+              <p className="rules-helper-text">
+                이 란은 모험가가 행동한 타로 카드 기록이나 오라클 신탁, 몬스터 조우 결과 등을 적어두어 나만의 이야기 연대기를 만들어가는 필드입니다.
+              </p>
+
+              <div className="journal-input-section" style={{ marginTop: "1rem" }}>
+                <textarea 
+                  className="journal-textarea" 
+                  placeholder="오늘 글롬의 여정에서 겪은 시련이나 이야기를 작성하십시오..." 
+                  value={newJournalText}
+                  onChange={e => setNewJournalText(e.target.value)}
+                />
+                <button className="btn-medieval" onClick={() => addJournalEntry()}>일지에 기록 추가</button>
+              </div>
+
+              <div className="journal-history-list" style={{ marginTop: "2rem" }}>
+                <h4>일지 히스토리</h4>
+                {state.journals.map(j => (
+                  <div key={j.id} className="journal-history-card">
+                    <div className="flex-row justify-between align-center" style={{ borderBottom: "1px dashed #333", paddingBottom: "5px", marginBottom: "5px" }}>
+                      <span className="date">{j.date}</span>
+                      <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => {
+                        if (confirm("정말 이 일지 기록을 삭제하겠습니까?")) {
+                          updateState(s => ({
+                            ...s,
+                            journals: s.journals.filter(x => x.id !== j.id)
+                          }));
+                        }
+                      }}><Trash2 size={12} /></button>
+                    </div>
+                    <p style={{ whiteSpace: "pre-wrap", lineHeight: "1.7" }}>{j.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: RULEBOOK GUIDE */}
+        {activeTab === "guidebook" && (
+          <div className="guidebook-layout">
+            {/* Guide sidebar */}
+            <div className="card-panel flex-1 max-height-600">
+              <h3 className="gothic-sub">가이드북 차례</h3>
+              
+              <div className="search-box">
+                <Search size={14} className="search-icon" />
+                <input 
+                  type="text" 
+                  placeholder="규칙 단어 검색..." 
+                  value={guideSearch}
+                  onChange={e => setGuideSearch(e.target.value)}
+                />
+              </div>
+
+              <div className="guidebook-page-list scrollable">
+                {RULEBOOK_PAGES.filter(p => 
+                  p.titleKo.toLowerCase().includes(guideSearch.toLowerCase()) || 
+                  p.content.toLowerCase().includes(guideSearch.toLowerCase())
+                ).map(page => (
+                  <button 
+                    key={page.pageNumber} 
+                    className={`guide-page-btn ${selectedGuidePage === page.pageNumber ? "active" : ""}`}
+                    onClick={() => setSelectedGuidePage(page.pageNumber)}
+                  >
+                    <span className="page-num">p.{page.pageNumber}</span>
+                    <span className="page-title">{page.titleKo}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Guide Viewer */}
+            <div className="card-panel gold-border flex-2 max-height-600 scrollable">
+              {RULEBOOK_PAGES.find(p => p.pageNumber === selectedGuidePage) ? (
+                (() => {
+                  const p = RULEBOOK_PAGES.find(x => x.pageNumber === selectedGuidePage)!;
+                  return (
+                    <div className="guidebook-page-content">
+                      <div className="flex-row justify-between align-center" style={{ borderBottom: "1px solid #333", paddingBottom: "10px", marginBottom: "15px" }}>
+                        <h2 className="gothic-sub" style={{ fontSize: "1.6rem" }}>{p.titleKo}</h2>
+                        <span className="page-badge">Page {p.pageNumber} / 60</span>
+                      </div>
+                      
+                      <div className="guidebook-raw-content">
+                        {p.content.split("\n").map((line, lIdx) => {
+                          if (line.startsWith("•") || line.startsWith("-")) {
+                            return <li key={lIdx} style={{ marginLeft: "15px", marginBottom: "8px", color: "#ddd" }}>{line.slice(1).trim()}</li>;
+                          }
+                          if (line.includes(":") && line.trim().endsWith("]")) {
+                            return <h4 key={lIdx} style={{ color: "var(--gold)", marginTop: "12px", borderLeft: "2px solid var(--gold)", paddingLeft: "10px" }}>{line}</h4>;
+                          }
+                          return <p key={lIdx} style={{ marginBottom: "10px", lineHeight: "1.8", color: "#ccc" }}>{line}</p>;
+                        })}
+                      </div>
+
+                      {/* Navigation at bottom of page */}
+                      <div className="guidebook-nav-row">
+                        <button 
+                          className="btn-medieval-small" 
+                          disabled={selectedGuidePage === 1}
+                          onClick={() => setSelectedGuidePage(prev => Math.max(1, prev - 1))}
+                        >
+                          &larr; 이전 페이지
+                        </button>
+                        <span>p.{p.pageNumber}</span>
+                        <button 
+                          className="btn-medieval-small" 
+                          disabled={selectedGuidePage === 60}
+                          onClick={() => setSelectedGuidePage(prev => Math.min(60, prev + 1))}
+                        >
+                          다음 페이지 &rarr;
+                        </button>
                       </div>
                     </div>
-                  ) : (
-                    <div>
-                      {/* Stat association */}
-                      {activeCard.statAssociation && (
-                        <div className="info-row">
-                          <div className="info-label">룰북 관련 캐릭터 스탯 분야</div>
-                          <div className="info-val">{activeCard.statAssociation}</div>
-                        </div>
-                      )}
+                  );
+                })()
+              ) : (
+                <p className="empty-text">페이지를 찾을 수 없습니다.</p>
+              )}
+            </div>
+          </div>
+        )}
 
-                      {/* Gloam Keywords */}
-                      {activeCard.suit === 'Major' ? (
-                        activeCard.value > 0 ? (
-                          <div className="info-row">
-                            <div className="info-label">레프리 전용 대상 키워드 (Subject)</div>
-                            <div className="info-val">
-                              <strong>정방향:</strong> {activeCard.subjectKeywordUpright} <br />
-                              <strong>역방향:</strong> {activeCard.subjectKeywordReversed}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="info-row">
-                            <div className="info-label">0 - 광대 카드 (The Fool)</div>
-                            <div className="info-val">모든 덱 리콜 셔플 트리거. 즉시 테이블 카드를 수거해 섞으십시오.</div>
-                          </div>
-                        )
-                      ) : (
-                        <div className="info-row">
-                          <div className="info-label">플레이어 전용 행동 키워드 (Action)</div>
-                          <div className="info-val" style={{ fontSize: '15px', fontWeight: 600, color: 'var(--accent)' }}>
-                            {activeCard.actionKeyword}
-                          </div>
-                        </div>
-                      )}
+      </main>
 
-                      {/* Oracle Values */}
-                      {activeCard.suit !== 'Major' && (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
-                          <div className="stat-box">
-                            <div className="info-label">예/아니오 오라클 판정</div>
-                            <div className="info-val" style={{ fontSize: '12px', fontWeight: 600 }}>
-                              {getYesNoOutcome(activeCard).outcome}
-                            </div>
-                          </div>
-                          <div className="stat-box">
-                            <div className="info-label">수량(Amount) 오라클 판정</div>
-                            <div className="info-val" style={{ fontSize: '12px', fontWeight: 600 }}>
-                              {getAmountOutcome(activeCard).outcome}
-                            </div>
-                          </div>
-                        </div>
-                      )}
+      {/* Item Purchase Test Modal Popup */}
+      {buyCatalogItem && (
+        <div className="modal-backdrop">
+          <div className="modal-content-panel gold-border">
+            <h3 className="gothic-sub">기어 획득 판정 (Coins Test)</h3>
+            <p className="desc" style={{ color: "#aaa", fontSize: "0.85rem", marginBottom: "1rem" }}>
+              아이템 <strong>{buyCatalogItem.nameKo} ({buyCatalogItem.name})</strong>을(를) 획득하려 Coins 판정을 수행합니다.<br />
+              구매 수정치: <strong style={{ color: "var(--gold)" }}>{buyCatalogItem.coinsMod}</strong> &bull; 
+              Swords 요구치: <strong>{buyCatalogItem.swordsReq || "-"}</strong>
+            </p>
+
+            {buyTestResult ? (
+              <div className="buy-test-result-box">
+                <div style={{ display: "flex", gap: "15px", alignItems: "center", marginBottom: "1rem" }}>
+                  <img 
+                    src={getCardImageUrl(buyTestResult.card)} 
+                    alt="test card" 
+                    style={{ width: "80px", height: "auto", border: "1px solid #444" }}
+                  />
+                  <div>
+                    <h5>판정 카드: {getCardDisplayName(buyTestResult.card)}</h5>
+                    <div style={{ fontSize: "0.9rem", color: "#ddd" }}>
+                      카드값 + Coins스탯 + 수정치 + 부상페널티 = 총합 <br />
+                      <strong>{buyTestResult.total - buyTestResult.statUsed - (parseInt(buyCatalogItem.coinsMod) || 0) - testPenalty} + {buyTestResult.statUsed} + {buyCatalogItem.coinsMod} + {testPenalty} = {buyTestResult.total}</strong>
                     </div>
+                  </div>
+                </div>
+
+                <div className={`result-outcome-badge ${buyTestResult.success ? "success" : "failed"}`}>
+                  판정 결과: {buyTestResult.success ? "🎉 구매 성공! (14점 이상)" : "💥 구매 실패 (자금 부족/재고 없음)"}
+                </div>
+
+                <div className="flex-row gap-10" style={{ marginTop: "1.5rem" }}>
+                  <button className="btn-medieval flex-1" onClick={() => setBuyCatalogItem(null)}>확인</button>
+                  {!buyTestResult.success && (
+                    <button className="btn-medieval" onClick={handleResolveBuyTest}>
+                      재시도 (결의 소모 또는 푸시)
+                    </button>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="empty-state">
-                <Compass className="empty-state-icon" size={48} />
-                <p style={{ fontWeight: 500, color: 'var(--text-h)', marginBottom: '6px' }}>활성화된 카드 없음</p>
-                <p style={{ fontSize: '12px' }}>덱에서 임의로 드로우하거나 우측 카탈로그에서 해석할 카드를 선택하세요.</p>
+              <div style={{ textAlign: "center", padding: "20px 0" }}>
+                <p style={{ color: "#ddd", marginBottom: "1rem" }}>플레이어 덱에서 카드 1장을 뽑아 Coins 수정치 및 판정 페널티를 대입합니다.</p>
+                <button className="btn-medieval" onClick={handleResolveBuyTest}>카드 뽑고 판정하기</button>
               </div>
             )}
           </div>
-
-          {/* Quick Oracle Roller Buttons */}
-          <div className="dashboard-card">
-            <div className="dashboard-card-title">자동 해석기 (Oracles)</div>
-            <div className="oracle-options">
-              <button className="btn-secondary" onClick={rollYesNoOracle}>
-                Yes / No 판정
-              </button>
-              <button className="btn-secondary" onClick={rollAmountOracle}>
-                수량 판정
-              </button>
-              <button className="btn-primary" onClick={rollActionSubjectOracle}>
-                행동-대상 결합
-              </button>
-            </div>
-            <p style={{ fontSize: '11px', color: 'var(--text)', marginTop: '8px', textAlign: 'center' }}>
-              가상 타로 덱에서 규칙 카드를 자동 인출하여 오라클 평가 결과를 산출합니다.
-            </p>
-          </div>
-        </section>
-
-        {/* Right: Browse Cards Catalog / Journal Log */}
-        <section className="panels-column">
-          <div className="tabs-header">
-            <button
-              onClick={() => setActiveTab('browser')}
-              className={`tab-btn ${activeTab === 'browser' ? 'active' : ''}`}
-            >
-              타로 카탈로그
-            </button>
-            <button
-              onClick={() => setActiveTab('journal')}
-              className={`tab-btn ${activeTab === 'journal' ? 'active' : ''}`}
-            >
-              모험 일지 기록 ({journal.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('rules')}
-              className={`tab-btn ${activeTab === 'rules' ? 'active' : ''}`}
-            >
-              룰북 & 레퍼런스
-            </button>
-          </div>
-
-          <div className="tab-content">
-            {/* Tab: Card Catalog Browser */}
-            {activeTab === 'browser' && (
-              <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <div className="browser-filters">
-                  {['All', 'Major', 'Cups', 'Swords', 'Wands', 'Pentacles'].map((suitName) => (
-                    <button
-                      key={suitName}
-                      onClick={() => setBrowserFilter(suitName)}
-                      className={`filter-btn ${browserFilter === suitName ? 'active' : ''}`}
-                    >
-                      {suitName === 'All' ? '전체' : (suitName === 'Major' ? '메이저' : (suitName === 'Cups' ? '컵' : (suitName === 'Swords' ? '검' : (suitName === 'Wands' ? '완드' : '동전'))))}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="cards-grid" style={{ flexGrow: 1, maxHeight: '360px' }}>
-                  {filteredCards.map((card) => (
-                    <div
-                      key={card.id}
-                      className="grid-card-item"
-                      onClick={() => selectCardFromBrowser(card)}
-                    >
-                      <div className="grid-card-thumbnail">
-                        <img src={card.imageUrl} alt={card.name} />
-                      </div>
-                      <div className="grid-card-name">
-                        {card.name.split(' (')[0]}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Manual Offline Draw Actions Panel */}
-                {activeCard && (
-                  <div className="dashboard-card" style={{ marginTop: '20px', padding: '16px', background: '#0d0d0f' }}>
-                    <div className="info-label" style={{ marginBottom: '10px', color: 'var(--accent)', fontSize: '12px' }}>
-                      선택한 카드 수동 로그 및 해석 (오프라인 실물 타로 기록용)
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-h)' }}>{activeCard.name}</span>
-                      <label className="toggle-option" style={{ margin: 0 }}>
-                        <input
-                          type="checkbox"
-                          checked={manualReversed}
-                          onChange={(e) => setManualReversed(e.target.checked)}
-                        />
-                        실물 카드가 거꾸로 나옴 (역방향)
-                      </label>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-                      <button className="btn-secondary" style={{ fontSize: '11px', padding: '6px' }} onClick={handleManualPlayerLog}>
-                        플레이어 드로우로 등록
-                      </button>
-                      <button className="btn-secondary" style={{ fontSize: '11px', padding: '6px' }} onClick={handleManualRefereeLog}>
-                        레프리 드로우로 등록
-                      </button>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                      <button className="btn-secondary" style={{ fontSize: '11px', padding: '6px' }} onClick={handleManualYesNoLog}>
-                        Yes/No 오라클로 기록
-                      </button>
-                      <button className="btn-secondary" style={{ fontSize: '11px', padding: '6px' }} onClick={handleManualAmountLog}>
-                        수량 오라클로 기록
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Tab: Session Journal */}
-            {activeTab === 'journal' && (
-              <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <div className="journal-controls">
-                  <span style={{ fontSize: '12px', color: 'var(--text)' }}>
-                    일지는 로컬 저장소와 구글 드라이브(Firebase)에 자동 보존됩니다.
-                  </span>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="btn-secondary" onClick={exportJournal} title="모험 일지 로컬 텍스트 다운로드">
-                      <Download size={14} style={{ marginRight: '4px' }} /> 일지 내보내기
-                    </button>
-                    <button className="btn-secondary" onClick={clearJournal} style={{ color: '#f87171' }} title="전체 일지 삭제">
-                      <Trash2 size={14} style={{ marginRight: '4px' }} /> 비우기
-                    </button>
-                  </div>
-                </div>
-
-                {journal.length === 0 ? (
-                  <div className="empty-state" style={{ margin: 'auto' }}>
-                    <BookOpen className="empty-state-icon" size={48} />
-                    <p style={{ fontWeight: 500, color: 'var(--text-h)', marginBottom: '6px' }}>작성된 일지가 없습니다</p>
-                    <p style={{ fontSize: '12px' }}>카드를 뽑거나 수동 기록하면 세션 활동이 여기에 누적됩니다.</p>
-                  </div>
-                ) : (
-                  <div className="journal-timeline">
-                    {journal.map((entry) => (
-                      <div key={entry.id} className="journal-entry">
-                        {entry.imageUrl && (
-                          <div className={`entry-thumbnail ${entry.isReversed ? 'reversed' : ''}`}>
-                            <img src={entry.imageUrl} alt={entry.cardName} />
-                          </div>
-                        )}
-                        {entry.imageUrl2 && (
-                          <div className={`entry-thumbnail ${entry.isReversed2 ? 'reversed' : ''}`} style={{ marginLeft: '-10px' }}>
-                            <img src={entry.imageUrl2} alt={entry.cardName2} />
-                          </div>
-                        )}
-
-                        <div className="entry-details">
-                          <div className="entry-header">
-                            <div>
-                              <span className="entry-card-name">
-                                {entry.cardName} {entry.isReversed ? '(역방향)' : ''}
-                                {entry.cardName2 && ` + ${entry.cardName2} ${entry.isReversed2 ? '(역방향)' : ''}`}
-                              </span>
-                              <div className="entry-action-type">
-                                {entry.type === 'draw_player' && '플레이어 덱 드로우'}
-                                {entry.type === 'draw_referee' && '레프리 덱 드로우'}
-                                {entry.type === 'oracle_yesno' && 'Yes/No 오라클'}
-                                {entry.type === 'oracle_amount' && '수량 오라클'}
-                                {entry.type === 'oracle_action_subject' && '행동-대상 오라클'}
-                                {entry.type === 'select' && '카탈로그 탐색'}
-                                {entry.type === 'system' && '시스템 안내'}
-                              </div>
-                            </div>
-                            <span className="entry-time">
-                              {new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                            </span>
-                          </div>
-
-                          <div className="entry-interpretation">{entry.interpretation}</div>
-
-                          {entry.type !== 'system' && (
-                            <textarea
-                              className="entry-note-area"
-                              placeholder="여기에 생각이나 모험 상황, 행동 결과 등을 기록해 보세요..."
-                              value={entry.note}
-                              onChange={(e) => updateNote(entry.id, e.target.value)}
-                            />
-                          )}
-                        </div>
-
-                        <button
-                          className="delete-entry-btn"
-                          onClick={() => deleteEntry(entry.id)}
-                          title="로그 삭제"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Tab: Rules & Lore Reference */}
-            {activeTab === 'rules' && (
-              <div className="rules-section-container">
-                {/* 1. Welcome & Setting */}
-                <div className="collapsible-section">
-                  <button 
-                    className={`collapsible-header ${expandedSection === 'lore' ? 'active' : ''}`}
-                    onClick={() => setExpandedSection(expandedSection === 'lore' ? null : 'lore')}
-                    type="button"
-                  >
-                    <span>월드 배경 설정 & 설명</span>
-                    <span className="arrow">{expandedSection === 'lore' ? '▼' : '▶'}</span>
-                  </button>
-                  {expandedSection === 'lore' && (
-                    <div className="collapsible-content">
-                      <h3>Gloam의 세계에 오신 것을 환영합니다</h3>
-                      <p><strong>위험천만한 잔혹동화 세계관:</strong> Gloam의 세계는 기사도의 동화, 어두운 전설, 왜곡된 민담, 고대의 악으로 이루어져 있습니다. 아주 단순한 부적에서부터 현실을 뒤트는 주문에 이르기까지 마법이 사방에 도사리고 있으나, 그것은 결코 안전하지 않습니다.</p>
-                      <p><strong>타로 기반 시스템:</strong> 주사위 대신 표준 78장 타로 덱을 핵심 무작위 난수 생성기로 사용합니다. 전투는 숨겨진 카드를 통한 전략적인 눈치싸움 방식을 띠며, 수명/성장 경로 생성(Lifepath)과 주문 마법, 오라클 등 여러 방면에서 메이저/마이너 아르카나 카드의 상징성을 폭넓게 차용합니다.</p>
-                      <p><strong>플레이어 주도 서사:</strong> 캐릭터 제작 시 각자 자신만의 <strong>목표(Goals)</strong>를 설정하며, 이를 수행하고 달성하는 과정이 모험가의 주된 성장 요소가 됩니다. 레프리(Referee)는 미리 준비된 이야기를 따라가기보다는 플레이어가 세운 목표를 바탕으로 위협을 조직합니다.</p>
-                      <p><strong>관계의 가치:</strong> 평판, 피로 맺은 맹세, 조력자, 그리고 적대자의 관계는 칼날이나 주문만큼 중요하게 작용합니다. 아군과 적대자가 생기며, 세계는 모험가의 행동에 실시간으로 반응합니다.</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* 2. Character Creation */}
-                <div className="collapsible-section">
-                  <button 
-                    className={`collapsible-header ${expandedSection === 'creation' ? 'active' : ''}`}
-                    onClick={() => setExpandedSection(expandedSection === 'creation' ? null : 'creation')}
-                    type="button"
-                  >
-                    <span>캐릭터 생성 가이드</span>
-                    <span className="arrow">{expandedSection === 'creation' ? '▼' : '▶'}</span>
-                  </button>
-                  {expandedSection === 'creation' && (
-                    <div className="collapsible-content">
-                      <h3>캐릭터 구축 체크리스트</h3>
-                      <ol style={{ paddingLeft: '20px', marginBottom: '12px' }}>
-                        <li><strong>라이프패스 (Lifepath):</strong> 플레이어 덱에서 카드를 연속 드로우하여 가문을 구성하고 성장 계절을 설정합니다. 뽑은 카드의 수치만큼 나이를 누적합니다 (최소 모험가 나이 18세).
-                          <ul style={{ paddingLeft: '20px', fontSize: '12px', color: 'var(--text)' }}>
-                            <li><strong>완드(Wands):</strong> 신비하고 기묘하며 오컬트적인 환경</li>
-                            <li><strong>검(Swords):</strong> 전쟁, 분쟁, 가문의 방랑, 소귀족</li>
-                            <li><strong>컵(Cups):</strong> 학술, 안전, 상업, 정치적 환경</li>
-                            <li><strong>동전(Coins):</strong> 시정 잡배, 가난, 빈민가, 방랑자</li>
-                          </ul>
-                        </li>
-                        <li style={{ marginTop: '6px' }}><strong>Stat (능력치 배분):</strong> 1, 2, 3, 4의 능력치 점수를 아래 네 개 분야에 원하는 대로 분배합니다:
-                          <ul style={{ paddingLeft: '20px', fontSize: '12px', color: 'var(--text)' }}>
-                            <li><strong>컵 (Cups):</strong> 판단력, 학식, 의학, 돌봄, 인내, 도구 활용</li>
-                            <li><strong>검 (Swords):</strong> 근력, 용기, 지구력, 활력, 전투 행동</li>
-                            <li><strong>완드 (Wands):</strong> 의지, 신비 능력, 정신력, 열정, 비전 오컬트 지식</li>
-                            <li><strong>동전 (Coins):</strong> 민첩성, 은신, 영리함, 대인 조작, 자산</li>
-                          </ul>
-                        </li>
-                        <li style={{ marginTop: '6px' }}><strong>보케이션 (Vocation / 직업 선택):</strong> 가장 높은 능력치 점수인 **4**를 할당한 스탯에 따라 직업과 고유 시작 재능(Starting Talent)이 자동 결정됩니다:
-                          <ul style={{ paddingLeft: '20px', fontSize: '12px', color: 'var(--text)' }}>
-                            <li>Cups (4점) &rarr; <strong>전령 (Herald)</strong> (시작 재능: 무장해제 미소 Disarming Presence)</li>
-                            <li>Swords (4점) &rarr; <strong>방랑기사 (Knight-Errant)</strong> (시작 재능: 출격 명령 Sally Forth)</li>
-                            <li>Wands (4점) &rarr; <strong>술사 (Mystic)</strong> (시작 재능: 비전 마법 Magick)</li>
-                            <li>Coins (4점) &rarr; <strong>소매치기 (Cutpurse)</strong> (시작 재능: 날렵함 Nimble)</li>
-                          </ul>
-                        </li>
-                        <li style={{ marginTop: '6px' }}><strong>결의 (Resolve):</strong> 시작 수치 1점 (최대 10). 재능을 발동하거나 대실패 시 재충전, 스탯 판정 보정에 소모하는 강력한 자원입니다.</li>
-                      </ol>
-                      <div className="stat-box" style={{ fontSize: '12px' }}>
-                        <strong>솔로 플레이 혜택:</strong> 혼자서 룰북 오라클만을 통해 솔로 플레이를 할 때는, <strong>시작 시 임의의 직업 재능을 1개 추가로 소유한 채</strong> 모험을 개시합니다!
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 3. Arcane Magick Formulator */}
-                <div className="collapsible-section">
-                  <button 
-                    className={`collapsible-header ${expandedSection === 'magick' ? 'active' : ''}`}
-                    onClick={() => setExpandedSection(expandedSection === 'magick' ? null : 'magick')}
-                    type="button"
-                  >
-                    <span>비전 마법 주문 생성기 (Page 38)</span>
-                    <span className="arrow">{expandedSection === 'magick' ? '▼' : '▶'}</span>
-                  </button>
-                  {expandedSection === 'magick' && (
-                    <div className="collapsible-content">
-                      <p style={{ marginBottom: '12px' }}>
-                        비전 마법은 플레이어 덱 마이너 카드의 <strong>동사 단어 (Verb)</strong>와 레프리 덱 메이저 카드의 <strong>명사 단어 (Noun)</strong>를 임의 조합하여 그 효력을 Referee와 상의하여 유연하게 해석하는 고유 시스템입니다. 최소 1 이상의 Resolve를 소모하여 캐스팅합니다.
-                      </p>
-                      <button 
-                        type="button" 
-                        className="btn-primary" 
-                        onClick={rollArcaneMagickSpell}
-                        style={{ width: '100%', marginBottom: '12px' }}
-                      >
-                        비전 마법 단어 결합하여 주문 생성
-                      </button>
-                      
-                      <div className="stat-box" style={{ fontSize: '12px' }}>
-                        <strong>마법 피해량 규칙:</strong> 적에게 상처를 유발하는 형태의 주문은 사용 시 소비한 **Resolve 1점당 1부상**의 피해를 기본 유발합니다. 전투 중 사용하려면 대항 완드(Wands) 판정에 승리해야 합니다.
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 4. Folk Road NPC Generator */}
-                <div className="collapsible-section">
-                  <button 
-                    className={`collapsible-header ${expandedSection === 'folk' ? 'active' : ''}`}
-                    onClick={() => setExpandedSection(expandedSection === 'folk' ? null : 'folk')}
-                    type="button"
-                  >
-                    <span>길 위의 나그네(NPC) 생성기 (Page 53)</span>
-                    <span className="arrow">{expandedSection === 'folk' ? '▼' : '▶'}</span>
-                  </button>
-                  {expandedSection === 'folk' && (
-                    <div className="collapsible-content">
-                      <p style={{ marginBottom: '12px' }}>
-                        모험 중 길에서 갑작스레 만나게 될 부랑아나 상인, 사제 등의 만남을 결정합니다. 메이저 아르카나 카드를 기반으로 나그네의 역할군, 전용 성명 및 별자리 특징을 조합하여 제시합니다.
-                      </p>
-                      <button 
-                        type="button" 
-                        className="btn-primary" 
-                        onClick={rollFolkTraveler}
-                        style={{ width: '100%' }}
-                      >
-                        무작위 길 위의 나그네 생성
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* 5. Core Rules & Tests */}
-                <div className="collapsible-section">
-                  <button 
-                    className={`collapsible-header ${expandedSection === 'tests' ? 'active' : ''}`}
-                    onClick={() => setExpandedSection(expandedSection === 'tests' ? null : 'tests')}
-                    type="button"
-                  >
-                    <span>능력치 판정(Test) 규칙 (Page 8)</span>
-                    <span className="arrow">{expandedSection === 'tests' ? '▼' : '▶'}</span>
-                  </button>
-                  {expandedSection === 'tests' && (
-                    <div className="collapsible-content">
-                      <h3>능력치 테스트 진행법</h3>
-                      <p>수행하고자 하는 행동에 부합하는 능력치 분야(스탯 1~4점)를 고르고 플레이어 덱에서 카드를 1장 드로우합니다. 카드 수치와 능력치를 합쳐 <strong>14점 이상</strong>이면 성공합니다.</p>
-                      
-                      <h4 style={{ marginTop: '8px', marginBottom: '4px' }}>테스트 밀어붙이기 (Pushing)</h4>
-                      <p>첫 카드의 점수가 모자라 실패했을 때, 선택 사항으로 판정을 <strong>푸시(Push)</strong>할 수 있습니다. 덱에서 2번째 카드를 뽑아 합산하며, 이를 통해 14점이 넘으면 성공입니다. 단, 두 번 드로우했음에도 판정에 미달하면 <strong>대실패 (Great Failure)</strong>로 취급되어 심각한 부작용이 생기지만, 내적인 고뇌와 한 극복으로 **Resolve 1점**을 환급받습니다.</p>
-                      
-                      <h4 style={{ marginTop: '8px', marginBottom: '4px' }}>판정 결과 유형</h4>
-                      <ul style={{ paddingLeft: '20px', fontSize: '13px' }}>
-                        <li><strong>대성공 (Great Success):</strong> 첫 장 인출만으로 14점 이상이며, 그 카드의 슈트가 판정하려던 스탯 분야(Cups/Swords 등)와 일치하는 경우. 원하는 결과 이상의 추가 보너스 획득.</li>
-                        <li><strong>성공 (Success):</strong> 최종 합산 수치 14점 이상.</li>
-                        <li><strong>실패 (Failure):</strong> 합산 수치 13점 이하. 좋지 않은 장애나 난관 돌발.</li>
-                        <li><strong>대실패 (Great Failure):</strong> 푸시(Push) 카드까지 뽑았으나 최종 13점 이하에 그침.</li>
-                      </ul>
-
-                      <h4 style={{ marginTop: '8px', marginBottom: '4px' }}>시간 척도 (Time Scales)</h4>
-                      <p><strong>교대 (Watch):</strong> 8시간 단위 (야영, 정비 및 야외 대이동 단위). 하루는 3교대로 구성.<br />
-                      <strong>차례 (Turn):</strong> 15분 단위 (던전 탐색, 은신 및 구조물 돌파 시점). 1시간에 4턴.<br />
-                      <strong>라운드 (Round):</strong> 10초 단위 (전투 상황용 정밀 턴제).</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* 6. Combat & Wounds */}
-                <div className="collapsible-section">
-                  <button 
-                    className={`collapsible-header ${expandedSection === 'combat' ? 'active' : ''}`}
-                    onClick={() => setExpandedSection(expandedSection === 'combat' ? null : 'combat')}
-                    type="button"
-                  >
-                    <span>전투 흐름 & 부상 규칙</span>
-                    <span className="arrow">{expandedSection === 'combat' ? '▼' : '▶'}</span>
-                  </button>
-                  {expandedSection === 'combat' && (
-                    <div className="collapsible-content">
-                      <h3>전투 라운드 진행 방법</h3>
-                      <ol style={{ paddingLeft: '20px', fontSize: '13px', marginBottom: '12px' }}>
-                        <li><strong>카드 수급:</strong> 핸드 카드가 4장이 되도록 드로우합니다. 레프리는 몬스터/NPC당 카드를 3장씩 쥡니다.</li>
-                        <li><strong>우선권 결정 (Initiative):</strong> 각자 손패에서 카드 1장을 골라 엎어놓습니다. 엎어놓은 카드의 수치는 적이 나를 맞추기 위해 넘어야 할 판정 난이도가 됩니다 (낮은 카드는 선수를 잡기 좋으나 피격받기 쉽고, 높은 카드는 느리나 탄탄해집니다).</li>
-                        <li><strong>행동 단계:</strong> 우선권 카드 수치 0번부터 14번까지 차례대로 오픈하며 자기 차례의 행동을 집행합니다.</li>
-                        <li><strong>정리 단계:</strong> 원하지 않는 패를 버리고 새 라운드를 엽니다. 라운드 중 광대(Fool) 카드가 1번이라도 오픈되었다면, 정리 단계에서 다 쓴 카드를 수거해 덱을 즉시 새로 섞어야 합니다.</li>
-                      </ol>
-
-                      <h3>부위별 부상 (Wound) 효과</h3>
-                      <p style={{ marginBottom: '8px' }}>체력 점수(HP) 개념이 존재하지 않으며, 피격 시 공격 무기의 고유 부상 수치에 해당하는 만큼 부위 부상을 입습니다:</p>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-                        <thead>
-                          <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                            <th style={{ textAlign: 'left', padding: '6px' }}>부상 부위</th>
-                            <th style={{ textAlign: 'left', padding: '6px' }}>발생하는 결함/디버프</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                            <td style={{ padding: '6px', fontWeight: 600 }}>팔 (Arms)</td>
-                            <td style={{ padding: '6px' }}>해당 팔에 든 무기나 도구를 떨어뜨립니다. 치료 전까진 그 팔을 전혀 쓸 수 없습니다.</td>
-                          </tr>
-                          <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                            <td style={{ padding: '6px', fontWeight: 600 }}>머리 (Head)</td>
-                            <td style={{ padding: '6px' }}>정신을 잃고 기절합니다. 기절해 있는 동안 머리에 추가 부상을 1번 더 입으면 즉사합니다.</td>
-                          </tr>
-                          <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                            <td style={{ padding: '6px', fontWeight: 600 }}>몸통 (Torso)</td>
-                            <td style={{ padding: '6px' }}>극심한 장기 충격으로 인해 수행하는 모든 판정(Test)에 -3 보정 페널티가 영구 누적됩니다.</td>
-                          </tr>
-                          <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                            <td style={{ padding: '6px', fontWeight: 600 }}>다리 (Legs)</td>
-                            <td style={{ padding: '6px' }}>한 쪽을 다칠 때마다 이동 속도가 2씩 삭감됩니다. 속도가 0이 되면 다른 사람의 도움 없이는 스스로 설 수 없습니다.</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-      </main>
-
-      {/* 4. Fool Card Shuffling Modal */}
-      {showFoolModal && (
-        <div className="settings-modal" style={{ zIndex: 1001 }}>
-          <div className="settings-box" style={{ maxWidth: '400px', textAlign: 'center', padding: '32px' }}>
-            <AlertCircle size={48} className="text-purple-300" style={{ margin: '0 auto 16px', color: 'var(--accent)' }} />
-            <h3 style={{ fontSize: '20px', marginBottom: '12px' }}>광대 (The Fool) 드로우됨</h3>
-            <p style={{ fontSize: '13px', color: 'var(--text)', marginBottom: '24px', lineBreak: 'normal' }}>
-              광대 카드는 덱에 예측할 수 없는 혼돈을 의미합니다. Gloam RPG 룰북 규칙에 따라, 광대 카드가 공개되면 즉시 모든 판정 카드를 회수해 덱을 새로 셔플해야 합니다.
-            </p>
-            <button className="btn-primary" onClick={triggerReshuffle} style={{ width: '100%' }}>
-              <Shuffle size={14} style={{ marginRight: '6px' }} /> 모든 카드 회수 및 다시 셔플
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 5. Firebase Configurations Settings Modal */}
-      {showSettingsModal && (
-        <div className="settings-modal">
-          <form className="settings-box" onSubmit={handleSettingsSave}>
-            <div className="settings-box-header">
-              <h3>구글 연동 & Firebase 클라우드 동기화 설정</h3>
-              <button
-                type="button"
-                className="btn-icon"
-                onClick={() => setShowSettingsModal(false)}
-                style={{ border: 'none', width: '24px', height: '24px' }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <p style={{ fontSize: '12px', color: 'var(--text)', marginBottom: '16px' }}>
-              아래에 Firebase 프로젝트 API 키값을 입력하시면 구글 로그인 활성화를 통해 다중 브라우저 기기 환경에서도 모험 일지(Journal Log) 데이터 동기화 혜택을 온전히 누릴 수 있습니다.
-            </p>
-
-            <div className="form-group">
-              <label>API Key (apiKey)</label>
-              <input
-                type="text"
-                className="form-control"
-                value={settingsForm.apiKey}
-                onChange={(e) => setSettingsForm({ ...settingsForm, apiKey: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Auth Domain (authDomain)</label>
-              <input
-                type="text"
-                className="form-control"
-                value={settingsForm.authDomain}
-                onChange={(e) => setSettingsForm({ ...settingsForm, authDomain: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Project ID (projectId)</label>
-              <input
-                type="text"
-                className="form-control"
-                value={settingsForm.projectId}
-                onChange={(e) => setSettingsForm({ ...settingsForm, projectId: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Storage Bucket (storageBucket)</label>
-              <input
-                type="text"
-                className="form-control"
-                value={settingsForm.storageBucket}
-                onChange={(e) => setSettingsForm({ ...settingsForm, storageBucket: e.target.value })}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Messaging Sender ID (messagingSenderId)</label>
-              <input
-                type="text"
-                className="form-control"
-                value={settingsForm.messagingSenderId}
-                onChange={(e) => setSettingsForm({ ...settingsForm, messagingSenderId: e.target.value })}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>App ID (appId)</label>
-              <input
-                type="text"
-                className="form-control"
-                value={settingsForm.appId}
-                onChange={(e) => setSettingsForm({ ...settingsForm, appId: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="domain-auth-info">
-              <p><strong>중요: Firebase 승인된 도메인(Authorized Domains) 설정</strong></p>
-              <p>구글 팝업 인증을 연동하려면 반드시 Firebase 콘솔의 Authentication &rarr; Settings &rarr; Authorized Domains 목록에 배포용 도메인을 등록해 주세요.</p>
-              <p>로컬 PC에서 개발하는 경우 기본적으로 <code>localhost</code>가 등록되어 있어야 정상 작동합니다.</p>
-            </div>
-
-            <div className="settings-actions">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={handleSettingsReset}
-                style={{ color: '#f87171' }}
-              >
-                연동 정보 완전 초기화
-              </button>
-              <button type="submit" className="btn-primary">
-                정보 등록 및 환경 갱신
-              </button>
-            </div>
-          </form>
         </div>
       )}
     </div>
   );
 }
-
-export default App;
