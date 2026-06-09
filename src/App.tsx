@@ -1809,7 +1809,7 @@ export default function App() {
                       <strong style={{ fontSize: "0.85rem", color: "var(--color-gold)" }}>무기 목록:</strong>
                       {WEAPONS.map(w => (
                         <div key={w.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.88rem", padding: "3px 0", borderBottom: "1px dashed rgba(0,0,0,0.05)" }}>
-                          <span>{w.nameKo} (Swords필요: {w.swordsReq})</span>
+                          <span>{w.nameKo} (Swords 필요: {w.swordsReq})</span>
                           <button className="btn-medieval-small" style={{ fontSize: "0.75rem", padding: "2px 6px" }} onClick={() => handleStartBuyTest({ name: w.name, nameKo: w.nameKo, coinsMod: w.coins, swordsReq: w.swordsReq })}>Coins판정</button>
                         </div>
                       ))}
