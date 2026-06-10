@@ -553,6 +553,7 @@ export default function App() {
   // CORE FUNCTIONS
   // =================================================================
   const drawCardForPlayer = (count: number = 1) => {
+    let foolDrawn = false;
     updateState(s => {
       let deck = [...s.playerDeck];
       let discard = [...s.playerDiscard];
@@ -566,7 +567,9 @@ export default function App() {
         }
         const card = deck.shift();
         if (card) {
-          // 25% chance of being reversed
+          if (card.type === "major" && card.card === "0") {
+            foolDrawn = true;
+          }
           const isReversed = Math.random() < 0.25;
           hand.push({ ...card, reversed: isReversed });
         }
@@ -579,6 +582,13 @@ export default function App() {
         hand
       };
     });
+
+    if (foolDrawn) {
+      setTimeout(() => {
+        alert("🔄 플레이어 덱에서 광대(The Fool)가 드로우되었습니다! 규칙에 따라 모든 손패를 회수하고 양쪽 덱 전체를 새로 섞습니다.");
+        reshuffleAllDecks();
+      }, 50);
+    }
   };
 
   const playCardFromHand = (idx: number, purpose: string) => {
@@ -656,13 +666,31 @@ export default function App() {
           alert("🔄 플레이어 덱에서 광대(The Fool)가 드로우되었습니다! 규칙에 따라 모든 손패를 회수하고 양쪽 덱 전체를 새로 섞습니다.");
           reshuffleAllDecks();
         }, 50);
+        if (purpose === "carousing" || purpose === "spell") {
+          return card;
+        }
         return null;
       }
 
       if (purpose === "oracle") {
         const lastVal = state?.lastDrawnOracleCardValue;
         const currentVal = card.card;
-        updateState(s => ({ ...s, lastDrawnOracleCardValue: currentVal }));
+
+        updateState(s => {
+          const nextJournals = [...s.journals];
+          if (lastVal === currentVal) {
+            nextJournals.unshift({
+              id: Date.now().toString(),
+              text: `[⚠️ 차원 왜곡] 오라클 카드 연속 동일 값 드로우 (${currentVal})! 돌발 사건(Event Deck) 격발이 필요합니다.`,
+              date: new Date().toLocaleString()
+            });
+          }
+          return {
+            ...s,
+            lastDrawnOracleCardValue: currentVal,
+            journals: nextJournals
+          };
+        });
 
         if (lastVal === currentVal) {
           setTimeout(() => {
@@ -973,9 +1001,11 @@ export default function App() {
   };
 
   const healWound = (partKey: "head" | "torso" | "lArm" | "rArm" | "lLeg" | "rLeg", partNameKo: string) => {
-    if (confirm(`식사와 함께 하룻밤 야영 및 휴식(Rest & Recovery)을 진행하여 ${partNameKo}의 부상을 치유하시겠습니까?`)) {
+    if (confirm(`식사와 함께 하룻밤 야영 및 휴식(Rest & Recovery)을 진행하여 ${partNameKo}의 부상을 치유하시겠습니까?\n(시간이 다음 날 아침 제 1워치로 전진합니다.)`)) {
       updateState(s => ({
         ...s,
+        day: s.day + 1,
+        watch: 1,
         character: {
           ...s.character,
           wounds: {
@@ -986,7 +1016,7 @@ export default function App() {
         journals: [
           {
             id: Date.now().toString(),
-            text: `[야영 휴식] 식사와 함께 편안한 휴식을 취해 ${partNameKo} 부상을 치유했습니다. (1 Wound Healed)`,
+            text: `[야영 휴식] 식사와 함께 편안한 휴식을 취해 ${partNameKo} 부상을 치유했습니다. (시간이 제 ${s.day + 1}일 제 1워치로 전진했습니다.)`,
             date: new Date().toLocaleString()
           },
           ...s.journals
@@ -1093,6 +1123,13 @@ export default function App() {
     const success = total >= 14;
 
     updateState(s => {
+      let nextWatch = s.watch + 1;
+      let nextDay = s.day;
+      if (nextWatch > 3) {
+        nextWatch = 1;
+        nextDay += 1;
+      }
+
       const nextBrewResult = {
         success,
         potionName,
@@ -1104,7 +1141,7 @@ export default function App() {
       const nextJournals = [
         {
           id: Date.now().toString(),
-          text: `[연금술 제조] 재료: ${brewingIngredient} -> 완드 판정: ${total}점 (카드: ${getCardDisplayName(card)} + Wands: ${statVal}) -> 결과: ${success ? "성공 및 비약 생산" : "실패 및 재료 소실"}`,
+          text: `[연금술 제조] 재료: ${brewingIngredient} -> 완드 판정: ${total}점 (카드: ${getCardDisplayName(card)} + Wands: ${statVal}) -> 결과: ${success ? "성공 및 비약 생산" : "실패 및 재료 소실"} (시간 1 워치 경과: 제 ${nextDay}일 제 ${nextWatch}워치)`,
           date: new Date().toLocaleString()
         },
         ...s.journals
@@ -1112,6 +1149,8 @@ export default function App() {
 
       return {
         ...s,
+        day: nextDay,
+        watch: nextWatch,
         alchemicalBrewResult: nextBrewResult,
         journals: nextJournals
       };
@@ -1140,32 +1179,8 @@ export default function App() {
   };
 
   const rollArcaneSpell = () => {
-    let minorCard: Card | null = null;
-    updateState(s => {
-      let deck = [...s.playerDeck];
-      let discard = [...s.playerDiscard];
-      if (deck.length === 0) {
-        if (discard.length === 0) return s;
-        deck = shuffle(discard);
-        discard = [];
-      }
-      const c = deck.shift();
-      if (c) {
-        minorCard = { ...c, reversed: Math.random() < 0.25 };
-        discard.push(c);
-      }
-      return { ...s, playerDeck: deck, playerDiscard: discard };
-    });
-
-    if (!minorCard) return;
-    const minCard = minorCard as Card;
-    if (minCard.type === "major" && minCard.card === "0") {
-      setTimeout(() => {
-        alert("🔄 주문 마법 단어 탐색 중 광대(The Fool)가 드로우되었습니다! 플레이어 덱을 새로 셔플합니다.");
-        reshuffleAllDecks();
-      }, 50);
-      return;
-    }
+    const minCard = drawPlayerCard("spell");
+    if (!minCard) return;
 
     let refereeCard: Card | null = null;
     updateState(s => {
@@ -1231,6 +1246,10 @@ export default function App() {
   const addArcaneSpellToSpellbook = () => {
     if (!state?.arcaneSpellResult) return;
     const spellName = state.arcaneSpellResult.spellName;
+    if (spellName.includes("광대의 장난")) {
+      alert("광대의 장난 주문은 주문첩에 영구히 저장할 수 없습니다!");
+      return;
+    }
     updateState(s => {
       const nextSpellbook = [...(s.character.spellbook || [])];
       if (nextSpellbook.includes(spellName)) {
@@ -1458,29 +1477,14 @@ export default function App() {
   };
 
   const rollCarousing = () => {
-    let cardDrawn: Card | null = null;
-    updateState(s => {
-      let deck = [...s.playerDeck];
-      let discard = [...s.playerDiscard];
-      if (deck.length === 0) {
-        deck = shuffle(discard);
-        discard = [];
-      }
-      const c = deck.shift();
-      if (c) {
-        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
-        discard.push(c);
-      }
-      return { ...s, playerDeck: deck, playerDiscard: discard };
-    });
+    const card = drawPlayerCard("carousing");
+    if (!card) return;
 
-    if (cardDrawn) {
-      const key = getCarousingKey(cardDrawn);
-      const text = CAROUSING_TABLE[key] || "알 수 없는 이벤트";
-      setCarousingResult({ card: cardDrawn, text });
-      setFolkNpcResult(null);
-      setMagickItemResult(null);
-    }
+    const key = getCarousingKey(card);
+    const text = CAROUSING_TABLE[key] || "알 수 없는 이벤트";
+    setCarousingResult({ card, text });
+    setFolkNpcResult(null);
+    setMagickItemResult(null);
   };
 
   const rollFolkNpc = () => {
@@ -1520,53 +1524,38 @@ export default function App() {
   };
 
   const rollMagickItem = () => {
-    let cardDrawn: Card | null = null;
-    updateState(s => {
-      let deck = [...s.playerDeck];
-      let discard = [...s.playerDiscard];
-      if (deck.length === 0) {
-        deck = shuffle(discard);
-        discard = [];
-      }
-      const c = deck.shift();
-      if (c) {
-        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
-        discard.push(c);
-      }
-      return { ...s, playerDeck: deck, playerDiscard: discard };
-    });
+    const card = drawPlayerCard("magick");
+    if (!card) return;
 
-    if (cardDrawn) {
-      const key = getCarousingKey(cardDrawn);
-      if (key === "Fool") {
+    const key = getCarousingKey(card);
+    if (key === "Fool") {
+      setMagickItemResult({
+        card,
+        suit: selectedMagickSuit,
+        name: "광대의 장난 (The Fool's Prank)",
+        text: "오라클 드로우 중 광대(The Fool)가 뽑혔습니다. 유물을 획득하지 못하고 덱의 마법이 흩어집니다! 덱 전체를 셔플해야 합니다."
+      });
+    } else {
+      const suitArray = MAGICK_ITEMS[selectedMagickSuit] || [];
+      const found = suitArray.find(item => item.key === key);
+      if (found) {
         setMagickItemResult({
-          card: cardDrawn,
+          card,
           suit: selectedMagickSuit,
-          name: "광대의 장난 (The Fool's Prank)",
-          text: "오라클 드로우 중 광대(The Fool)가 뽑혔습니다. 유물을 획득하지 못하고 덱의 마법이 흩어집니다! 덱 전체를 셔플해야 합니다."
+          name: found.name,
+          text: found.text
         });
       } else {
-        const suitArray = MAGICK_ITEMS[selectedMagickSuit] || [];
-        const found = suitArray.find(item => item.key === key);
-        if (found) {
-          setMagickItemResult({
-            card: cardDrawn,
-            suit: selectedMagickSuit,
-            name: found.name,
-            text: found.text
-          });
-        } else {
-          setMagickItemResult({
-            card: cardDrawn,
-            suit: selectedMagickSuit,
-            name: "미지의 유물 (Unknown Relic)",
-            text: `해당 카드 값(${key})에 일치하는 마법 보물을 찾을 수 없습니다.`
-          });
-        }
+        setMagickItemResult({
+          card,
+          suit: selectedMagickSuit,
+          name: "미지의 유물 (Unknown Relic)",
+          text: `해당 카드 값(${key})에 일치하는 마법 보물을 찾을 수 없습니다.`
+        });
       }
-      setCarousingResult(null);
-      setFolkNpcResult(null);
     }
+    setCarousingResult(null);
+    setFolkNpcResult(null);
   };
 
   const addNpcAsFriend = () => {
