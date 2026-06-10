@@ -491,7 +491,7 @@ export default function App() {
     return (
       <div className="loading-screen">
         <div className="loading-spinner">🔮</div>
-        <h2>GLOAM COMPANION LOADING...</h2>
+        <h2>Gloam Companion Loading...</h2>
         <p>황혼의 카드들을 정비하는 중...</p>
       </div>
     );
@@ -858,22 +858,15 @@ export default function App() {
       <div key={statKey} className="wreath-card">
         <div className="wreath-svg-container">
           <svg viewBox="0 0 100 100" style={{ width: "100%", height: "100%" }}>
-            <circle cx="50" cy="50" r="42" fill="none" stroke="var(--border-color)" strokeWidth="1" strokeDasharray="3 3"/>
-            <path d="M 50 8 C 30 8 8 30 8 50 C 8 70 30 92 50 92" fill="none" stroke="var(--border-color)" strokeWidth="1.5"/>
-            <path d="M 50 8 C 70 8 92 30 92 50 C 92 70 70 92 50 92" fill="none" stroke="var(--border-color)" strokeWidth="1.5"/>
+            {/* Elegant double-circle concentric border */}
+            <circle cx="50" cy="50" r="44" fill="none" stroke="var(--border-color)" strokeWidth="1"/>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--border-color)" strokeWidth="1.5" strokeDasharray="3 3"/>
+            <circle cx="50" cy="50" r="36" fill="none" stroke="var(--border-color)" strokeWidth="0.75"/>
             
-            <path d="M 50 8 C 47 12 44 14 50 18 C 56 14 53 12 50 8" fill="var(--border-color)"/>
-            <path d="M 23 20 C 20 24 18 26 24 29 C 28 25 26 23 23 20" fill="var(--border-color)"/>
-            <path d="M 8 50 C 12 47 14 44 18 50 C 14 56 12 53 8 50" fill="var(--border-color)"/>
-            <path d="M 23 80 C 26 77 28 75 24 71 C 20 75 21 78 23 80" fill="var(--border-color)"/>
-            <path d="M 77 20 C 80 24 82 26 76 29 C 72 25 74 23 77 20" fill="var(--border-color)"/>
-            <path d="M 92 50 C 88 47 86 44 82 50 C 86 56 88 53 92 50" fill="var(--border-color)"/>
-            <path d="M 77 80 C 74 77 72 75 76 71 C 80 75 79 78 77 80" fill="var(--border-color)"/>
-            
-            {statKey === "cups" && <path d="M 42 42 L 58 42 L 58 46 C 58 52 54 56 50 56 C 46 56 42 52 42 46 Z M 46 56 L 54 56 L 54 62 L 46 62 Z M 40 62 L 60 62 L 60 65 L 40 65 Z" fill="rgba(150, 111, 35, 0.15)" />}
-            {statKey === "swords" && <path d="M 48 30 L 52 30 L 52 58 L 56 58 L 56 61 L 52 61 L 52 68 L 48 68 L 48 61 L 44 61 L 44 58 L 48 58 Z" fill="rgba(150, 111, 35, 0.15)" />}
-            {statKey === "coins" && <path d="M 50 32 C 40 32 32 40 32 50 C 32 60 40 68 50 68 C 60 68 68 60 68 50 C 68 40 60 32 50 32 Z M 50 38 L 54 46 L 62 48 L 56 54 L 58 62 L 50 58 L 42 62 L 44 54 L 38 48 L 46 46 Z" fill="rgba(150, 111, 35, 0.15)" />}
-            {statKey === "wands" && <path d="M 46 30 L 54 30 L 52 65 L 48 65 Z M 44 26 L 56 26 L 56 29 L 44 29 Z" fill="rgba(150, 111, 35, 0.15)" />}
+            {statKey === "cups" && <path d="M 42 42 L 58 42 L 58 46 C 58 52 54 56 50 56 C 46 56 42 52 42 46 Z M 46 56 L 54 56 L 54 62 L 46 62 Z M 40 62 L 60 62 L 60 65 L 40 65 Z" fill="rgba(150, 111, 35, 0.18)" />}
+            {statKey === "swords" && <path d="M 48 30 L 52 30 L 52 58 L 56 58 L 56 61 L 52 61 L 52 68 L 48 68 L 48 61 L 44 61 L 44 58 L 48 58 Z" fill="rgba(150, 111, 35, 0.18)" />}
+            {statKey === "coins" && <path d="M 50 32 C 40 32 32 40 32 50 C 32 60 40 68 50 68 C 60 68 68 60 68 50 C 68 40 60 32 50 32 Z M 50 38 L 54 46 L 62 48 L 56 54 L 58 62 L 50 58 L 42 62 L 44 54 L 38 48 L 46 46 Z" fill="rgba(150, 111, 35, 0.18)" />}
+            {statKey === "wands" && <path d="M 46 30 L 54 30 L 52 65 L 48 65 Z M 44 26 L 56 26 L 56 29 L 44 29 Z" fill="rgba(150, 111, 35, 0.18)" />}
           </svg>
           <div className="wreath-value-overlay">{currentVal}</div>
         </div>
@@ -989,7 +982,7 @@ export default function App() {
         {activeTab === "dashboard" && (
           <div className="dashboard-grid">
             <div className="card-panel gold-border">
-              <h2 className="gothic-sub">글롬(GLOAM) companion에 오신 것을 환영합니다</h2>
+              <h2 className="gothic-sub">글롬(Gloam) Companion에 오신 것을 환영합니다</h2>
               <p style={{ lineHeight: "1.7", color: "var(--text-muted)" }}>
                 이 웹앱은 타로 카드 기반의 다크 판타지 솔로 저널링 RPG인 <strong>Gloam (v1.02)</strong>을 원활하게 
                 플레이할 수 있도록 설계된 전용 디지털 컴패니언입니다. 룰북 한 장 한 장의 세부 지침과 오라클, 
@@ -1037,7 +1030,7 @@ export default function App() {
 
             {/* Top Banner Header */}
             <div className="medieval-banner-header crenellation-header">
-              <span className="medieval-banner-logo">Gloam</span>
+              <span className="medieval-banner-logo">GLOAM</span>
               <div className="medieval-banner-inputs">
                 <div className="banner-field">
                   <span>NAME:</span>
@@ -1331,144 +1324,20 @@ export default function App() {
                     Anatomy &amp; Injuries (신체 부위 및 부상)
                   </h4>
                   
-                  <div className="wounds-anatomy-grid">
-                    {/* SVG Skeleton replaced by interactive medieval image overlay */}
-                    <div className="skeleton-svg-holder" style={{ position: "relative", padding: 0, border: "none", background: "transparent" }}>
-                      <img 
-                        src="/anatomy_woodcut.png" 
-                        alt="Anatomy & Injuries" 
-                        style={{ 
-                          width: "100%", 
-                          height: "auto", 
-                          maxHeight: "320px", 
-                          display: "block",
-                          border: "1px solid var(--border-color)",
-                          backgroundColor: "var(--bg-panel-light)",
-                          filter: "sepia(0.08) contrast(1.02)"
-                        }} 
-                      />
-                      <svg 
-                        viewBox="0 0 100 100" 
-                        style={{ 
-                          position: "absolute", 
-                          top: 0, 
-                          left: 0, 
-                          width: "100%", 
-                          height: "100%" 
-                        }}
-                      >
-                        {/* Head (Skull) */}
-                        <g 
-                          onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, head: !s.character.wounds.head } } }))}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <path 
-                            d="M 45 5 L 55 5 L 57 11 L 55 18 L 45 18 L 43 11 Z" 
-                            className={`skeleton-interactive-path ${state.character.wounds.head ? "path-wounded" : ""}`}
-                          />
-                        </g>
-
-                        {/* Torso */}
-                        <g
-                          onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, torso: !s.character.wounds.torso } } }))}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <path 
-                            d="M 44 18 L 56 18 L 57 32 L 55 49 L 45 49 L 43 32 Z" 
-                            className={`skeleton-interactive-path ${state.character.wounds.torso ? "path-wounded" : ""}`}
-                          />
-                        </g>
-
-                        {/* Left Arm (viewer's left) */}
-                        <g 
-                          onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lArm: !s.character.wounds.lArm } } }))}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <path 
-                            d="M 43 18 L 38 22 L 32 35 L 30 60 L 37 60 L 39 38 L 44 26 Z" 
-                            className={`skeleton-interactive-path ${state.character.wounds.lArm ? "path-wounded" : ""}`}
-                          />
-                        </g>
-
-                        {/* Right Arm (viewer's right) */}
-                        <g 
-                          onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rArm: !s.character.wounds.rArm } } }))}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <path 
-                            d="M 57 18 L 62 22 L 68 35 L 70 60 L 63 60 L 61 38 L 56 26 Z" 
-                            className={`skeleton-interactive-path ${state.character.wounds.rArm ? "path-wounded" : ""}`}
-                          />
-                        </g>
-
-                        {/* Left Leg (viewer's left) */}
-                        <g 
-                          onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lLeg: !s.character.wounds.lLeg } } }))}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <path 
-                            d="M 45 49 L 41 55 L 40 70 L 40 96 L 47 96 L 47 70 L 49 55 Z" 
-                            className={`skeleton-interactive-path ${state.character.wounds.lLeg ? "path-wounded" : ""}`}
-                          />
-                        </g>
-
-                        {/* Right Leg (viewer's right) */}
-                        <g 
-                          onClick={() => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rLeg: !s.character.wounds.rLeg } } }))}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <path 
-                            d="M 55 49 L 59 55 L 60 70 L 60 96 L 53 96 L 53 70 L 51 55 Z" 
-                            className={`skeleton-interactive-path ${state.character.wounds.rLeg ? "path-wounded" : ""}`}
-                          />
-                        </g>
-
-                        {/* Shield (Top-left floating coat of arms in blank space) */}
-                        <g
-                          onClick={() => {
-                            updateState(s => {
-                              const curr = s.character.armorNotches.shield;
-                              const next = curr === 3 ? 0 : 3;
-                              return { ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, shield: next } } };
-                            });
-                          }}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <path
-                            d="M 10 12 L 28 12 C 28 24, 25 30, 19 36 C 13 30, 10 24, 10 12 Z"
-                            className={`skeleton-interactive-path ${state.character.armorNotches.shield === 3 ? "path-wounded" : ""}`}
-                            style={{ strokeWidth: "1.5px" }}
-                          />
-                          <g style={{ pointerEvents: "none" }}>
-                            <path
-                              d="M 12 14 L 26 14 C 26 23, 23 28, 19 33 C 15 28, 12 23, 12 14 Z"
-                              fill="none"
-                              stroke="var(--text-bright)"
-                              strokeWidth="0.8"
-                              opacity="0.6"
-                            />
-                            <line x1="19" y1="17" x2="19" y2="26" stroke="var(--text-bright)" strokeWidth="1" opacity="0.7" />
-                            <line x1="14" y1="20" x2="24" y2="20" stroke="var(--text-bright)" strokeWidth="1" opacity="0.7" />
-                            <text x="19" y="30" fontSize="4.2" fontFamily="var(--gothic)" fontWeight="bold" textAnchor="middle" fill="var(--text-bright)">SHIELD</text>
-                          </g>
-                        </g>
-                      </svg>
-                    </div>
-
-                    {/* Interactive List Controls */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.92rem" }}>
-                      {/* Head control */}
-                      <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: "bold" }}>
-                          <input 
-                            type="checkbox" 
-                            checked={state.character.wounds.head} 
-                            onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, head: e.target.checked } } }))} 
-                          />
-                          <span style={{ color: state.character.wounds.head ? "var(--color-crimson)" : "inherit" }}>머리 (Head) [기절]</span>
-                        </div>
-                        <div style={{ marginLeft: "20px", display: "flex", alignItems: "center", gap: "5px", fontSize: "0.88rem" }}>
-                          <span>투구 AP2:</span>
+                  <div className="injuries-grid">
+                    {/* Head Injury Card */}
+                    <div className={`injury-card ${state.character.wounds.head ? "wounded" : ""}`}>
+                      <div className="injury-card-header">
+                        <input 
+                          type="checkbox" 
+                          checked={state.character.wounds.head} 
+                          onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, head: e.target.checked } } }))} 
+                        />
+                        <span style={{ color: state.character.wounds.head ? "var(--color-crimson)" : "inherit" }}>머리 (Head) [기절]</span>
+                      </div>
+                      <div className="injury-card-content">
+                        <span>투구 AP2:</span>
+                        <div style={{ display: "flex", gap: "3px" }}>
                           {[1, 2].map(n => (
                             <input key={n} type="checkbox" checked={state.character.armorNotches.helmet >= n} onChange={() => {
                               updateState(s => {
@@ -1480,19 +1349,21 @@ export default function App() {
                           ))}
                         </div>
                       </div>
+                    </div>
 
-                      {/* Torso control */}
-                      <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: "bold" }}>
-                          <input 
-                            type="checkbox" 
-                            checked={state.character.wounds.torso} 
-                            onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, torso: e.target.checked } } }))} 
-                          />
-                          <span style={{ color: state.character.wounds.torso ? "var(--color-crimson)" : "inherit" }}>몸통 (Torso) [-3 판정]</span>
-                        </div>
-                        <div style={{ marginLeft: "20px", display: "flex", alignItems: "center", gap: "5px", fontSize: "0.88rem" }}>
-                          <span>흉갑 AP3:</span>
+                    {/* Torso Injury Card */}
+                    <div className={`injury-card ${state.character.wounds.torso ? "wounded" : ""}`}>
+                      <div className="injury-card-header">
+                        <input 
+                          type="checkbox" 
+                          checked={state.character.wounds.torso} 
+                          onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, torso: e.target.checked } } }))} 
+                        />
+                        <span style={{ color: state.character.wounds.torso ? "var(--color-crimson)" : "inherit" }}>몸통 (Torso) [-3 판정]</span>
+                      </div>
+                      <div className="injury-card-content">
+                        <span>흉갑 AP3:</span>
+                        <div style={{ display: "flex", gap: "3px" }}>
                           {[1, 2, 3].map(n => (
                             <input key={n} type="checkbox" checked={state.character.armorNotches.cuirass >= n} onChange={() => {
                               updateState(s => {
@@ -1504,80 +1375,103 @@ export default function App() {
                           ))}
                         </div>
                       </div>
+                    </div>
 
-                      {/* Arms control */}
-                      <div>
-                        <div style={{ fontWeight: "bold", marginBottom: "2px" }}>양팔 (Arms) [장비 떨어뜨림]</div>
-                        <div style={{ marginLeft: "10px", display: "flex", flexDirection: "column", gap: "2px", fontSize: "0.88rem" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                            <input 
-                              type="checkbox" 
-                              checked={state.character.wounds.lArm} 
-                              onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lArm: e.target.checked } } }))} 
-                            />
-                            <span>왼팔 건틀릿:</span>
-                            <input type="checkbox" checked={state.character.armorNotches.gauntletL >= 1} onChange={() => {
-                              updateState(s => ({ ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, gauntletL: s.character.armorNotches.gauntletL === 1 ? 0 : 1 } } }));
+                    {/* Left Arm Injury Card */}
+                    <div className={`injury-card ${state.character.wounds.lArm ? "wounded" : ""}`}>
+                      <div className="injury-card-header">
+                        <input 
+                          type="checkbox" 
+                          checked={state.character.wounds.lArm} 
+                          onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lArm: e.target.checked } } }))} 
+                        />
+                        <span style={{ color: state.character.wounds.lArm ? "var(--color-crimson)" : "inherit" }}>왼팔 (L.Arm) [떨어뜨림]</span>
+                      </div>
+                      <div className="injury-card-content">
+                        <span>건틀릿 AP1:</span>
+                        <input type="checkbox" checked={state.character.armorNotches.gauntletL >= 1} onChange={() => {
+                          updateState(s => ({ ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, gauntletL: s.character.armorNotches.gauntletL === 1 ? 0 : 1 } } }));
+                        }} />
+                      </div>
+                    </div>
+
+                    {/* Right Arm Injury Card */}
+                    <div className={`injury-card ${state.character.wounds.rArm ? "wounded" : ""}`}>
+                      <div className="injury-card-header">
+                        <input 
+                          type="checkbox" 
+                          checked={state.character.wounds.rArm} 
+                          onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rArm: e.target.checked } } }))} 
+                        />
+                        <span style={{ color: state.character.wounds.rArm ? "var(--color-crimson)" : "inherit" }}>오른팔 (R.Arm) [떨어뜨림]</span>
+                      </div>
+                      <div className="injury-card-content">
+                        <span>건틀릿 AP1:</span>
+                        <input type="checkbox" checked={state.character.armorNotches.gauntletR >= 1} onChange={() => {
+                          updateState(s => ({ ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, gauntletR: s.character.armorNotches.gauntletR === 1 ? 0 : 1 } } }));
+                        }} />
+                      </div>
+                    </div>
+
+                    {/* Left Leg Injury Card */}
+                    <div className={`injury-card ${state.character.wounds.lLeg ? "wounded" : ""}`}>
+                      <div className="injury-card-header">
+                        <input 
+                          type="checkbox" 
+                          checked={state.character.wounds.lLeg} 
+                          onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lLeg: e.target.checked } } }))} 
+                        />
+                        <span style={{ color: state.character.wounds.lLeg ? "var(--color-crimson)" : "inherit" }}>왼다리 (L.Leg) [-2 이동]</span>
+                      </div>
+                      <div className="injury-card-content">
+                        <span>정강이 AP2:</span>
+                        <div style={{ display: "flex", gap: "3px" }}>
+                          {[1, 2].map(n => (
+                            <input key={n} type="checkbox" checked={state.character.armorNotches.greaveL >= n} onChange={() => {
+                              updateState(s => {
+                                const current = s.character.armorNotches.greaveL;
+                                const next = current === n ? n - 1 : n;
+                                return { ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, greaveL: next } } };
+                              });
                             }} />
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                            <input 
-                              type="checkbox" 
-                              checked={state.character.wounds.rArm} 
-                              onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rArm: e.target.checked } } }))} 
-                            />
-                            <span>오른팔 건틀릿:</span>
-                            <input type="checkbox" checked={state.character.armorNotches.gauntletR >= 1} onChange={() => {
-                              updateState(s => ({ ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, gauntletR: s.character.armorNotches.gauntletR === 1 ? 0 : 1 } } }));
-                            }} />
-                          </div>
+                          ))}
                         </div>
                       </div>
+                    </div>
 
-                      {/* Legs control */}
-                      <div>
-                        <div style={{ fontWeight: "bold", marginBottom: "2px" }}>양다리 (Legs) [이동력 -2/개]</div>
-                        <div style={{ marginLeft: "10px", display: "flex", flexDirection: "column", gap: "2px", fontSize: "0.88rem" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                            <input 
-                              type="checkbox" 
-                              checked={state.character.wounds.lLeg} 
-                              onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lLeg: e.target.checked } } }))} 
-                            />
-                            <span>왼다리 정강이:</span>
-                            {[1, 2].map(n => (
-                              <input key={n} type="checkbox" checked={state.character.armorNotches.greaveL >= n} onChange={() => {
-                                updateState(s => {
-                                  const current = s.character.armorNotches.greaveL;
-                                  const next = current === n ? n - 1 : n;
-                                  return { ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, greaveL: next } } };
-                                });
-                              }} />
-                            ))}
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                            <input 
-                              type="checkbox" 
-                              checked={state.character.wounds.rLeg} 
-                              onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rLeg: e.target.checked } } }))} 
-                            />
-                            <span>오른다리 정강이:</span>
-                            {[1, 2].map(n => (
-                              <input key={n} type="checkbox" checked={state.character.armorNotches.greaveR >= n} onChange={() => {
-                                updateState(s => {
-                                  const current = s.character.armorNotches.greaveR;
-                                  const next = current === n ? n - 1 : n;
-                                  return { ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, greaveR: next } } };
-                                });
-                              }} />
-                            ))}
-                          </div>
+                    {/* Right Leg Injury Card */}
+                    <div className={`injury-card ${state.character.wounds.rLeg ? "wounded" : ""}`}>
+                      <div className="injury-card-header">
+                        <input 
+                          type="checkbox" 
+                          checked={state.character.wounds.rLeg} 
+                          onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rLeg: e.target.checked } } }))} 
+                        />
+                        <span style={{ color: state.character.wounds.rLeg ? "var(--color-crimson)" : "inherit" }}>오른다리 (R.Leg) [-2 이동]</span>
+                      </div>
+                      <div className="injury-card-content">
+                        <span>정강이 AP2:</span>
+                        <div style={{ display: "flex", gap: "3px" }}>
+                          {[1, 2].map(n => (
+                            <input key={n} type="checkbox" checked={state.character.armorNotches.greaveR >= n} onChange={() => {
+                              updateState(s => {
+                                const current = s.character.armorNotches.greaveR;
+                                const next = current === n ? n - 1 : n;
+                                return { ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, greaveR: next } } };
+                              });
+                            }} />
+                          ))}
                         </div>
                       </div>
+                    </div>
 
-                      {/* Shield control */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", borderTop: "1px dashed rgba(42,37,33,0.15)", paddingTop: "5px" }}>
-                        <strong>방패 마모 (Shield AP3):</strong>
+                    {/* Shield Injury Card */}
+                    <div className="injury-card">
+                      <div className="injury-card-header">
+                        <strong>방패 마모 (Shield AP3)</strong>
+                      </div>
+                      <div className="injury-card-content">
+                        <span>슬롯:</span>
                         <div style={{ display: "flex", gap: "3px" }}>
                           {[1, 2, 3].map(n => (
                             <input key={n} type="checkbox" checked={state.character.armorNotches.shield >= n} onChange={() => {
@@ -1590,8 +1484,8 @@ export default function App() {
                           ))}
                         </div>
                       </div>
-
                     </div>
+
                   </div>
 
                 </div>

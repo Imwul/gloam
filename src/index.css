@@ -1552,40 +1552,46 @@ h1, h2, h3, h4, h5, h6, .gothic-title, .gothic-sub {
 }
 
 /* Wounds Layout */
-.wounds-anatomy-grid {
+.injuries-grid {
   display: grid;
-  grid-template-columns: 1.2fr 1.5fr;
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
   margin-top: 15px;
 }
 
-.skeleton-svg-holder {
-  border: 1px solid rgba(42, 37, 33, 0.15);
+.injury-card {
   background-color: var(--bg-panel-light);
-  padding: 10px;
+  border: 1px solid var(--border-color);
+  padding: 12px 14px;
+  border-radius: var(--border-radius);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.injury-card:hover {
+  border-color: var(--color-gold);
+}
+
+.injury-card.wounded {
+  border-color: var(--color-crimson);
+  background-color: var(--color-crimson-light);
+}
+
+.injury-card-header {
+  display: flex;
   align-items: center;
+  gap: 8px;
+  font-weight: bold;
 }
 
-.skeleton-interactive-path {
-  fill: rgba(42, 37, 33, 0.005);
-  stroke: transparent;
-  stroke-width: 1.5px;
-  transition: all 0.2s;
-  cursor: pointer;
-}
-
-.skeleton-interactive-path:hover {
-  stroke: var(--color-crimson);
-  stroke-width: 2.2px;
-  fill: rgba(128, 28, 29, 0.1);
-}
-
-.skeleton-interactive-path.path-wounded {
-  stroke: var(--color-crimson);
-  stroke-width: 2.2px;
-  fill: rgba(128, 28, 29, 0.25);
+.injury-card-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  margin-left: 20px;
 }
 
 /* Vertical stats banners (Resolve, EXP, Speed) */
