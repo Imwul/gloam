@@ -1827,3 +1827,63 @@ input[type="checkbox"]:checked::after {
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
+/* Custom Downtime Styles */
+.scrolls-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.downtime-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.downtime-column {
+  background-color: var(--bg-panel-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 380px;
+}
+
+.select-medieval {
+  background-color: #FAF5EB;
+  color: var(--color-ink);
+  font-family: inherit;
+  border: 1px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.select-medieval:focus {
+  border-color: var(--color-gold);
+}
+
+.npc-card-woodcut {
+  border: 1px double var(--border-color);
+  padding: 10px;
+  background-color: #FAF5EB;
+  border-radius: 4px;
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
+
+@media(max-width: 1024px) {
+  .scrolls-grid {
+    grid-template-columns: 1fr;
+  }
+  .downtime-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

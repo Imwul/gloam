@@ -13,7 +13,10 @@ import {
   MAP_DUNGEON, 
   MAP_SETTLEMENT, 
   ORACLE_SUITS, 
-  ORACLE_SUBJECTS
+  ORACLE_SUBJECTS,
+  CAROUSING_TABLE,
+  FOLK_ROAD,
+  MAGICK_ITEMS
 } from "./gameData";
 import { 
   BookOpen, 
@@ -126,6 +129,7 @@ export interface Character {
   goals: string[];
   friends: { name: string; info: string }[];
   foes: { name: string; info: string }[];
+  hirelings: { name: string; info: string }[];
   unlockedTalents: string[];
   lifepathLogs: string[];
 }
@@ -205,6 +209,7 @@ const INITIAL_CHARACTER: Character = {
   ],
   friends: [{ name: "아이리스 (Iris)", info: "마을 약초꾼. 다쳤을 때 안전한 잠자리를 제공해 줍니다." }],
   foes: [{ name: "마옌스 경 (Sir Mayence)", info: "기사 서약을 저버린 배역자 기사. 사사건건 도전을 걸어옵니다." }],
+  hirelings: [],
   unlockedTalents: ["Sally Forth (과감한 돌격)"],
   lifepathLogs: [
     "출생: 검(Swords) 문양의 전시 상황 속에서 소수의 몰락 영지 기사의 가문에 태어났습니다.",
@@ -347,6 +352,12 @@ export default function App() {
 
   // Combat States
   const [selectedMonsterToSpawn, setSelectedMonsterToSpawn] = useState<number>(1);
+
+  // Downtime & Special Tables States
+  const [carousingResult, setCarousingResult] = useState<{ card: Card; text: string } | null>(null);
+  const [folkNpcResult, setFolkNpcResult] = useState<{ card: Card; femaleName: string; maleName: string; occupation: string; personality: string } | null>(null);
+  const [selectedMagickSuit, setSelectedMagickSuit] = useState<"Swords" | "Coins" | "Cups" | "Wands">("Swords");
+  const [magickItemResult, setMagickItemResult] = useState<{ card: Card; suit: string; name: string; text: string } | null>(null);
 
   // Init Auth State
   useEffect(() => {
@@ -764,6 +775,218 @@ export default function App() {
       setOracleYesNo(null);
       setOracleAmount(null);
     }
+  };
+
+  // --- Downtime Helper Functions ---
+  const getCarousingKey = (card: Card): string => {
+    if (card.type === "major" && card.card === "0") return "Fool";
+    if (card.card === "Page") return "P";
+    if (card.card === "Knight") return "Kn";
+    if (card.card === "Queen") return "Q";
+    if (card.card === "King") return "K";
+    return card.card;
+  };
+
+  const getMajorCardIndex = (card: Card): number => {
+    const romanToIdx: { [key: string]: number } = {
+      "I": 0, "II": 1, "III": 2, "IV": 3, "V": 4, "VI": 5, "VII": 6, "VIII": 7, "IX": 8, "X": 9,
+      "XI": 10, "XII": 11, "XIII": 12, "XIV": 13, "XV": 14, "XVI": 15, "XVII": 16, "XVIII": 17, "XIX": 18, "XX": 19, "XXI": 20
+    };
+    return romanToIdx[card.card] !== undefined ? romanToIdx[card.card] : 0;
+  };
+
+  const addHireling = () => {
+    const cups = state?.character?.stats?.cups || 0;
+    const currentCount = state?.character?.hirelings?.length || 0;
+    if (currentCount >= cups) {
+      alert(`고용 가능한 최대 용병 수에 도달했습니다! (현재 컵 능력치: ${cups}명 제한)\n컵(Cups) 능력치를 올리거나 기존 용병을 해고하십시오.`);
+      return;
+    }
+    const name = prompt("용병 이름을 적으세요:");
+    if (!name) return;
+    const info = prompt("용병 세부 능력 또는 특징을 적으세요:");
+    if (!info) return;
+    
+    updateState(s => ({
+      ...s,
+      character: {
+        ...s.character,
+        hirelings: [...(s.character.hirelings || []), { name, info }]
+      }
+    }));
+  };
+
+  const rollCarousing = () => {
+    let cardDrawn: Card | null = null;
+    updateState(s => {
+      let deck = [...s.playerDeck];
+      let discard = [...s.playerDiscard];
+      if (deck.length === 0) {
+        deck = shuffle(discard);
+        discard = [];
+      }
+      const c = deck.shift();
+      if (c) {
+        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
+        discard.push(c);
+      }
+      return { ...s, playerDeck: deck, playerDiscard: discard };
+    });
+
+    if (cardDrawn) {
+      const key = getCarousingKey(cardDrawn);
+      const text = CAROUSING_TABLE[key] || "알 수 없는 이벤트";
+      setCarousingResult({ card: cardDrawn, text });
+      setFolkNpcResult(null);
+      setMagickItemResult(null);
+    }
+  };
+
+  const rollFolkNpc = () => {
+    let cardDrawn: Card | null = null;
+    updateState(s => {
+      let deck = [...s.refereeDeck];
+      let discard = [...s.refereeDiscard];
+      if (deck.length === 0) {
+        deck = shuffle(discard);
+        discard = [];
+      }
+      const c = deck.shift();
+      if (c) {
+        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
+        discard.push(c);
+      }
+      return { ...s, refereeDeck: deck, refereeDiscard: discard };
+    });
+
+    if (cardDrawn) {
+      const idx = getMajorCardIndex(cardDrawn);
+      const femaleName = FOLK_ROAD.femaleNames[idx] || "알 수 없음";
+      const maleName = FOLK_ROAD.maleNames[idx] || "알 수 없음";
+      const occupation = FOLK_ROAD.occupations[idx] || "알 수 없음";
+      const personality = FOLK_ROAD.personalities[idx] || "알 수 없음";
+      
+      setFolkNpcResult({
+        card: cardDrawn,
+        femaleName,
+        maleName,
+        occupation,
+        personality
+      });
+      setCarousingResult(null);
+      setMagickItemResult(null);
+    }
+  };
+
+  const rollMagickItem = () => {
+    let cardDrawn: Card | null = null;
+    updateState(s => {
+      let deck = [...s.playerDeck];
+      let discard = [...s.playerDiscard];
+      if (deck.length === 0) {
+        deck = shuffle(discard);
+        discard = [];
+      }
+      const c = deck.shift();
+      if (c) {
+        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
+        discard.push(c);
+      }
+      return { ...s, playerDeck: deck, playerDiscard: discard };
+    });
+
+    if (cardDrawn) {
+      const key = getCarousingKey(cardDrawn);
+      if (key === "Fool") {
+        setMagickItemResult({
+          card: cardDrawn,
+          suit: selectedMagickSuit,
+          name: "광대의 장난 (The Fool's Prank)",
+          text: "오라클 드로우 중 광대(The Fool)가 뽑혔습니다. 유물을 획득하지 못하고 덱의 마법이 흩어집니다! 덱 전체를 셔플해야 합니다."
+        });
+      } else {
+        const suitArray = MAGICK_ITEMS[selectedMagickSuit] || [];
+        const found = suitArray.find(item => item.key === key);
+        if (found) {
+          setMagickItemResult({
+            card: cardDrawn,
+            suit: selectedMagickSuit,
+            name: found.name,
+            text: found.text
+          });
+        } else {
+          setMagickItemResult({
+            card: cardDrawn,
+            suit: selectedMagickSuit,
+            name: "미지의 유물 (Unknown Relic)",
+            text: `해당 카드 값(${key})에 일치하는 마법 보물을 찾을 수 없습니다.`
+          });
+        }
+      }
+      setCarousingResult(null);
+      setFolkNpcResult(null);
+    }
+  };
+
+  const addNpcAsFriend = () => {
+    if (!folkNpcResult) return;
+    const name = `${folkNpcResult.femaleName}/${folkNpcResult.maleName}`;
+    const info = `${folkNpcResult.occupation} (${folkNpcResult.personality})`;
+    updateState(s => ({
+      ...s,
+      character: {
+        ...s.character,
+        friends: [...s.character.friends, { name, info }]
+      }
+    }));
+    alert(`${name}이(가) 인연(Friends) 목록에 추가되었습니다.`);
+  };
+
+  const addNpcAsFoe = () => {
+    if (!folkNpcResult) return;
+    const name = `${folkNpcResult.femaleName}/${folkNpcResult.maleName}`;
+    const info = `${folkNpcResult.occupation} (${folkNpcResult.personality})`;
+    updateState(s => ({
+      ...s,
+      character: {
+        ...s.character,
+        foes: [...s.character.foes, { name, info }]
+      }
+    }));
+    alert(`${name}이(가) 원수(Foes) 목록에 추가되었습니다.`);
+  };
+
+  const addNpcAsHireling = () => {
+    if (!folkNpcResult) return;
+    const cups = state?.character?.stats?.cups || 0;
+    const currentCount = state?.character?.hirelings?.length || 0;
+    if (currentCount >= cups) {
+      alert(`고용 가능한 최대 용병 수에 도달했습니다! (현재 컵 능력치: ${cups}명 제한)\n컵(Cups) 능력치를 올리거나 기존 용병을 해고하십시오.`);
+      return;
+    }
+    const name = `${folkNpcResult.femaleName}/${folkNpcResult.maleName}`;
+    const info = `${folkNpcResult.occupation} (${folkNpcResult.personality})`;
+    updateState(s => ({
+      ...s,
+      character: {
+        ...s.character,
+        hirelings: [...(s.character.hirelings || []), { name, info }]
+      }
+    }));
+    alert(`${name}이(가) 용병(Hirelings)으로 고용되었습니다.`);
+  };
+
+  const addMagickItemToInventory = () => {
+    if (!magickItemResult) return;
+    const itemName = `${magickItemResult.name} (${magickItemResult.suit === "Swords" ? "소드" : magickItemResult.suit === "Coins" ? "코인" : magickItemResult.suit === "Cups" ? "컵" : "완드"} 유물)`;
+    updateState(s => ({
+      ...s,
+      character: {
+        ...s.character,
+        inventory: [...s.character.inventory, itemName]
+      }
+    }));
+    alert(`'${itemName}' 아이템이 인벤토리에 추가되었습니다.`);
   };
 
   // Add Item to Journal
@@ -1608,8 +1831,8 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Friends & Foes Hanging Scrolls Grid */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
+                {/* Friends, Foes & Hirelings Hanging Scrolls Grid */}
+                <div className="scrolls-grid">
                   
                   {/* Friends Scroll */}
                   <div className="hanging-scroll-box scroll-card">
@@ -1664,6 +1887,33 @@ export default function App() {
                           <span style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem" }}>{f.info}</span>
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Hirelings Scroll */}
+                  <div className="hanging-scroll-box scroll-card" style={{ borderColor: "var(--color-gold)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--color-gold)", paddingBottom: "3px", marginBottom: "10px" }}>
+                      <h5 style={{ border: "none", margin: 0, fontSize: "0.9rem", color: "var(--color-gold)" }}>
+                        HIRELINGS (용병 {state.character.hirelings?.length || 0}/{state.character.stats.cups})
+                      </h5>
+                      <button 
+                        className="btn-medieval-small" 
+                        onClick={addHireling}
+                      >+</button>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "160px", overflowY: "auto", fontSize: "0.8rem" }}>
+                      {(state.character.hirelings || []).map((h, i) => (
+                        <div key={i} style={{ borderBottom: "1px dashed rgba(0,0,0,0.1)", paddingBottom: "4px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <strong style={{ color: "var(--color-gold)" }}>{h.name}</strong>
+                            <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, hirelings: s.character.hirelings.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                          </div>
+                          <span style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem" }}>{h.info}</span>
+                        </div>
+                      ))}
+                      {(!state.character.hirelings || state.character.hirelings.length === 0) && (
+                        <p style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: "0.75rem", margin: "10px 0" }}>고용된 용병이 없습니다 (최대 {state.character.stats.cups}명 가능).</p>
+                      )}
                     </div>
                   </div>
 
@@ -1908,6 +2158,173 @@ export default function App() {
                 {!drawnOracleCard && !oracleActionSubject && (
                   <p className="empty-text" style={{ padding: "20px 0" }}>신탁 결과를 굴리지 않았습니다. 상단 버튼을 클릭하십시오.</p>
                 )}
+
+              </div>
+            </div>
+
+            {/* Downtime & Special Tables Section */}
+            <div className="card-panel gold-border downtime-panel" style={{ gridColumn: "span 2", width: "100%", marginTop: "20px" }}>
+              <div style={{ borderBottom: "1px solid #333", paddingBottom: "10px", marginBottom: "15px" }}>
+                <h3 className="gothic-sub">특별 테이블 &amp; 다운타임 (Downtime &amp; Special Tables)</h3>
+                <p className="rules-helper-text">
+                  룰북 50~60페이지의 선술집 축제(Carousing), 유랑민 생성(Folk NPC Generator), 그리고 마법 보물 드로우(Magick Items) 규칙을 수행합니다.
+                </p>
+              </div>
+
+              <div className="downtime-grid">
+                
+                {/* 1. Carousing Column */}
+                <div className="downtime-column">
+                  <div>
+                    <h4 className="gothic-sub" style={{ fontSize: "1.05rem", color: "var(--color-gold)", borderBottom: "1px solid #444", paddingBottom: "5px", marginBottom: "8px" }}>
+                      선술집 축제 (Carousing - p.51)
+                    </h4>
+                    <p style={{ fontSize: "0.75rem", color: "#888", margin: "8px 0", height: "35px" }}>
+                      정착지 다운타임 중 축제를 즐깁니다. 플레이어 덱에서 카드를 1장 드로우하여 결과를 판정합니다.
+                    </p>
+                    <button className="btn-medieval w-100" onClick={rollCarousing}>축제 카드 드로우</button>
+                    
+                    {carousingResult && (
+                      <div style={{ marginTop: "15px", display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                        <img 
+                          src={getCardImageUrl(carousingResult.card)} 
+                          alt="Carousing card" 
+                          style={{ width: "65px", height: "auto", border: "1px solid #555" }}
+                          className={carousingResult.card.reversed ? "reversed-image" : ""}
+                        />
+                        <div style={{ fontSize: "0.8rem" }}>
+                          <h5 style={{ margin: 0, color: "var(--color-gold)" }}>{getCardDisplayName(carousingResult.card)}</h5>
+                          <p style={{ marginTop: "5px", color: "var(--text-bright)", lineHeight: "1.3" }}>{carousingResult.text}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {carousingResult && (
+                    <button 
+                      className="btn-medieval-small w-100" 
+                      style={{ marginTop: "15px" }} 
+                      onClick={() => addJournalEntry(`[선술집 축제 다운타임] ${getCardDisplayName(carousingResult.card)}: ${carousingResult.text}`)}
+                    >
+                      일지에 기록하기
+                    </button>
+                  )}
+                </div>
+
+                {/* 2. Folk NPC Generator Column */}
+                <div className="downtime-column">
+                  <div>
+                    <h4 className="gothic-sub" style={{ fontSize: "1.05rem", color: "var(--color-gold)", borderBottom: "1px solid #444", paddingBottom: "5px", marginBottom: "8px" }}>
+                      유랑민 생성기 (Folk NPC - p.53)
+                    </h4>
+                    <p style={{ fontSize: "0.75rem", color: "#888", margin: "8px 0", height: "35px" }}>
+                      여정 중 조우하거나 고용할 수 있는 무작위 인물을 생성합니다. 레프리 덱에서 메이저 카드를 1장 뽑습니다.
+                    </p>
+                    <button className="btn-medieval w-100" onClick={rollFolkNpc}>유랑민 생성</button>
+
+                    {folkNpcResult && (
+                      <div style={{ marginTop: "15px" }}>
+                        <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "8px" }}>
+                          <img 
+                            src={getCardImageUrl(folkNpcResult.card)} 
+                            alt="Folk NPC Major Card" 
+                            style={{ width: "50px", height: "auto", border: "1px solid #555" }}
+                            className={folkNpcResult.card.reversed ? "reversed-image" : ""}
+                          />
+                          <div>
+                            <h5 style={{ margin: 0, fontSize: "0.85rem", color: "var(--color-gold)" }}>
+                              {getCardDisplayName(folkNpcResult.card)}
+                            </h5>
+                          </div>
+                        </div>
+                        <div className="npc-card-woodcut">
+                          <div><strong>여성 이름:</strong> {folkNpcResult.femaleName}</div>
+                          <div><strong>남성 이름:</strong> {folkNpcResult.maleName}</div>
+                          <div><strong>직업:</strong> {folkNpcResult.occupation}</div>
+                          <div style={{ marginTop: "4px", borderTop: "1px dashed #ccc", paddingTop: "4px" }}>
+                            <strong>성격:</strong> {folkNpcResult.personality}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {folkNpcResult && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginTop: "15px" }}>
+                      <button 
+                        className="btn-medieval-small" 
+                        onClick={() => addJournalEntry(`[유랑민 생성] ${getCardDisplayName(folkNpcResult.card)} - 여성명: ${folkNpcResult.femaleName} / 남성명: ${folkNpcResult.maleName} | 직업: ${folkNpcResult.occupation} | 성격: ${folkNpcResult.personality}`)}
+                      >
+                        일지에 기록하기
+                      </button>
+                      <div style={{ display: "flex", gap: "5px" }}>
+                        <button className="btn-medieval-small" style={{ flex: 1, padding: "4px 2px", fontSize: "0.75rem" }} onClick={addNpcAsFriend}>인연 등록</button>
+                        <button className="btn-medieval-small" style={{ flex: 1, padding: "4px 2px", fontSize: "0.75rem" }} onClick={addNpcAsFoe}>원수 등록</button>
+                        <button className="btn-medieval-small" style={{ flex: 1, padding: "4px 2px", fontSize: "0.75rem" }} onClick={addNpcAsHireling}>용병 고용</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. Magick Item Drawer Column */}
+                <div className="downtime-column">
+                  <div>
+                    <h4 className="gothic-sub" style={{ fontSize: "1.05rem", color: "var(--color-gold)", borderBottom: "1px solid #444", paddingBottom: "5px", marginBottom: "8px" }}>
+                      마법 보물 (Magick Items - p.56)
+                    </h4>
+                    <p style={{ fontSize: "0.75rem", color: "#888", margin: "8px 0", height: "35px" }}>
+                      비술적 전설 유물을 획득합니다. 문양(Suit)을 결정한 후 플레이어 덱에서 드로우하여 유물을 결정합니다.
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
+                      <select 
+                        className="select-medieval w-100" 
+                        value={selectedMagickSuit} 
+                        onChange={(e) => setSelectedMagickSuit(e.target.value as any)}
+                      >
+                        <option value="Swords">소드 (Swords) - 무기류</option>
+                        <option value="Coins">코인 (Coins) - 방구/장신구</option>
+                        <option value="Cups">컵 (Cups) - 도구/영약</option>
+                        <option value="Wands">완드 (Wands) - 악기/마법도구</option>
+                      </select>
+                      <button className="btn-medieval w-100" onClick={rollMagickItem}>보물 드로우</button>
+                    </div>
+
+                    {magickItemResult && (
+                      <div style={{ marginTop: "15px", display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                        <img 
+                          src={getCardImageUrl(magickItemResult.card)} 
+                          alt="Magick card" 
+                          style={{ width: "65px", height: "auto", border: "1px solid #555" }}
+                          className={magickItemResult.card.reversed ? "reversed-image" : ""}
+                        />
+                        <div style={{ fontSize: "0.8rem", flex: 1 }}>
+                          <h5 style={{ margin: 0, color: "var(--color-gold)" }}>
+                            {getCardDisplayName(magickItemResult.card)}
+                          </h5>
+                          <h6 style={{ margin: "3px 0", fontSize: "0.85rem", color: "var(--text-bright)" }}>
+                            {magickItemResult.name}
+                          </h6>
+                          <p style={{ color: "#bbb", lineHeight: "1.3", fontSize: "0.75rem" }}>{magickItemResult.text}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {magickItemResult && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginTop: "15px" }}>
+                      <button 
+                        className="btn-medieval-small" 
+                        onClick={() => addJournalEntry(`[마법 보물 탐색] ${selectedMagickSuit} ${getCardDisplayName(magickItemResult.card)}: ${magickItemResult.name} - ${magickItemResult.text}`)}
+                      >
+                        일지에 기록하기
+                      </button>
+                      {magickItemResult.name !== "광대의 장난 (The Fool's Prank)" && (
+                        <button className="btn-medieval-small" onClick={addMagickItemToInventory}>
+                          소지품 인벤토리에 추가
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
 
               </div>
             </div>
