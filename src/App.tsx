@@ -816,6 +816,214 @@ export default function App() {
     }));
   };
 
+  const searchAndHirelingTest = () => {
+    const cups = state?.character?.stats?.cups || 0;
+    const currentCount = state?.character?.hirelings?.length || 0;
+    if (currentCount >= cups) {
+      alert(`고용 가능한 최대 용병 수에 도달했습니다! (현재 컵 능력치: ${cups}명 제한)\n컵(Cups) 능력치를 올리거나 기존 용병을 해고하십시오.`);
+      return;
+    }
+
+    // 1. Cups Test to Search
+    let searchCard: Card | null = null;
+    updateState(s => {
+      let deck = [...s.playerDeck];
+      let discard = [...s.playerDiscard];
+      if (deck.length === 0) {
+        deck = shuffle(discard);
+        discard = [];
+      }
+      const c = deck.shift();
+      if (c) {
+        searchCard = { ...c, reversed: Math.random() < 0.25 };
+        discard.push(c);
+      }
+      return { ...s, playerDeck: deck, playerDiscard: discard };
+    });
+
+    if (!searchCard) return;
+    const sCard = searchCard as Card;
+    let sCardVal = 0;
+    if (sCard.card === "A") sCardVal = 1;
+    else if (sCard.card === "Page") sCardVal = 11;
+    else if (sCard.card === "Knight") sCardVal = 12;
+    else if (sCard.card === "Queen") sCardVal = 13;
+    else if (sCard.card === "King") sCardVal = 14;
+    else sCardVal = parseInt(sCard.card) || 0;
+
+    const cupsStat = state.character.stats.cups;
+    const searchTotal = sCardVal + cupsStat + testPenalty;
+    const searchSuccess = searchTotal >= 14;
+
+    if (!searchSuccess) {
+      alert(`[용병 모집 실패]\nCups 판정 결과: ${searchTotal}점 (카드: ${getCardDisplayName(sCard)} + Cups: ${cupsStat})\n\n마을 안에서 적절한 고용 후보를 발견하는 데 실패했습니다.`);
+      updateState(s => ({
+        ...s,
+        journals: [
+          {
+            id: Date.now().toString(),
+            text: `[용병 모집 실패] Cups 판정 결과 ${searchTotal}점으로 용병 후보 탐색에 실패했습니다.`,
+            date: new Date().toLocaleString()
+          },
+          ...s.journals
+        ]
+      }));
+      return;
+    }
+
+    // 2. Generate Candidate NPC using FOLK_ROAD
+    const idx = Math.floor(Math.random() * FOLK_ROAD.occupations.length);
+    const candidateFemale = FOLK_ROAD.femaleNames[idx] || "알 수 없음";
+    const candidateMale = FOLK_ROAD.maleNames[idx] || "알 수 없음";
+    const candidateName = `${candidateFemale}/${candidateMale}`;
+    const candidateOccupation = FOLK_ROAD.occupations[idx] || "일반인";
+    const candidatePersonality = FOLK_ROAD.personalities[idx] || "평범한";
+
+    const confirmHire = confirm(
+      `[용병 모집 성공!]\nCups 판정 결과: ${searchTotal}점 (성공)\n\n새로운 용병 후보를 발견했습니다!\n- 이름: ${candidateName}\n- 직업: ${candidateOccupation}\n- 성격: ${candidatePersonality}\n\n이 후보를 용병으로 고용하기 위해 고용 계약 판정(Coins Test)을 진행하시겠습니까?`
+    );
+
+    if (!confirmHire) return;
+
+    // 3. Coins Test to Hire
+    let hireCard: Card | null = null;
+    updateState(s => {
+      let deck = [...s.playerDeck];
+      let discard = [...s.playerDiscard];
+      if (deck.length === 0) {
+        deck = shuffle(discard);
+        discard = [];
+      }
+      const c = deck.shift();
+      if (c) {
+        hireCard = { ...c, reversed: Math.random() < 0.25 };
+        discard.push(c);
+      }
+      return { ...s, playerDeck: deck, playerDiscard: discard };
+    });
+
+    if (!hireCard) return;
+    const hCard = hireCard as Card;
+    let hCardVal = 0;
+    if (hCard.card === "A") hCardVal = 1;
+    else if (hCard.card === "Page") hCardVal = 11;
+    else if (hCard.card === "Knight") hCardVal = 12;
+    else if (hCard.card === "Queen") hCardVal = 13;
+    else if (hCard.card === "King") hCardVal = 14;
+    else hCardVal = parseInt(hCard.card) || 0;
+
+    const coinsStat = state.character.stats.coins;
+    const hireTotal = hCardVal + coinsStat + testPenalty;
+    const hireSuccess = hireTotal >= 14;
+
+    if (hireSuccess) {
+      alert(
+        `[용병 고용 성공!]\nCoins 판정 결과: ${hireTotal}점 (카드: ${getCardDisplayName(hCard)} + Coins: ${coinsStat})\n\n${candidateName}이(가) 계약을 수락하고 당신의 용병으로 합류했습니다!`
+      );
+      updateState(s => ({
+        ...s,
+        character: {
+          ...s.character,
+          hirelings: [...(s.character.hirelings || []), { name: candidateName, info: `${candidateOccupation} (${candidatePersonality})` }]
+        },
+        journals: [
+          {
+            id: Date.now().toString(),
+            text: `[용병 고용 성공] Cups(${searchTotal}) 및 Coins(${hireTotal}) 판정에 성공하여 용병 ${candidateName}(${candidateOccupation})을 고용했습니다.`,
+            date: new Date().toLocaleString()
+          },
+          ...s.journals
+        ]
+      }));
+    } else {
+      alert(
+        `[용병 고용 실패]\nCoins 판정 결과: ${hireTotal}점 (카드: ${getCardDisplayName(hCard)} + Coins: ${coinsStat})\n\n${candidateName}이(가) 제시한 고용 금액이나 모험의 위험성에 동의하지 못하고 자리를 떠났습니다.`
+      );
+      updateState(s => ({
+        ...s,
+        journals: [
+          {
+            id: Date.now().toString(),
+            text: `[용병 계약 실패] Coins 판정 결과 ${hireTotal}점 부족으로 용병 ${candidateName}과의 고용 계약이 무산되었습니다.`,
+            date: new Date().toLocaleString()
+          },
+          ...s.journals
+        ]
+      }));
+    }
+  };
+
+  const payWeeklyHireling = (idx: number) => {
+    const hireling = state?.character?.hirelings?.[idx];
+    if (!hireling) return;
+
+    if (!confirm(`'${hireling.name}' 용병의 주간 고용 유지를 위한 주간 급여 판정(Coins Test)을 진행하시겠습니까?\n실패 시 용병이 사직하고 떠납니다.`)) {
+      return;
+    }
+
+    let cardDrawn: Card | null = null;
+    updateState(s => {
+      let deck = [...s.playerDeck];
+      let discard = [...s.playerDiscard];
+      if (deck.length === 0) {
+        deck = shuffle(discard);
+        discard = [];
+      }
+      const c = deck.shift();
+      if (c) {
+        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
+        discard.push(c);
+      }
+      return { ...s, playerDeck: deck, playerDiscard: discard };
+    });
+
+    if (!cardDrawn) return;
+    const card = cardDrawn as Card;
+    let cardVal = 0;
+    if (card.card === "A") cardVal = 1;
+    else if (card.card === "Page") cardVal = 11;
+    else if (card.card === "Knight") cardVal = 12;
+    else if (card.card === "Queen") cardVal = 13;
+    else if (card.card === "King") cardVal = 14;
+    else cardVal = parseInt(card.card) || 0;
+
+    const coinsStat = state.character.stats.coins;
+    const total = cardVal + coinsStat + testPenalty;
+    const success = total >= 14;
+
+    if (success) {
+      alert(`[주간 급여 판정 성공]\nCoins 판정 결과: ${total}점 (성공)\n\n급여가 만족스럽게 지급되었습니다. ${hireling.name}은(는) 고용 상태를 계속 유지합니다.`);
+      updateState(s => ({
+        ...s,
+        journals: [
+          {
+            id: Date.now().toString(),
+            text: `[용병 유지 성공] Coins 판정 ${total}점으로 ${hireling.name}에게 주간 급여를 정상 지급하여 계약을 연장했습니다.`,
+            date: new Date().toLocaleString()
+          },
+          ...s.journals
+        ]
+      }));
+    } else {
+      alert(`[주간 급여 판정 실패]\nCoins 판정 결과: ${total}점 (실패)\n\n제시한 주간 급여가 적거나 계약금 부족으로 인해 ${hireling.name}이(가) 즉시 계약을 해지하고 사직했습니다.`);
+      updateState(s => ({
+        ...s,
+        character: {
+          ...s.character,
+          hirelings: s.character.hirelings.filter((_, i) => i !== idx)
+        },
+        journals: [
+          {
+            id: Date.now().toString(),
+            text: `[용병 사직] Coins 판정 ${total}점 실패로 용병 ${hireling.name}이(가) 계약을 파기하고 탈퇴했습니다.`,
+            date: new Date().toLocaleString()
+          },
+          ...s.journals
+        ]
+      }));
+    }
+  };
+
   const rollCarousing = () => {
     let cardDrawn: Card | null = null;
     updateState(s => {
@@ -964,16 +1172,79 @@ export default function App() {
       alert(`고용 가능한 최대 용병 수에 도달했습니다! (현재 컵 능력치: ${cups}명 제한)\n컵(Cups) 능력치를 올리거나 기존 용병을 해고하십시오.`);
       return;
     }
+
     const name = `${folkNpcResult.femaleName}/${folkNpcResult.maleName}`;
     const info = `${folkNpcResult.occupation} (${folkNpcResult.personality})`;
-    updateState(s => ({
-      ...s,
-      character: {
-        ...s.character,
-        hirelings: [...(s.character.hirelings || []), { name, info }]
+
+    if (!confirm(`'${name}'을(를) 용병으로 고용하기 위해 고용 계약 판정(Coins Test)을 수행하시겠습니까?`)) {
+      return;
+    }
+
+    let hireCard: Card | null = null;
+    updateState(s => {
+      let deck = [...s.playerDeck];
+      let discard = [...s.playerDiscard];
+      if (deck.length === 0) {
+        deck = shuffle(discard);
+        discard = [];
       }
-    }));
-    alert(`${name}이(가) 용병(Hirelings)으로 고용되었습니다.`);
+      const c = deck.shift();
+      if (c) {
+        hireCard = { ...c, reversed: Math.random() < 0.25 };
+        discard.push(c);
+      }
+      return { ...s, playerDeck: deck, playerDiscard: discard };
+    });
+
+    if (!hireCard) return;
+    const hCard = hireCard as Card;
+    let hCardVal = 0;
+    if (hCard.card === "A") hCardVal = 1;
+    else if (hCard.card === "Page") hCardVal = 11;
+    else if (hCard.card === "Knight") hCardVal = 12;
+    else if (hCard.card === "Queen") hCardVal = 13;
+    else if (hCard.card === "King") hCardVal = 14;
+    else hCardVal = parseInt(hCard.card) || 0;
+
+    const coinsStat = state.character.stats.coins;
+    const hireTotal = hCardVal + coinsStat + testPenalty;
+    const hireSuccess = hireTotal >= 14;
+
+    if (hireSuccess) {
+      alert(
+        `[용병 고용 성공!]\nCoins 판정 결과: ${hireTotal}점 (카드: ${getCardDisplayName(hCard)} + Coins: ${coinsStat})\n\n${name}이(가) 계약을 수락하고 당신의 용병으로 합류했습니다!`
+      );
+      updateState(s => ({
+        ...s,
+        character: {
+          ...s.character,
+          hirelings: [...(s.character.hirelings || []), { name, info }]
+        },
+        journals: [
+          {
+            id: Date.now().toString(),
+            text: `[용병 고용 성공] 길에서 만난 NPC ${name}(${folkNpcResult.occupation})을 Coins 판정(${hireTotal}점) 성공으로 고용했습니다.`,
+            date: new Date().toLocaleString()
+          },
+          ...s.journals
+        ]
+      }));
+    } else {
+      alert(
+        `[용병 고용 실패]\nCoins 판정 결과: ${hireTotal}점 (카드: ${getCardDisplayName(hCard)} + Coins: ${coinsStat})\n\n${name}이(가) 제시한 조건을 거절하여 고용에 실패했습니다.`
+      );
+      updateState(s => ({
+        ...s,
+        journals: [
+          {
+            id: Date.now().toString(),
+            text: `[용병 고용 실패] 길에서 만난 NPC ${name} 고용 계약 Coins 판정(${hireTotal}점) 실패로 무산되었습니다.`,
+            date: new Date().toLocaleString()
+          },
+          ...s.journals
+        ]
+      }));
+    }
   };
 
   const addMagickItemToInventory = () => {
@@ -1896,17 +2167,34 @@ export default function App() {
                       <h5 style={{ border: "none", margin: 0, fontSize: "0.9rem", color: "var(--color-gold)" }}>
                         HIRELINGS (용병 {state.character.hirelings?.length || 0}/{state.character.stats.cups})
                       </h5>
-                      <button 
-                        className="btn-medieval-small" 
-                        onClick={addHireling}
-                      >+</button>
+                      <div style={{ display: "flex", gap: "5px" }}>
+                        <button 
+                          className="btn-medieval-small" 
+                          onClick={searchAndHirelingTest}
+                          title="용병 구인 및 고용 판정 (Cups & Coins Test)"
+                          style={{ fontSize: "0.7rem", padding: "2px 4px" }}
+                        >구인판정</button>
+                        <button 
+                          className="btn-medieval-small" 
+                          onClick={addHireling}
+                          title="직접 추가"
+                        >+</button>
+                      </div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "160px", overflowY: "auto", fontSize: "0.8rem" }}>
                       {(state.character.hirelings || []).map((h, i) => (
                         <div key={i} style={{ borderBottom: "1px dashed rgba(0,0,0,0.1)", paddingBottom: "4px" }}>
                           <div style={{ display: "flex", justifyContent: "space-between" }}>
                             <strong style={{ color: "var(--color-gold)" }}>{h.name}</strong>
-                            <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, hirelings: s.character.hirelings.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                            <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                              <button 
+                                className="btn-medieval-small" 
+                                style={{ fontSize: "0.65rem", padding: "1px 4px", background: "transparent", color: "var(--color-gold)", border: "1px solid var(--color-gold)" }}
+                                onClick={() => payWeeklyHireling(i)}
+                                title="주간 급여 Coins 판정"
+                              >급여판정</button>
+                              <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, hirelings: s.character.hirelings.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                            </div>
                           </div>
                           <span style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem" }}>{h.info}</span>
                         </div>

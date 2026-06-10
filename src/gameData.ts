@@ -482,7 +482,7 @@ export const FOLK_ROAD = {
   femaleNames: [
     "알리스 (Alise)", "브리지드 (Brigid)", "카트리오나 (Catriona)", "드레다 (Dreda)",
     "에디 (Edie)", "엘레오노르 (Eleanor)", "그레텔 (Gretel)", "아이리스 (Iris)",
-    "조안 (Joan)", "잰킨 (Jankin)", "메이벨 (Mabel)", "마드라 (Mardra)",
+    "조안 (Joan)", "레이니 (Laney)", "메이벨 (Mabel)", "마드라 (Mardra)",
     "미라 (Mira)", "오다 (Odda)", "오를라 (Orla)", "로즈 (Rose)",
     "로완 (Rowan)", "셀레네 (Selene)", "위니프레드 (Winifred)", "윌로우 (Willow)",
     "윈 (Wynn)"
@@ -535,27 +535,27 @@ export const ORACLE_SUITS = {
 
 export const ORACLE_SUBJECTS: { [key: string]: { name: string; meaning: string; reversed: string } } = {
   "0": { name: "The Fool", meaning: "자기 자신 (Self)", reversed: "주의 산만 / 방해물 (Distraction)" },
-  "I": { name: "The Magician", meaning: "정신 / 이성 (Mind)", reversed: "환각 / 오판 (Illusion)" },
-  "II": { name: "The High Priestess", meaning: "의식 / 자각 (Consciousness)", reversed: "음성 / 속삭임 (Voice)" },
-  "III": { name: "The Empress", meaning: "아름다움 / 풍요 (Beauty)", reversed: "추함 / 쇠락 (Ugliness)" },
-  "IV": { name: "The Emperor", meaning: "권위 / 통제 (Authority)", reversed: "얼음 / 차가움 (Ice)" },
-  "V": { name: "The Hierophant", meaning: "지식 / 전통 (Knowledge)", reversed: "무지 / 미신 (Ignorance)" },
-  "VI": { name: "The Lovers", meaning: "유혹 / 선택 (Temptation)", reversed: "불화 / 대립 (Conflict)" },
-  "VII": { name: "The Chariot", meaning: "금속 / 도구 (Metal)", reversed: "장벽 / 단절 (Barrier)" },
-  "VIII": { name: "Strength", meaning: "강함 / 완력 (Strength)", reversed: "약함 / 굴복 (Weakness)" },
-  "IX": { name: "The Hermit", meaning: "인물 / 고독 (Person)", reversed: "고립 / 은둔 (Isolation)" },
-  "X": { name: "Wheel of Fortune", meaning: "운명 / 순환 (Fate)", reversed: "지연 / 정체 (Delay)" },
-  "XI": { name: "Justice", meaning: "진실 / 정의 (Truth)", reversed: "피 / 복수 (Blood)" },
-  "XII": { name: "The Hanged Man", meaning: "육체 / 헌신 (Flesh)", reversed: "공허 / 허무 (Emptiness)" },
-  "XIII": { name: "Death", meaning: "죽음 / 종결 (Death)", reversed: "생명 / 회생 (Life)" },
-  "XIV": { name: "Temperance", meaning: "물 / 정화 (Water)", reversed: "불균형 / 왜곡 (Imbalance)" },
-  "XV": { name: "The Devil", meaning: "고통 / 억압 (Pain)", reversed: "지배 / 집착 (Control)" },
-  "XVI": { name: "The Tower", meaning: "대지 / 자연 (Earth)", reversed: "혼돈 / 붕괴 (Chaos)" },
-  "XVII": { name: "The Star", meaning: "믿음 / 소망 (Faith)", reversed: "시간 / 노화 (Time)" },
-  "XVIII": { name: "The Moon", meaning: "야수 / 야생 (Beast)", reversed: "비밀 / 기만 (Secret)" },
-  "XIX": { name: "The Sun", meaning: "빛 / 생명력 (Light)", reversed: "슬픔 / 암담 (Sorrow)" },
-  "XX": { name: "Judgement", meaning: "망자 / 언데드 (Undead)", reversed: "목적 / 재평가 (Purpose)" },
-  "XXI": { name: "The World", meaning: "화염 / 번영 (Fire)", reversed: "어둠 / 종말 (Darkness)" }
+  "I": { name: "The Magician", meaning: "기술 / 숙련 (Skill)", reversed: "속임수 / 기만 (Trickery)" },
+  "II": { name: "The High Priestess", meaning: "신비 / 미스터리 (Mystery)", reversed: "혼란 / 당혹 (Confusion)" },
+  "III": { name: "The Empress", meaning: "자연 (Nature)", reversed: "공허 / 빈곤 (Emptiness)" },
+  "IV": { name: "The Emperor", meaning: "구조 / 조직 (Structure)", reversed: "폭정 / 압제 (Tyranny)" },
+  "V": { name: "The Hierophant", meaning: "전통 / 관습 (Tradition)", reversed: "반란 / 반역 (Rebellion)" },
+  "VI": { name: "The Lovers", meaning: "협력 / 동반자 관계 (Partnership)", reversed: "갈등 / 충돌 (Conflict)" },
+  "VII": { name: "The Chariot", meaning: "의지력 / 투지 (Willpower)", reversed: "장애물 / 난관 (Obstacle)" },
+  "VIII": { name: "Strength", meaning: "용기 / 대담함 (Bravery)", reversed: "의심 / 회의감 (Doubt)" },
+  "IX": { name: "The Hermit", meaning: "인도 / 지침 (Guidance)", reversed: "외로움 / 고독 (Loneliness)" },
+  "X": { name: "Wheel of Fortune", meaning: "행운 / 운명 (Fortune)", reversed: "통제 / 지배 (Control)" },
+  "XI": { name: "Justice", meaning: "진실 / 사실 (Truth)", reversed: "부정직 / 기만 (Dishonesty)" },
+  "XII": { name: "The Hanged Man", meaning: "희생 (Sacrifice)", reversed: "무관심 / 냉담 (Apathy)" },
+  "XIII": { name: "Death", meaning: "변화 (Change)", reversed: "부패 / 쇠퇴 (Decay)" },
+  "XIV": { name: "Temperance", meaning: "인내 / 조절 (Patience)", reversed: "불화 / 불협화음 (Discord)" },
+  "XV": { name: "The Devil", meaning: "억압 / 지배 (Oppression)", reversed: "독립 / 해방 (Independence)" },
+  "XVI": { name: "The Tower", meaning: "재앙 / 파멸 (Disaster)", reversed: "축복 / 천우신조 (Blessing)" },
+  "XVII": { name: "The Star", meaning: "희망 / 기대 (Hope)", reversed: "불안정 / 불안감 (Insecurity)" },
+  "XVIII": { name: "The Moon", meaning: "본능 / 직관 (Instinct)", reversed: "오해 / 착각 (Misunderstanding)" },
+  "XIX": { name: "The Sun", meaning: "기쁨 / 환희 (Joy)", reversed: "슬픔 / 우울 (Sadness)" },
+  "XX": { name: "Judgement", meaning: "목적 / 사명 (Purpose)", reversed: "회의론 / 불신 (Skepticism)" },
+  "XXI": { name: "The World", meaning: "온전함 / 완성 (Wholeness)", reversed: "부서짐 / 불완전 (Brokenness)" }
 };
 
 export const MAGICK_ITEMS = {
