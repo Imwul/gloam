@@ -16,7 +16,9 @@ import {
   ORACLE_SUBJECTS,
   CAROUSING_TABLE,
   FOLK_ROAD,
-  MAGICK_ITEMS
+  MAGICK_ITEMS,
+  ARCANE_MINOR_WORDS,
+  ARCANE_MAJOR_WORDS
 } from "./gameData";
 import { 
   BookOpen, 
@@ -132,6 +134,7 @@ export interface Character {
   hirelings: { name: string; info: string }[];
   unlockedTalents: string[];
   lifepathLogs: string[];
+  spellbook: string[]; // Arcane spells known by the character
 }
 
 export interface MapCell {
@@ -150,6 +153,22 @@ export interface CombatMonster {
   initiativeCard?: Card;
 }
 
+export interface ActiveTest {
+  stat: "cups" | "swords" | "coins" | "wands" | "none";
+  statUsed: number;
+  modifier: number;
+  opposedMonsterId: number | null; // null if not opposed, 0 if custom, or monsterId
+  opposedPenalty: number;
+  helpStat: number;
+  cardsDrawn: Card[];
+  total: number;
+  success: boolean;
+  greatSuccess: boolean;
+  pushed: boolean;
+  greatFailure: boolean;
+  purpose: string;
+}
+
 export interface GameState {
   character: Character;
   playerDeck: Card[];
@@ -162,6 +181,12 @@ export interface GameState {
   combatMonsters: CombatMonster[];
   combatRound: number;
   mapType: "wilderness" | "dungeon" | "settlement";
+  day: number;
+  watch: number; // 1, 2, 3
+  lastDrawnOracleCardValue: string | null;
+  activeTest: ActiveTest | null;
+  arcaneSpellResult: { minorCard: Card; majorCard: Card; spellName: string; ruleSummary: string } | null;
+  alchemicalBrewResult: { success: boolean; potionName: string; ingredient: string; total: number; card: Card } | null;
 }
 
 const INITIAL_CHARACTER: Character = {
@@ -215,7 +240,8 @@ const INITIAL_CHARACTER: Character = {
     "출생: 검(Swords) 문양의 전시 상황 속에서 소수의 몰락 영지 기사의 가문에 태어났습니다.",
     "청년기: 믿었던 가장 가까운 동료 기사에게 배신당해 큰 마음의 상처를 입었습니다. (+9세)",
     "청년기: 고고학적이고 역사적인 고문헌을 밤낮으로 치열하게 탐구하며 지식을 마스터했습니다. (+14세)"
-  ]
+  ],
+  spellbook: []
 };
 
 const INITIAL_STATE: GameState = {
@@ -234,7 +260,13 @@ const INITIAL_STATE: GameState = {
   ],
   combatMonsters: [],
   combatRound: 1,
-  mapType: "wilderness"
+  mapType: "wilderness",
+  day: 1,
+  watch: 1,
+  lastDrawnOracleCardValue: null,
+  activeTest: null,
+  arcaneSpellResult: null,
+  alchemicalBrewResult: null
 };
 
 // =================================================================
@@ -402,6 +434,13 @@ export default function App() {
       if (loaded) {
         // Safe checks/migrations
         if (!loaded.character) loaded.character = INITIAL_CHARACTER;
+        if (!loaded.character.spellbook) loaded.character.spellbook = [];
+        if (loaded.day === undefined) loaded.day = 1;
+        if (loaded.watch === undefined) loaded.watch = 1;
+        if (loaded.lastDrawnOracleCardValue === undefined) loaded.lastDrawnOracleCardValue = null;
+        if (loaded.activeTest === undefined) loaded.activeTest = null;
+        if (loaded.arcaneSpellResult === undefined) loaded.arcaneSpellResult = null;
+        if (loaded.alchemicalBrewResult === undefined) loaded.alchemicalBrewResult = null;
         if (!loaded.mapGrid) {
           loaded.mapGrid = Array.from({ length: 16 }, (_, i) => ({
             x: i % 4,
@@ -592,6 +631,51 @@ export default function App() {
     }
   };
 
+  const drawPlayerCard = (purpose: string = "oracle"): Card | null => {
+    let cardDrawn: Card | null = null;
+    updateState(s => {
+      let deck = [...s.playerDeck];
+      let discard = [...s.playerDiscard];
+      if (deck.length === 0) {
+        if (discard.length === 0) return s;
+        deck = shuffle(discard);
+        discard = [];
+      }
+      const c = deck.shift();
+      if (c) {
+        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
+        discard.push(c);
+      }
+      return { ...s, playerDeck: deck, playerDiscard: discard };
+    });
+
+    if (cardDrawn) {
+      const card = cardDrawn as Card;
+      if (card.type === "major" && card.card === "0") {
+        setTimeout(() => {
+          alert("🔄 플레이어 덱에서 광대(The Fool)가 드로우되었습니다! 규칙에 따라 모든 손패를 회수하고 양쪽 덱 전체를 새로 섞습니다.");
+          reshuffleAllDecks();
+        }, 50);
+        return null;
+      }
+
+      if (purpose === "oracle") {
+        const lastVal = state?.lastDrawnOracleCardValue;
+        const currentVal = card.card;
+        updateState(s => ({ ...s, lastDrawnOracleCardValue: currentVal }));
+
+        if (lastVal === currentVal) {
+          setTimeout(() => {
+            alert(`⚠️ 연속으로 동일한 카드 값 '${currentVal}'이 드로우되었습니다!\n룰북 규칙에 따라 즉시 돌발 사건 덱(Event Deck)에서 이벤트를 한 장 격발 처리하십시오.`);
+          }, 80);
+        }
+      }
+
+      return card;
+    }
+    return null;
+  };
+
   const reshuffleAllDecks = () => {
     updateState(s => {
       const fullPlayerDeck = createPlayerDeck();
@@ -602,130 +686,70 @@ export default function App() {
         playerDiscard: [],
         refereeDeck: fullRefereeDeck,
         refereeDiscard: [],
-        hand: []
+        hand: [],
+        lastDrawnOracleCardValue: null
       };
     });
-    alert("🔄 광대(The Fool)가 소집되었습니다! 플레이어 덱과 레프리 덱의 버린 카드 더미를 모두 모아 새로 섞어 손패를 초기화했습니다.");
+    alert("🔄 덱 전체가 소집되었습니다! 플레이어 덱과 레프리 덱의 버린 카드 더미를 모두 모아 새로 섞어 손패를 초기화했습니다.");
   };
 
   // Yes/No oracle logic
   const rollYesNoOracle = () => {
-    // Draw card from player deck
-    let cardDrawn: Card | null = null;
-    updateState(s => {
-      let deck = [...s.playerDeck];
-      let discard = [...s.playerDiscard];
-      if (deck.length === 0) {
-        deck = shuffle(discard);
-        discard = [];
-      }
-      const c = deck.shift();
-      if (c) {
-        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
-        discard.push(c);
-      }
-      return { ...s, playerDeck: deck, playerDiscard: discard };
-    });
+    const card = drawPlayerCard("oracle");
+    if (!card) return;
 
-    if (cardDrawn) {
-      const card = cardDrawn as Card;
-      setDrawnOracleCard(card);
-      
-      if (card.type === "major" && card.card === "0") {
-        setOracleYesNo("광대(The Fool) 카드입니다! 즉시 다시 섞기(Reshuffle)를 가동하십시오.");
-        return;
-      }
-
-      // Logic
-      // Ace = extreme
-      // 3,5,7,9 = No
-      // 2,4,6,8,10 = Yes
-      // Page/Knight = No, but
-      // Queen/King = Yes, but
-      const val = card.card;
-      if (val === "A") {
-        setOracleYesNo("극단적인 운명 (Extreme)! [1장을 즉시 새로 뽑아 상황을 더 깊게 전개해 보십시오.]");
-      } else if (["3", "5", "7", "9"].includes(val)) {
-        setOracleYesNo("아니오 (No)");
-      } else if (["2", "4", "6", "8", "10"].includes(val)) {
-        setOracleYesNo("예 (Yes)");
-      } else if (["Page", "Knight"].includes(val)) {
-        setOracleYesNo("아니오, 그러나... (No, but...)");
-      } else if (["Queen", "King"].includes(val)) {
-        setOracleYesNo("예, 하지만... (Yes, but...)");
-      } else {
-        setOracleYesNo("알 수 없음");
-      }
-      setOracleAmount(null);
-      setOracleActionSubject(null);
+    setDrawnOracleCard(card);
+    const val = card.card;
+    if (val === "A") {
+      setOracleYesNo("극단적인 운명 (Extreme)! [1장을 즉시 새로 뽑아 상황을 더 깊게 전개해 보십시오.]");
+    } else if (["3", "5", "7", "9"].includes(val)) {
+      setOracleYesNo("아니오 (No)");
+    } else if (["2", "4", "6", "8", "10"].includes(val)) {
+      setOracleYesNo("예 (Yes)");
+    } else if (["Page", "Knight"].includes(val)) {
+      setOracleYesNo("아니오, 그러나... (No, but...)");
+    } else if (["Queen", "King"].includes(val)) {
+      setOracleYesNo("예, 하지만... (Yes, but...)");
+    } else {
+      setOracleYesNo("알 수 없음");
     }
+    setOracleAmount(null);
+    setOracleActionSubject(null);
   };
 
   // Amount oracle logic
   const rollAmountOracle = () => {
-    let cardDrawn: Card | null = null;
-    updateState(s => {
-      let deck = [...s.playerDeck];
-      let discard = [...s.playerDiscard];
-      if (deck.length === 0) {
-        deck = shuffle(discard);
-        discard = [];
-      }
-      const c = deck.shift();
-      if (c) {
-        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
-        discard.push(c);
-      }
-      return { ...s, playerDeck: deck, playerDiscard: discard };
-    });
+    const card = drawPlayerCard("oracle");
+    if (!card) return;
 
-    if (cardDrawn) {
-      const card = cardDrawn as Card;
-      setDrawnOracleCard(card);
-      
-      // 2-5: None
-      // 6-10: Average
-      // Court: Considerable
-      // Ace: Excessive
-      const val = card.card;
-      if (val === "A") {
-        setOracleAmount("도를 지나치게 압도적인 스케일 (Excessive!)");
-      } else if (["2", "3", "4", "5"].includes(val)) {
-        setOracleAmount("미미함 / 거의 없음 (None)");
-      } else if (["6", "7", "8", "9", "10"].includes(val)) {
-        setOracleAmount("무난하고 평범한 정도 (Average)");
-      } else if (["Page", "Knight", "Queen", "King"].includes(val)) {
-        setOracleAmount("상당히 막대함 (Considerable)");
-      } else {
-        setOracleAmount("보통 수준");
-      }
-      setOracleYesNo(null);
-      setOracleActionSubject(null);
+    setDrawnOracleCard(card);
+    const val = card.card;
+    if (val === "A") {
+      setOracleAmount("도를 지나치게 압도적인 스케일 (Excessive!)");
+    } else if (["2", "3", "4", "5"].includes(val)) {
+      setOracleAmount("미미함 / 거의 없음 (None)");
+    } else if (["6", "7", "8", "9", "10"].includes(val)) {
+      setOracleAmount("무난하고 평범한 정도 (Average)");
+    } else if (["Page", "Knight", "Queen", "King"].includes(val)) {
+      setOracleAmount("상당히 막대함 (Considerable)");
+    } else {
+      setOracleAmount("보통 수준");
     }
+    setOracleYesNo(null);
+    setOracleActionSubject(null);
   };
 
   // Action-Subject Oracle
   const rollActionSubjectOracle = () => {
-    let playerCard: Card | null = null;
-    let refereeCard: Card | null = null;
+    const card1 = drawPlayerCard("oracle");
+    if (!card1) return;
 
+    let refereeCard: Card | null = null;
     updateState(s => {
-      let pDeck = [...s.playerDeck];
-      let pDiscard = [...s.playerDiscard];
       let rDeck = [...s.refereeDeck];
       let rDiscard = [...s.refereeDiscard];
-
-      if (pDeck.length === 0) {
-        pDeck = shuffle(pDiscard);
-        pDiscard = [];
-      }
-      const c1 = pDeck.shift();
-      if (c1) {
-        playerCard = c1;
-        pDiscard.push(c1);
-      }
-
       if (rDeck.length === 0) {
+        if (rDiscard.length === 0) return s;
         rDeck = shuffle(rDiscard);
         rDiscard = [];
       }
@@ -734,18 +758,10 @@ export default function App() {
         refereeCard = { ...c2, reversed: Math.random() < 0.25 };
         rDiscard.push(refereeCard);
       }
-
-      return {
-        ...s,
-        playerDeck: pDeck,
-        playerDiscard: pDiscard,
-        refereeDeck: rDeck,
-        refereeDiscard: rDiscard
-      };
+      return { ...s, refereeDeck: rDeck, refereeDiscard: rDiscard };
     });
 
-    if (playerCard && refereeCard) {
-      const card1 = playerCard as Card;
+    if (card1 && refereeCard) {
       const card2 = refereeCard as Card;
 
       // Extract Action
@@ -774,6 +790,146 @@ export default function App() {
       setDrawnOracleCard(null);
       setOracleYesNo(null);
       setOracleAmount(null);
+    }
+  };
+
+  // =================================================================
+  // GENERAL TEST ROLLER FUNCTIONS
+  // =================================================================
+  const [testStat, setTestStat] = useState<"cups" | "swords" | "coins" | "wands" | "none">("none");
+  const [testMod, setTestMod] = useState<number>(0);
+  const [testOppMonsterId, setTestOppMonsterId] = useState<string>("none");
+  const [testCustomOppPenalty, setTestCustomOppPenalty] = useState<number>(0);
+  const [testHelpStat, setTestHelpStat] = useState<number>(0);
+  const [testPurpose, setTestPurpose] = useState<string>("");
+  const [testDrawnCards, setTestDrawnCards] = useState<Card[]>([]);
+  const [testPushed, setTestPushed] = useState<boolean>(false);
+  const [testStatus, setTestStatus] = useState<"idle" | "rolled" | "success" | "failed" | "great_success" | "great_failure">("idle");
+
+  const resetTestState = () => {
+    setTestStat("none");
+    setTestMod(0);
+    setTestOppMonsterId("none");
+    setTestCustomOppPenalty(0);
+    setTestHelpStat(0);
+    setTestPurpose("");
+    setTestDrawnCards([]);
+    setTestPushed(false);
+    setTestStatus("idle");
+  };
+
+  const rollGeneralTest = () => {
+    let statVal = 0;
+    if (testStat !== "none" && state?.character?.stats) {
+      statVal = (state.character.stats as any)[testStat] || 0;
+    }
+
+    let oppPenalty = 0;
+    if (testOppMonsterId === "custom") {
+      oppPenalty = testCustomOppPenalty;
+    } else if (testOppMonsterId !== "none") {
+      const mon = BESTIARY.find(m => m.id === parseInt(testOppMonsterId));
+      if (mon) oppPenalty = mon.stat;
+    }
+
+    const card = drawPlayerCard("test");
+    if (!card) {
+      resetTestState();
+      return;
+    }
+
+    let cardVal = 0;
+    if (card.card === "A") cardVal = 1;
+    else if (card.card === "Page") cardVal = 11;
+    else if (card.card === "Knight") cardVal = 12;
+    else if (card.card === "Queen") cardVal = 13;
+    else if (card.card === "King") cardVal = 14;
+    else cardVal = parseInt(card.card) || 0;
+
+    const total = cardVal + statVal + testMod - oppPenalty + testHelpStat + testPenalty;
+    const isSuccess = total >= 14;
+    const isSuitMatch = card.suit === testStat;
+    const isGreatSuccess = isSuccess && isSuitMatch;
+
+    setTestDrawnCards([card]);
+    setTestPushed(false);
+
+    if (isGreatSuccess) {
+      setTestStatus("great_success");
+    } else if (isSuccess) {
+      setTestStatus("success");
+    } else {
+      setTestStatus("failed");
+    }
+
+    const statName = testStat === "cups" ? "Cups" : testStat === "swords" ? "Swords" : testStat === "coins" ? "Coins" : testStat === "wands" ? "Wands" : "None";
+    const statusText = isGreatSuccess ? "극적 성공 (Great Success)" : isSuccess ? "성공 (Success)" : "실패 (Failure)";
+    const logMsg = `[판정 - ${statName}] 목적: ${testPurpose || "일반 판정"} | 카드: ${getCardDisplayName(card)} (${cardVal}) | 합계: ${total} (스탯: ${statVal}, 모디파이어: ${testMod}, 대항패널티: -${oppPenalty}, 헬프: +${testHelpStat}, 부상패널티: ${testPenalty}) -> 결과: ${statusText}`;
+    addJournalEntry(logMsg);
+  };
+
+  const pushGeneralTest = () => {
+    if (testStatus !== "failed") return;
+
+    const card = drawPlayerCard("test");
+    if (!card) {
+      resetTestState();
+      return;
+    }
+
+    let cardVal = 0;
+    if (card.card === "A") cardVal = 1;
+    else if (card.card === "Page") cardVal = 11;
+    else if (card.card === "Knight") cardVal = 12;
+    else if (card.card === "Queen") cardVal = 13;
+    else if (card.card === "King") cardVal = 14;
+    else cardVal = parseInt(card.card) || 0;
+
+    let statVal = 0;
+    if (testStat !== "none" && state?.character?.stats) {
+      statVal = (state.character.stats as any)[testStat] || 0;
+    }
+    let oppPenalty = 0;
+    if (testOppMonsterId === "custom") {
+      oppPenalty = testCustomOppPenalty;
+    } else if (testOppMonsterId !== "none") {
+      const mon = BESTIARY.find(m => m.id === parseInt(testOppMonsterId));
+      if (mon) oppPenalty = mon.stat;
+    }
+
+    const origCard = testDrawnCards[0];
+    let origCardVal = 0;
+    if (origCard) {
+      if (origCard.card === "A") origCardVal = 1;
+      else if (origCard.card === "Page") origCardVal = 11;
+      else if (origCard.card === "Knight") origCardVal = 12;
+      else if (origCard.card === "Queen") origCardVal = 13;
+      else if (origCard.card === "King") origCardVal = 14;
+      else origCardVal = parseInt(origCard.card) || 0;
+    }
+
+    const total = origCardVal + cardVal + statVal + testMod - oppPenalty + testHelpStat + testPenalty;
+    const isSuccess = total >= 14;
+
+    setTestDrawnCards([...testDrawnCards, card]);
+    setTestPushed(true);
+
+    if (isSuccess) {
+      setTestStatus("success");
+      const logMsg = `[판정 푸시 성공] 추가 카드: ${getCardDisplayName(card)} (${cardVal}) | 합계: ${total} -> 결과: 성공 (Success)`;
+      addJournalEntry(logMsg);
+    } else {
+      setTestStatus("great_failure");
+      updateState(s => ({
+        ...s,
+        character: {
+          ...s.character,
+          resolve: Math.min(10, s.character.resolve + 1)
+        }
+      }));
+      const logMsg = `[판정 푸시 대실패 - Great Failure] 추가 카드: ${getCardDisplayName(card)} (${cardVal}) | 합계: ${total} -> 결과: 대실패! (결의 +1 획득)`;
+      addJournalEntry(logMsg);
+      alert("💥 대실패 (Great Failure)!\n상황이 심각하게 꼬이지만, 극적인 시련으로 인해 결의(Resolve) 1점을 얻습니다.");
     }
   };
 
@@ -814,6 +970,283 @@ export default function App() {
         hirelings: [...(s.character.hirelings || []), { name, info }]
       }
     }));
+  };
+
+  const healWound = (partKey: "head" | "torso" | "lArm" | "rArm" | "lLeg" | "rLeg", partNameKo: string) => {
+    if (confirm(`식사와 함께 하룻밤 야영 및 휴식(Rest & Recovery)을 진행하여 ${partNameKo}의 부상을 치유하시겠습니까?`)) {
+      updateState(s => ({
+        ...s,
+        character: {
+          ...s.character,
+          wounds: {
+            ...s.character.wounds,
+            [partKey]: false
+          }
+        },
+        journals: [
+          {
+            id: Date.now().toString(),
+            text: `[야영 휴식] 식사와 함께 편안한 휴식을 취해 ${partNameKo} 부상을 치유했습니다. (1 Wound Healed)`,
+            date: new Date().toLocaleString()
+          },
+          ...s.journals
+        ]
+      }));
+      alert(`${partNameKo}의 상처가 깨끗하게 치유되었습니다!`);
+    }
+  };
+
+  const rollMonsterMoraleTest = (monName: string, monStat: number) => {
+    drawRefereeCard((card) => {
+      let cardVal = 0;
+      if (card.card === "A") cardVal = 1;
+      else if (card.card === "Page") cardVal = 11;
+      else if (card.card === "Knight") cardVal = 12;
+      else if (card.card === "Queen") cardVal = 13;
+      else if (card.card === "King") cardVal = 14;
+      else cardVal = parseInt(card.card) || 0;
+
+      const total = cardVal + monStat;
+      const success = total >= 14;
+      const text = `[몬스터 사기 판정] ${monName} -> 난이도 14 | 판정합: ${total} (레프리 카드: ${getCardDisplayName(card)} + 몬스터 능력치: ${monStat}) -> 결과: ${success ? "성공 (사기 유지)" : "실패 (사기 꺾임/도망/항복)"}`;
+      
+      alert(text);
+      updateState(s => ({
+        ...s,
+        journals: [
+          {
+            id: Date.now().toString(),
+            text,
+            date: new Date().toLocaleString()
+          },
+          ...s.journals
+        ]
+      }));
+    });
+  };
+
+  const rollNpcReactionTest = (npcName: string) => {
+    const statVal = state?.character?.stats?.cups || 0;
+    const card = drawPlayerCard("reaction");
+    if (!card) return;
+
+    let cardVal = 0;
+    if (card.card === "A") cardVal = 1;
+    else if (card.card === "Page") cardVal = 11;
+    else if (card.card === "Knight") cardVal = 12;
+    else if (card.card === "Queen") cardVal = 13;
+    else if (card.card === "King") cardVal = 14;
+    else cardVal = parseInt(card.card) || 0;
+
+    const total = cardVal + statVal;
+    const success = total >= 14;
+    
+    let outcomeText = "";
+    if (success) {
+      outcomeText = "우호적임 (Friendly/Helpful) - 협조적이거나 호의를 보입니다.";
+    } else {
+      outcomeText = "비우호적임 (Hostile/Unfriendly) - 대화를 거부하거나 적대감을 드러냅니다.";
+    }
+    
+    const text = `[NPC 반응 판정] ${npcName} -> Cups 판정합: ${total} (플레이어 카드: ${getCardDisplayName(card)} + Cups: ${statVal}) -> 결과: ${outcomeText}`;
+    alert(text);
+    updateState(s => ({
+      ...s,
+      journals: [
+        {
+          id: Date.now().toString(),
+          text,
+          date: new Date().toLocaleString()
+        },
+        ...s.journals
+      ]
+    }));
+  };
+
+  // =================================================================
+  // ALCHEMY & ARCANE SPELL FUNCTIONS
+  // =================================================================
+  const [brewingIngredient, setBrewingIngredient] = useState<string>("Basilisk Eyeball");
+
+  const brewAlchemyPotion = () => {
+    let potionName = "";
+    if (brewingIngredient === "Basilisk Eyeball") potionName = "석화 물약 (Petrifying Potion)";
+    else if (brewingIngredient === "Ghost Ectoplasm") potionName = "수면 안개 폭탄 (Sleep-smoke Bomb)";
+    else if (brewingIngredient === "Troll Heart") potionName = "재생 물약 (Potion of Regeneration)";
+    else if (brewingIngredient === "Barghest Fang") potionName = "사냥개 폼 영약 (Elixir of Hound-form)";
+    else if (brewingIngredient === "Blood Asp Venom") potionName = "독가스 폭탄 (Poison Bomb)";
+    else potionName = "미지의 연금 약품";
+
+    const statVal = state?.character?.stats?.wands || 0;
+    const card = drawPlayerCard("alchemy");
+    if (!card) return;
+
+    let cardVal = 0;
+    if (card.card === "A") cardVal = 1;
+    else if (card.card === "Page") cardVal = 11;
+    else if (card.card === "Knight") cardVal = 12;
+    else if (card.card === "Queen") cardVal = 13;
+    else if (card.card === "King") cardVal = 14;
+    else cardVal = parseInt(card.card) || 0;
+
+    const total = cardVal + statVal + testPenalty;
+    const success = total >= 14;
+
+    updateState(s => {
+      const nextBrewResult = {
+        success,
+        potionName,
+        ingredient: brewingIngredient,
+        total,
+        card
+      };
+      
+      const nextJournals = [
+        {
+          id: Date.now().toString(),
+          text: `[연금술 제조] 재료: ${brewingIngredient} -> 완드 판정: ${total}점 (카드: ${getCardDisplayName(card)} + Wands: ${statVal}) -> 결과: ${success ? "성공 및 비약 생산" : "실패 및 재료 소실"}`,
+          date: new Date().toLocaleString()
+        },
+        ...s.journals
+      ];
+
+      return {
+        ...s,
+        alchemicalBrewResult: nextBrewResult,
+        journals: nextJournals
+      };
+    });
+  };
+
+  const addBrewResultToInventory = () => {
+    if (!state?.alchemicalBrewResult || !state.alchemicalBrewResult.success) return;
+    const potionName = state.alchemicalBrewResult.potionName;
+    
+    updateState(s => {
+      if (s.character.inventory.length >= carryCapacity) {
+        alert(`소지품 가방 공간이 부족합니다! 물건을 비우고 다시 시도해 주십시오.`);
+        return s;
+      }
+      return {
+        ...s,
+        character: {
+          ...s.character,
+          inventory: [...s.character.inventory, potionName]
+        },
+        alchemicalBrewResult: null
+      };
+    });
+    alert(`성공적으로 [${potionName}] 비약을 소지품 인벤토리에 추가했습니다!`);
+  };
+
+  const rollArcaneSpell = () => {
+    let minorCard: Card | null = null;
+    updateState(s => {
+      let deck = [...s.playerDeck];
+      let discard = [...s.playerDiscard];
+      if (deck.length === 0) {
+        if (discard.length === 0) return s;
+        deck = shuffle(discard);
+        discard = [];
+      }
+      const c = deck.shift();
+      if (c) {
+        minorCard = { ...c, reversed: Math.random() < 0.25 };
+        discard.push(c);
+      }
+      return { ...s, playerDeck: deck, playerDiscard: discard };
+    });
+
+    if (!minorCard) return;
+    const minCard = minorCard as Card;
+    if (minCard.type === "major" && minCard.card === "0") {
+      setTimeout(() => {
+        alert("🔄 주문 마법 단어 탐색 중 광대(The Fool)가 드로우되었습니다! 플레이어 덱을 새로 셔플합니다.");
+        reshuffleAllDecks();
+      }, 50);
+      return;
+    }
+
+    let refereeCard: Card | null = null;
+    updateState(s => {
+      let deck = [...s.refereeDeck];
+      let discard = [...s.refereeDiscard];
+      if (deck.length === 0) {
+        if (discard.length === 0) return s;
+        deck = shuffle(discard);
+        discard = [];
+      }
+      const c = deck.shift();
+      if (c) {
+        refereeCard = { ...c, reversed: Math.random() < 0.25 };
+        discard.push(c);
+      }
+      return { ...s, refereeDeck: deck, refereeDiscard: discard };
+    });
+
+    if (!refereeCard) return;
+    const majCard = refereeCard as Card;
+
+    let minorWord = "";
+    let minorWordKo = "";
+    if (minCard.suit) {
+      const suitFolder = minCard.suit === "cups" ? "Cups" : minCard.suit === "wands" ? "Wands" : minCard.suit === "swords" ? "Swords" : "Coins";
+      const wInfo = ARCANE_MINOR_WORDS[suitFolder]?.[minCard.card];
+      if (wInfo) {
+        minorWord = wInfo.en;
+        minorWordKo = wInfo.ko;
+      }
+    }
+
+    let majorWord = "";
+    let majorWordKo = "";
+    const majInfo = ARCANE_MAJOR_WORDS[majCard.card];
+    if (majInfo) {
+      majorWord = majCard.reversed ? majInfo.revEn : majInfo.en;
+      majorWordKo = majCard.reversed ? majInfo.revKo : majInfo.ko;
+    }
+
+    const spellName = `${minorWord} ${majorWord} (${minorWordKo} ${majorWordKo})`;
+    const ruleSummary = `소모 결의: 최소 1 Resolve / 피해: 결의 1점 소모당 부상 1점 / 전투 시 시전 판정: 대지 완드 판정(Opposed Wands Test, 대상 몬스터 Stat 만큼 페널티)`;
+
+    updateState(s => ({
+      ...s,
+      arcaneSpellResult: {
+        minorCard: minCard,
+        majorCard: majCard,
+        spellName,
+        ruleSummary
+      },
+      journals: [
+        {
+          id: Date.now().toString(),
+          text: `[비문 마법 탐구] 카드 단어 조합: ${spellName} 주문 단어를 발견하여 마법 주문을 구성했습니다.`,
+          date: new Date().toLocaleString()
+        },
+        ...s.journals
+      ]
+    }));
+  };
+
+  const addArcaneSpellToSpellbook = () => {
+    if (!state?.arcaneSpellResult) return;
+    const spellName = state.arcaneSpellResult.spellName;
+    updateState(s => {
+      const nextSpellbook = [...(s.character.spellbook || [])];
+      if (nextSpellbook.includes(spellName)) {
+        alert("이미 주문첩에 기록된 주문입니다.");
+        return s;
+      }
+      return {
+        ...s,
+        character: {
+          ...s.character,
+          spellbook: [...nextSpellbook, spellName]
+        },
+        arcaneSpellResult: null
+      };
+    });
+    alert(`주문첩에 [${spellName}] 마법이 등록되었습니다!`);
   };
 
   const searchAndHirelingTest = () => {
@@ -1475,19 +1908,61 @@ export default function App() {
       <main className="main-content">
         {activeTab === "dashboard" && (
           <div className="dashboard-grid">
+            {/* 첫 번째 열: 컴패니언 환영 및 시간 추적기 */}
             <div className="card-panel gold-border">
-              <h2 className="gothic-sub">글롬(Gloam) Companion에 오신 것을 환영합니다</h2>
-              <p style={{ lineHeight: "1.7", color: "var(--text-muted)" }}>
-                이 웹앱은 타로 카드 기반의 다크 판타지 솔로 저널링 RPG인 <strong>Gloam (v1.02)</strong>을 원활하게 
-                플레이할 수 있도록 설계된 전용 디지털 컴패니언입니다. 룰북 한 장 한 장의 세부 지침과 오라클, 
-                전투 매니저, 인터랙티브 캐릭터 시트를 지원합니다.
+              <h2 className="gothic-sub">글롬(Gloam) Companion</h2>
+              <p style={{ lineHeight: "1.6", color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                이 웹앱은 타로 카드 기반의 다크 판타지 RPG인 <strong>Gloam (v1.02)</strong>을 원활하게 
+                플레이하기 위한 디지털 서적 겸 컴패니언입니다. 룰북 지침, 오라클, 전투 트래커, 캐릭터 시트가 연동됩니다.
               </p>
               
-              <div className="alert alert-note" style={{ marginTop: "1rem", border: "1px solid var(--border-color)", padding: "10px", backgroundColor: "var(--bg-panel-light)" }}>
+              <div className="alert alert-note" style={{ marginTop: "1rem", border: "1px solid var(--border-color)", padding: "10px", backgroundColor: "var(--bg-panel-light)", fontSize: "0.85rem" }}>
                 <strong>💡 캐릭터 시트 상태 안내:</strong> 현재 캐릭터는 <strong>{state.character.name} ({detectedVocation})</strong>입니다.<br />
                 속도(Speed): <strong>{speed}</strong>, 
                 소지 한도(Backpack): <strong>{carryCapacity}슬롯</strong>, 
                 판정 페널티(Torso): <strong>{testPenalty}</strong>.
+              </div>
+
+              {/* 시간 및 워치 추적기 */}
+              <div style={{ marginTop: "1.5rem", borderTop: "1px solid #333", paddingTop: "15px" }}>
+                <h4 className="gothic-sub" style={{ fontSize: "1.05rem", margin: "0 0 10px 0" }}>⏱️ 여정 시간 및 환경 추적기 (Time &amp; Watch Tracker)</h4>
+                <div style={{ display: "flex", gap: "15px", alignItems: "center", marginTop: "10px" }}>
+                  <div style={{ background: "rgba(42,37,33,0.1)", border: "1px solid var(--border-color)", padding: "8px 12px", borderRadius: "4px", textAlign: "center", minWidth: "70px" }}>
+                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>DAY</div>
+                    <div style={{ fontSize: "1.3rem", fontWeight: "bold", color: "var(--color-gold)", fontFamily: "var(--gothic)" }}>{state.day}</div>
+                  </div>
+                  <div style={{ background: "rgba(42,37,33,0.1)", border: "1px solid var(--border-color)", padding: "8px 12px", borderRadius: "4px", textAlign: "center", minWidth: "70px" }}>
+                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>WATCH</div>
+                    <div style={{ fontSize: "1.3rem", fontWeight: "bold", color: "var(--color-gold)", fontFamily: "var(--gothic)" }}>{state.watch} / 3</div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                    <button className="btn-medieval-small" onClick={() => {
+                      updateState(s => {
+                        let nextWatch = s.watch + 1;
+                        let nextDay = s.day;
+                        if (nextWatch > 3) {
+                          nextWatch = 1;
+                          nextDay += 1;
+                        }
+                        return {
+                          ...s,
+                          day: nextDay,
+                          watch: nextWatch,
+                          journals: [{ id: Date.now().toString(), text: `[시간 경과] 제 ${nextDay}일 제 ${nextWatch}워치가 되었습니다.`, date: new Date().toLocaleString() }, ...s.journals]
+                        };
+                      });
+                    }}>+1 Watch 경과 (8시간)</button>
+                    <button className="btn-medieval-small" style={{ borderColor: "var(--color-crimson)", color: "var(--color-crimson)", fontSize: "0.68rem" }} onClick={() => {
+                      if (confirm("일차를 1일 이전으로 되돌리시겠습니까?")) {
+                        updateState(s => ({ ...s, day: Math.max(1, s.day - 1), watch: 1 }));
+                      }
+                    }}>-1 Day 이전으로</button>
+                  </div>
+                </div>
+                <p className="rules-helper-text" style={{ marginTop: "10px", fontSize: "0.72rem", lineHeight: "1.3", color: "#888" }}>
+                  * 야외 이동당 1 Watch(8시간) 소요. 연금술 비약 제조당 1 Watch 소요. <br />
+                  * 하루는 3개의 Watch로 구성됩니다 (제 3워치는 밤 시간대).
+                </p>
               </div>
 
               <div style={{ marginTop: "1.5rem", display: "flex", gap: "10px" }}>
@@ -1500,19 +1975,157 @@ export default function App() {
               </div>
             </div>
 
+            {/* 두 번째 열: 최근 일지 요약 */}
             <div className="card-panel">
               <h3 className="gothic-sub">최근 일지 요약</h3>
               <div className="summary-journals">
-                {state.journals.slice(0, 3).map((j) => (
+                {state.journals.slice(0, 4).map((j) => (
                   <div key={j.id} className="summary-journal-item" style={{ borderLeft: "2px solid var(--border-color)", paddingLeft: "10px", marginBottom: "10px" }}>
                     <span className="date" style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "block" }}>{j.date}</span>
-                    <p style={{ fontSize: "0.9rem" }}>{j.text}</p>
+                    <p style={{ fontSize: "0.85rem", margin: "2px 0 0 0", lineHeight: "1.3" }}>{j.text}</p>
                   </div>
                 ))}
                 {state.journals.length === 0 && <p className="empty-text">기록된 연대기가 없습니다.</p>}
-                <button className="btn-medieval text-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--color-gold)", padding: 0, marginTop: "10px" }} onClick={() => setActiveTab("journal")}>
+                <button className="btn-medieval text-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--color-gold)", padding: 0, marginTop: "10px", display: "block" }} onClick={() => setActiveTab("journal")}>
                   전체 기록 보기 &rarr;
                 </button>
+              </div>
+            </div>
+
+            {/* 세 번째 열: 범용 운명 판정판 (General Test Roller) */}
+            <div className="card-panel gold-border">
+              <h3 className="gothic-sub">🔮 운명의 판정판 (General Test Roller)</h3>
+              <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "5px 0 12px 0", lineHeight: "1.3" }}>
+                캐릭터 스탯, 보정치, 대항 페널티(Opposed)를 결합하여 운명의 판정을 드로우합니다. (성공 기준: 14점 이상)
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div>
+                  <label style={{ fontSize: "0.78rem", fontWeight: "bold", display: "block", marginBottom: "3px" }}>판정 능력치 (Stat):</label>
+                  <select 
+                    className="select-medieval w-100" 
+                    value={testStat} 
+                    onChange={e => {
+                      setTestStat(e.target.value as any);
+                      setTestDrawnCards([]);
+                      setTestStatus("idle");
+                    }}
+                  >
+                    <option value="none">없음 (순수 카드 + modifier)</option>
+                    <option value="cups">Cups (컵 - {state.character.stats.cups})</option>
+                    <option value="swords">Swords (소드 - {state.character.stats.swords})</option>
+                    <option value="coins">Coins (코인 - {state.character.stats.coins})</option>
+                    <option value="wands">Wands (완드 - {state.character.stats.wands})</option>
+                  </select>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div>
+                    <label style={{ fontSize: "0.78rem", fontWeight: "bold", display: "block", marginBottom: "3px" }}>보정치 (Modifier):</label>
+                    <input 
+                      type="number" 
+                      className="banner-input" 
+                      style={{ padding: "4px 8px", width: "100%", fontSize: "0.85rem" }}
+                      value={testMod} 
+                      onChange={e => setTestMod(parseInt(e.target.value) || 0)} 
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.78rem", fontWeight: "bold", display: "block", marginBottom: "3px" }}>동료원조 (+Help):</label>
+                    <input 
+                      type="number" 
+                      className="banner-input" 
+                      style={{ padding: "4px 8px", width: "100%", fontSize: "0.85rem" }}
+                      value={testHelpStat} 
+                      onChange={e => setTestHelpStat(parseInt(e.target.value) || 0)} 
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "0.78rem", fontWeight: "bold", display: "block", marginBottom: "3px" }}>대항 적수 페널티 (Opposed Penalty):</label>
+                  <select 
+                    className="select-medieval w-100" 
+                    value={testOppMonsterId} 
+                    onChange={e => setTestOppMonsterId(e.target.value)}
+                  >
+                    <option value="none">없음 (일반 난이도 14)</option>
+                    <option value="custom">직접 수치 입력 페널티</option>
+                    {BESTIARY.map(m => (
+                      <option key={m.id} value={m.id.toString()}>{m.nameKo} (Stat: -{m.stat})</option>
+                    ))}
+                  </select>
+                  {testOppMonsterId === "custom" && (
+                    <input 
+                      type="number" 
+                      className="banner-input" 
+                      style={{ padding: "4px 8px", width: "100%", marginTop: "5px", fontSize: "0.85rem" }} 
+                      placeholder="페널티 수치 입력"
+                      value={testCustomOppPenalty} 
+                      onChange={e => setTestCustomOppPenalty(Math.abs(parseInt(e.target.value) || 0))} 
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "0.78rem", fontWeight: "bold", display: "block", marginBottom: "3px" }}>판정 목적/노트:</label>
+                  <input 
+                    type="text" 
+                    className="banner-input" 
+                    style={{ padding: "4px 8px", width: "100%", fontSize: "0.85rem" }} 
+                    placeholder="예: 함정 피하기, 문 자물쇠 따기 등"
+                    value={testPurpose} 
+                    onChange={e => setTestPurpose(e.target.value)} 
+                  />
+                </div>
+
+                <div style={{ display: "flex", gap: "10px", marginTop: "5px" }}>
+                  <button className="btn-medieval flex-1" onClick={rollGeneralTest}>판정 카드 드로우</button>
+                  <button className="btn-medieval-small danger" onClick={resetTestState}>초기화</button>
+                </div>
+
+                {/* 판정 결과 카드 */}
+                {testDrawnCards.length > 0 && (
+                  <div className="oracle-result-card" style={{ marginTop: "8px", backgroundColor: "rgba(42,37,33,0.08)", padding: "10px" }}>
+                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                      <div style={{ display: "flex", gap: "4px" }}>
+                        {testDrawnCards.map((c, i) => (
+                          <img 
+                            key={i} 
+                            src={getCardImageUrl(c)} 
+                            alt="test-card" 
+                            style={{ width: "45px", height: "auto", border: "1px solid #444" }} 
+                            className={c.reversed ? "reversed-image" : ""}
+                          />
+                        ))}
+                      </div>
+                      <div style={{ flex: 1, fontSize: "0.78rem" }}>
+                        <h5 style={{ margin: 0, fontSize: "0.82rem" }}>
+                          결과: {testStatus === "great_success" && <strong style={{ color: "var(--color-gold)" }}>🎉 극적 성공 (Great Success!)</strong>}
+                                {testStatus === "success" && <strong style={{ color: "var(--color-gold)" }}>👍 성공 (Success)</strong>}
+                                {testStatus === "failed" && <strong style={{ color: "var(--color-crimson)" }}>💥 실패 (Failure)</strong>}
+                                {testStatus === "great_failure" && <strong style={{ color: "var(--color-crimson)" }}>💀 대실패 (Great Failure!)</strong>}
+                        </h5>
+                        <p style={{ margin: "3px 0 0 0", fontSize: "0.7rem", color: "var(--text-muted)", lineHeight: "1.2" }}>
+                          카드: {testDrawnCards.map(c => getCardDisplayName(c)).join(" + ")} <br />
+                          {testPushed && <span>[푸시 적용] </span>}
+                          부상 페널티: {testPenalty}
+                        </p>
+                      </div>
+                    </div>
+
+                    {testStatus === "failed" && !testPushed && (
+                      <div style={{ marginTop: "6px", borderTop: "1px dashed #bbb", paddingTop: "6px", textAlign: "center" }}>
+                        <p style={{ fontSize: "0.7rem", color: "var(--color-crimson)", margin: "0 0 4px 0" }}>
+                          * 실패했습니다. 리스크를 지고 한 장 더 뽑으시겠습니까?
+                        </p>
+                        <button className="btn-medieval-small" style={{ width: "100%", padding: "4px" }} onClick={pushGeneralTest}>
+                          🎲 판정 푸시 (카드 1장 추가)
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1828,6 +2441,11 @@ export default function App() {
                           onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, head: e.target.checked } } }))} 
                         />
                         <span style={{ color: state.character.wounds.head ? "var(--color-crimson)" : "inherit" }}>머리 (Head) [기절]</span>
+                        {state.character.wounds.head && (
+                          <button className="btn-medieval-small" style={{ marginLeft: "auto", fontSize: "0.65rem" }} onClick={() => healWound("head", "머리")}>
+                            휴식치료
+                          </button>
+                        )}
                       </div>
                       <div className="injury-card-content">
                         <span>투구 AP2:</span>
@@ -1854,6 +2472,11 @@ export default function App() {
                           onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, torso: e.target.checked } } }))} 
                         />
                         <span style={{ color: state.character.wounds.torso ? "var(--color-crimson)" : "inherit" }}>몸통 (Torso) [-3 판정]</span>
+                        {state.character.wounds.torso && (
+                          <button className="btn-medieval-small" style={{ marginLeft: "auto", fontSize: "0.65rem" }} onClick={() => healWound("torso", "몸통")}>
+                            휴식치료
+                          </button>
+                        )}
                       </div>
                       <div className="injury-card-content">
                         <span>흉갑 AP3:</span>
@@ -1880,6 +2503,11 @@ export default function App() {
                           onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lArm: e.target.checked } } }))} 
                         />
                         <span style={{ color: state.character.wounds.lArm ? "var(--color-crimson)" : "inherit" }}>왼팔 (L.Arm) [떨어뜨림]</span>
+                        {state.character.wounds.lArm && (
+                          <button className="btn-medieval-small" style={{ marginLeft: "auto", fontSize: "0.65rem" }} onClick={() => healWound("lArm", "왼팔")}>
+                            휴식치료
+                          </button>
+                        )}
                       </div>
                       <div className="injury-card-content">
                         <span>건틀릿 AP1:</span>
@@ -1898,6 +2526,11 @@ export default function App() {
                           onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rArm: e.target.checked } } }))} 
                         />
                         <span style={{ color: state.character.wounds.rArm ? "var(--color-crimson)" : "inherit" }}>오른팔 (R.Arm) [떨어뜨림]</span>
+                        {state.character.wounds.rArm && (
+                          <button className="btn-medieval-small" style={{ marginLeft: "auto", fontSize: "0.65rem" }} onClick={() => healWound("rArm", "오른팔")}>
+                            휴식치료
+                          </button>
+                        )}
                       </div>
                       <div className="injury-card-content">
                         <span>건틀릿 AP1:</span>
@@ -1916,6 +2549,11 @@ export default function App() {
                           onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lLeg: e.target.checked } } }))} 
                         />
                         <span style={{ color: state.character.wounds.lLeg ? "var(--color-crimson)" : "inherit" }}>왼다리 (L.Leg) [-2 이동]</span>
+                        {state.character.wounds.lLeg && (
+                          <button className="btn-medieval-small" style={{ marginLeft: "auto", fontSize: "0.65rem" }} onClick={() => healWound("lLeg", "왼다리")}>
+                            휴식치료
+                          </button>
+                        )}
                       </div>
                       <div className="injury-card-content">
                         <span>정강이 AP2:</span>
@@ -1942,6 +2580,11 @@ export default function App() {
                           onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rLeg: e.target.checked } } }))} 
                         />
                         <span style={{ color: state.character.wounds.rLeg ? "var(--color-crimson)" : "inherit" }}>오른다리 (R.Leg) [-2 이동]</span>
+                        {state.character.wounds.rLeg && (
+                          <button className="btn-medieval-small" style={{ marginLeft: "auto", fontSize: "0.65rem" }} onClick={() => healWound("rLeg", "오른다리")}>
+                            휴식치료
+                          </button>
+                        )}
                       </div>
                       <div className="injury-card-content">
                         <span>정강이 AP2:</span>
@@ -2096,6 +2739,36 @@ export default function App() {
                       ))}
                       {state.character.unlockedTalents.length === 0 && (
                         <p style={{ color: "var(--text-muted)", fontStyle: "italic" }}>습득된 고유 재능이 없습니다.</p>
+                      )}
+                    </div>
+
+                    {/* Spellbook section */}
+                    <div className="book-page-header" style={{ fontSize: "1.2rem", marginTop: "15px", marginBottom: "10px" }}>
+                      <span>Spellbook (주문첩)</span>
+                    </div>
+                    <div style={{ maxHeight: "160px", overflowY: "auto", fontSize: "0.85rem" }}>
+                      {(state.character.spellbook || []).map((spell, idx) => (
+                        <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px dashed rgba(42,37,33,0.15)", padding: "3px 0" }}>
+                          <span style={{ color: "#6b46c1", fontWeight: "bold" }}>⚡ {spell}</span>
+                          <button 
+                            className="delete-btn" 
+                            style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }}
+                            onClick={() => {
+                              if (confirm(`주문첩에서 [${spell}] 주문을 영구히 삭제하시겠습니까?`)) {
+                                updateState(s => ({ 
+                                  ...s, 
+                                  character: { 
+                                    ...s.character, 
+                                    spellbook: (s.character.spellbook || []).filter((_, i) => i !== idx) 
+                                  } 
+                                }));
+                              }
+                            }}
+                          >&times;</button>
+                        </div>
+                      ))}
+                      {(state.character.spellbook || []).length === 0 && (
+                        <p style={{ color: "var(--text-muted)", fontStyle: "italic" }}>기록된 비문 마법 주문이 없습니다.</p>
                       )}
                     </div>
 
@@ -2544,6 +3217,12 @@ export default function App() {
                       >
                         일지에 기록하기
                       </button>
+                      <button 
+                        className="btn-medieval-small" 
+                        onClick={() => rollNpcReactionTest(`${folkNpcResult.femaleName}/${folkNpcResult.maleName}`)}
+                      >
+                        반응 판정 (Cups Test vs 14)
+                      </button>
                       <div style={{ display: "flex", gap: "5px" }}>
                         <button className="btn-medieval-small" style={{ flex: 1, padding: "4px 2px", fontSize: "0.75rem" }} onClick={addNpcAsFriend}>인연 등록</button>
                         <button className="btn-medieval-small" style={{ flex: 1, padding: "4px 2px", fontSize: "0.75rem" }} onClick={addNpcAsFoe}>원수 등록</button>
@@ -2610,6 +3289,124 @@ export default function App() {
                           소지품 인벤토리에 추가
                         </button>
                       )}
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Alchemical Cauldron Column */}
+                <div className="downtime-column">
+                  <div>
+                    <h4 className="gothic-sub" style={{ fontSize: "1.05rem", color: "var(--color-gold)", borderBottom: "1px solid #444", paddingBottom: "5px", marginBottom: "8px" }}>
+                      연금술 비약 제조 (Alchemy Cauldron - p.54)
+                    </h4>
+                    <p style={{ fontSize: "0.75rem", color: "#888", margin: "8px 0", height: "35px" }}>
+                      몬스터의 잔해(전리품)를 가마솥에 넣어 비약을 조제합니다. (Wands 판정 난이도 14)
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
+                      <select 
+                        className="select-medieval w-100" 
+                        value={brewingIngredient} 
+                        onChange={(e) => setBrewingIngredient(e.target.value)}
+                      >
+                        <option value="Basilisk Eyeball">바실리스크 안구 → 석화 물약</option>
+                        <option value="Ghost Ectoplasm">유령 엑토플라즘 → 수면 안개 폭탄</option>
+                        <option value="Troll Heart">트롤 심장 → 재생 물약</option>
+                        <option value="Barghest Fang">바게스트 송곳니 → 사냥개 영약</option>
+                        <option value="Blood Asp Venom">핏빛 독사 독액 → 독가스 폭탄</option>
+                      </select>
+                      <button className="btn-medieval w-100" onClick={brewAlchemyPotion}>가마솥 끓이기</button>
+                    </div>
+
+                    {state.alchemicalBrewResult && (
+                      <div style={{ marginTop: "15px" }}>
+                        <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "8px" }}>
+                          <img 
+                            src={getCardImageUrl(state.alchemicalBrewResult.card)} 
+                            alt="Alchemy card" 
+                            style={{ width: "50px", height: "auto", border: "1px solid #555" }}
+                            className={state.alchemicalBrewResult.card.reversed ? "reversed-image" : ""}
+                          />
+                          <div style={{ fontSize: "0.8rem" }}>
+                            <h5 style={{ margin: 0, color: state.alchemicalBrewResult.success ? "var(--color-gold)" : "var(--color-crimson)" }}>
+                              결과: {state.alchemicalBrewResult.success ? "제조 성공!" : "제조 실패"}
+                            </h5>
+                            <span style={{ color: "#bbb" }}>
+                              판정합: {state.alchemicalBrewResult.total} (카드 {state.alchemicalBrewResult.card.card} + 완드 {state.character.stats.wands})
+                            </span>
+                          </div>
+                        </div>
+                        <div className="npc-card-woodcut" style={{ fontSize: "0.8rem", borderStyle: "solid" }}>
+                          <strong>제조된 비약:</strong> {state.alchemicalBrewResult.potionName}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {state.alchemicalBrewResult && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginTop: "15px" }}>
+                      {state.alchemicalBrewResult.success ? (
+                        <button className="btn-medieval-small" onClick={addBrewResultToInventory}>
+                          소지품 가방에 추가
+                        </button>
+                      ) : (
+                        <p style={{ fontSize: "0.75rem", color: "var(--color-crimson)", fontStyle: "italic", textAlign: "center", margin: 0 }}>
+                          재료를 모두 낭비하고 검은 연기만 피어올랐습니다.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* 5. Arcane Spell Generator Column */}
+                <div className="downtime-column">
+                  <div>
+                    <h4 className="gothic-sub" style={{ fontSize: "1.05rem", color: "var(--color-gold)", borderBottom: "1px solid #444", paddingBottom: "5px", marginBottom: "8px" }}>
+                      비문 마법 주문 생성 (Arcane Spells - p.38)
+                    </h4>
+                    <p style={{ fontSize: "0.75rem", color: "#888", margin: "8px 0", height: "35px" }}>
+                      플레이어 덱(마이너)과 레프리 덱(메이저)에서 카드를 한 장씩 뽑아 비문 주문을 조합합니다.
+                    </p>
+                    <button className="btn-medieval w-100" onClick={rollArcaneSpell}>주문 마법 탐구</button>
+
+                    {state.arcaneSpellResult && (
+                      <div style={{ marginTop: "15px" }}>
+                        <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginBottom: "10px" }}>
+                          <div>
+                            <div style={{ fontSize: "0.7rem", textAlign: "center", color: "#888" }}>마이너 (동사)</div>
+                            <img 
+                              src={getCardImageUrl(state.arcaneSpellResult.minorCard)} 
+                              alt="Minor Card" 
+                              style={{ width: "50px", height: "auto", border: "1px solid #555" }}
+                              className={state.arcaneSpellResult.minorCard.reversed ? "reversed-image" : ""}
+                            />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: "0.7rem", textAlign: "center", color: "#888" }}>메이저 (명사)</div>
+                            <img 
+                              src={getCardImageUrl(state.arcaneSpellResult.majorCard)} 
+                              alt="Major Card" 
+                              style={{ width: "50px", height: "auto", border: "1px solid #555" }}
+                              className={state.arcaneSpellResult.majorCard.reversed ? "reversed-image" : ""}
+                            />
+                          </div>
+                        </div>
+                        <div className="npc-card-woodcut" style={{ fontSize: "0.75rem", borderStyle: "solid" }}>
+                          <div style={{ color: "#6b46c1", fontWeight: "bold", fontSize: "0.85rem", marginBottom: "4px" }}>
+                            {state.arcaneSpellResult.spellName}
+                          </div>
+                          <div style={{ fontSize: "0.7rem", color: "#666", lineHeight: "1.2" }}>
+                            {state.arcaneSpellResult.ruleSummary}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {state.arcaneSpellResult && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginTop: "15px" }}>
+                      <button className="btn-medieval-small" onClick={addArcaneSpellToSpellbook}>
+                        주문첩(Spellbook)에 기록
+                      </button>
                     </div>
                   )}
                 </div>
@@ -2799,6 +3596,14 @@ export default function App() {
                               });
                             });
                           }}>선제권 카드 결정</button>
+                        </div>
+
+                        {/* Monster Morale Test */}
+                        <div className="flex-row justify-between align-center" style={{ marginTop: "6px", borderTop: "1px dashed #333", paddingTop: "5px" }}>
+                          <span>사기 수치: {template.stat}</span>
+                          <button className="btn-medieval-small" onClick={() => rollMonsterMoraleTest(mon.name, template.stat)}>
+                            사기 판정 (Ref + Stat vs 14)
+                          </button>
                         </div>
 
                         <button className="btn-medieval-small danger w-100" style={{ marginTop: "10px" }} onClick={() => {

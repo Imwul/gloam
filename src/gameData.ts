@@ -167,7 +167,7 @@ export const BESTIARY: Monster[] = [
     id: 3, name: "Barghest", nameKo: "바게스트",
     description: "Clever shapeshifting demons that live among goblins. They grow more powerful the more peasants they eat.",
     descriptionKo: "고블린 사이에 섞여 사는 영악한 형상변환 악마. 농민을 많이 잡아먹을수록 강해집니다.",
-    stat: 2, wounds: 3, speed: 2, // 2 (goblin) / 4 (canine)
+    stat: 2, wounds: 3, speed: 2, // 2 in goblin form, 4 in canine form
     attacks: "Bite 1 (1 sq)", attacksKo: "물기 1점 (사거리 1칸)",
     armor: "None", armorKo: "없음",
     talents: ["Shapechange", "Levitate", "Illusion", "Teleport", "Charm"],
@@ -225,61 +225,55 @@ export const BESTIARY: Monster[] = [
     id: 9, name: "Goblin", nameKo: "고블린",
     description: "Small chaotic troglodytes who hate humans and have a disturbing sense of humor.",
     descriptionKo: "인간을 증오하며 기괴한 유머 감각을 가진 무질서하고 작은 혈거인.",
-    stat: 2, wounds: 2, speed: 3,
-    attacks: "Rusty dagger 1 (1 sq)", attacksKo: "녹슨 단검 1점 (사거리 1칸)",
-    armor: "leather helmet", armorKo: "가죽 투구 (머리 AP 2)",
-    talents: ["Sneak attack", "Scurry"], talentsKo: ["기습 공격", "황급히 도망치기"]
+    stat: 1, wounds: 1, speed: 3,
+    attacks: "Cleaver 1 (1 sq)", attacksKo: "식칼 1점 (사거리 1칸)",
+    armor: "helmet", armorKo: "투구 (머리 AP 2)",
+    talents: ["Call Reinforcement"], talentsKo: ["지원군 소환"]
   },
   {
-    id: 10, name: "Lindwurm", nameKo: "린트부름",
-    description: "Two-legged wingless dragons that lurk in marshes and underground pools.",
-    descriptionKo: "늪지대와 지하 물웅덩이에 잠복해 사는 두 다리뿐인 날개 없는 용.",
-    stat: 5, wounds: 7, speed: 4,
-    attacks: "Bite 3 (2 sq)", attacksKo: "물기 3점 (사거리 2칸)",
-    armor: "scales (torso)", armorKo: "비늘 (몸통 AP 2)",
-    talents: ["Acid spit (4 sq)", "Meld into Mud"], talentsKo: ["산성 침 뱉기 (범위 4칸)", "진흙 속 동화"]
+    id: 10, name: "Harpy", nameKo: "하피",
+    description: "Birds of prey with twisted human faces.",
+    descriptionKo: "뒤틀린 인간의 얼굴을 한 맹금류 크리처.",
+    stat: 1, wounds: 2, speed: 6,
+    attacks: "Talons 1 (1 sq)", attacksKo: "발톱 1점 (사거리 1칸)",
+    armor: "None", armorKo: "없음",
+    talents: ["Modifier Voice"], talentsKo: ["목소리 흉내"]
   },
   {
-    id: 11, name: "Manticore", nameKo: "만티코어",
-    description: "Lion's body, bat's wings, man's head, scorpion's tail.",
-    descriptionKo: "사자의 몸, 박쥐의 날개, 인간의 얼굴, 전갈의 꼬리를 가진 끔찍한 야수.",
-    stat: 5, wounds: 6, speed: 4, // speed 4/6 (fly)
-    attacks: "Claw 2 (1 sq), Tail spike 2 (3 sq)", attacksKo: "발톱 2점 (1칸), 꼬리 가시 2점 (3칸)",
-    armor: "fur (torso)", armorKo: "모피 (몸통 AP 2)",
-    talents: ["Fly", "Poison tail spike"], talentsKo: ["비행", "독 꼬리 가시"]
+    id: 11, name: "Hag", nameKo: "해그 (늪지 마녀)",
+    description: "Scheming swamp-dwellers who practice black magick and eat children. They cannot pass up a good bargain.",
+    descriptionKo: "흑마법을 수행하고 어린아이들을 잡아먹는 사악한 늪지 거주자. 흥미로운 거래는 결코 그냥 지나치지 못합니다.",
+    stat: 4, wounds: 6, speed: 3,
+    attacks: "Claws 2 (1 sq)", attacksKo: "손톱 2점 (사거리 1칸)",
+    armor: "None", armorKo: "없음",
+    talents: ["Mimic Voice", "Invisibility", "Breathe Water", "Weaken"],
+    talentsKo: ["목소리 흉내", "투명화", "수중 호흡", "약화"]
   },
   {
-    id: 12, name: "Nightmare", nameKo: "나이트메어 (몽마)",
-    description: "Demonic horses with eyes of embers and hooves of fire.",
-    descriptionKo: "이글거리는 석탄 눈망울과 불타는 말굽을 지닌 마계의 준마.",
-    stat: 4, wounds: 5, speed: 8,
-    attacks: "Hooves 2 (1 sq)", attacksKo: "말굽 2점 (사거리 1칸)",
-    armor: "charred hide", armorKo: "그을린 가죽 (전신 AP 2)",
-    weakness: "water", weaknessKo: "물",
-    talents: ["Incite fear", "Spontaneous combustion"], talentsKo: ["공포 조장", "자연 발화"]
+    id: 12, name: "Lycanthrope", nameKo: "늑대인간 (라이칸스로프)",
+    description: "Men and women whose heinous actions manifested in a monstrous, bloodthirsty second form.",
+    descriptionKo: "자신들의 사악한 행동이 피에 굶주린 괴수 형태의 두 번째 모습으로 발현된 인간들.",
+    stat: 5, wounds: 4, speed: 5,
+    attacks: "Bite 3 (1 sq), Slash 4 (1 sq)", attacksKo: "물기 3점 (1칸), 찢기 4점 (1칸)",
+    armor: "None", armorKo: "없음",
+    weakness: "silver", weaknessKo: "은",
+    talents: ["Shapechange", "Great Leap", "Transmit Lycanthropy"],
+    talentsKo: ["형상변환", "거대한 도약", "늑대인간 병 감염"]
   },
   {
     id: 13, name: "Oathbreaker", nameKo: "배역자 (기사 서약 파기자)",
     description: "Gave up on being chivalrous long ago.",
     descriptionKo: "오래전에 기사도를 저버리고 타락한 옛 기사들.",
     stat: 6, wounds: 6, speed: 6,
-    attacks: "Greatsword 4 (2 sq)", attacksKo: "대검 4점 (사거리 2칸)",
-    armor: "full plate", armorKo: "판금 갑옷 (전신 AP 2)",
-    talents: ["Martial dominance", "Geas"], talentsKo: ["전투 지배", "강제 서약(기아스)"]
+    attacks: "Sword 3 (1 sq)", attacksKo: "검 3점 (사거리 1칸)",
+    armor: "full plate", armorKo: "전신 판금 갑옷 (전신 AP 2)",
+    talents: ["Sally Forth", "Mock", "Martial Dominance"],
+    talentsKo: ["과감한 돌격", "조롱", "전투 지배"]
   },
   {
-    id: 14, name: "Ogre", nameKo: "오우거",
-    description: "Ugly, gluttonous giants that love eating sheep and travelers.",
-    descriptionKo: "양과 여행자를 잡아먹는 것을 매우 좋아하는 추악하고 탐욕스러운 거인.",
-    stat: 3, wounds: 7, speed: 3,
-    attacks: "Club 2 (2 sq)", attacksKo: "곤봉 2점 (사거리 2칸)",
-    armor: "animal skins (torso)", armorKo: "동물 가죽 (몸통 AP 2)",
-    talents: ["Frightening roar", "Smell treasure"], talentsKo: ["위협적인 포효", "보물 냄새 맡기"]
-  },
-  {
-    id: 15, name: "Pixie", nameKo: "픽시",
-    description: "Tiny fey with insect wings, highly mischievous.",
-    descriptionKo: "곤충 날개를 가진 장난기 넘치는 초소형 요정.",
+    id: 14, name: "Pixy", nameKo: "픽시",
+    description: "Tiny fey with insect wings and a knack for mischief.",
+    descriptionKo: "곤충의 날개를 가졌고 장난에 특화된 초소형 요정.",
     stat: 3, wounds: 1, speed: 7,
     attacks: "Needle 1 (1 sq)", attacksKo: "바늘 1점 (사거리 1칸)",
     armor: "None", armorKo: "없음",
@@ -287,35 +281,38 @@ export const BESTIARY: Monster[] = [
     talentsKo: ["수면 유도", "매혹", "회피", "사라지기"]
   },
   {
-    id: 16, name: "Redcap", nameKo: "레드캡",
+    id: 15, name: "Redcap", nameKo: "레드캡",
     description: "Gaunt, murderous fairies with blood-soaked caps.",
     descriptionKo: "희생자의 피로 모자를 붉게 물들이는 수척하고 살인적인 요정.",
     stat: 3, wounds: 3, speed: 3,
     attacks: "Axe 2 (1 sq)", attacksKo: "도끼 2점 (사거리 1칸)",
     armor: "helmet, cuirass, gauntlets", armorKo: "투구, 흉갑, 건틀릿 (AP 2)",
-    talents: ["Leech", "Tackle"], talentsKo: ["생명력 흡수", "태클"]
+    talents: ["Leech", "Tackle"],
+    talentsKo: ["생명력 흡수", "태클"]
   },
   {
-    id: 17, name: "Restless Dead", nameKo: "떠도는 시체들",
+    id: 16, name: "Restless Dead", nameKo: "떠도는 시체들",
     description: "Skeletons, zombies, bog-men, ghouls.",
     descriptionKo: "스켈레톤, 좀비, 늪지 미라, 구울 등 안식에 들지 못한 망자.",
     stat: 2, wounds: 2, speed: 2,
     attacks: "Claws/Bite 1 (1 sq)", attacksKo: "발톱/물기 1점 (사거리 1칸)",
     armor: "varies", armorKo: "상황에 따라 다름 (AP 2)",
-    talents: ["Strangle"], talentsKo: ["목 조르기"]
+    talents: ["Strangle"],
+    talentsKo: ["목 조르기"]
   },
   {
-    id: 18, name: "Scarecrow", nameKo: "허수아비",
+    id: 17, name: "Scarecrow", nameKo: "허수아비",
     description: "Animated by the Gloaming. Having killed their farmers long ago, they wander the fields for prey.",
     descriptionKo: "황혼(Gloaming)의 기운으로 생명을 얻은 존재. 오래전 자신들의 주인을 살해하고 들판을 배회하며 사냥감을 찾습니다.",
     stat: 6, wounds: 6, speed: 2,
     attacks: "Whack 3 (1 sq)", attacksKo: "강타 3점 (사거리 1칸)",
     armor: "None", armorKo: "없음",
     weakness: "fire", weaknessKo: "불",
-    talents: ["Summon Murder"], talentsKo: ["까마귀 떼 소환"]
+    talents: ["Summon Murder"],
+    talentsKo: ["까마귀 떼 소환"]
   },
   {
-    id: 19, name: "Shade", nameKo: "그림자 영(Shade)",
+    id: 18, name: "Shade", nameKo: "그림자 영(Shade)",
     description: "Evil incorporeal manifestations of the Gloaming.",
     descriptionKo: "황혼(Gloaming)의 기운이 형체 없이 사악하게 구현된 실체.",
     stat: 2, wounds: 3, speed: 4,
@@ -326,16 +323,17 @@ export const BESTIARY: Monster[] = [
     talentsKo: ["빙의", "그림자 이동", "속도 저하"]
   },
   {
-    id: 20, name: "Troll", nameKo: "트롤",
+    id: 19, name: "Troll", nameKo: "트롤",
     description: "Large guardians of the Otherworld that delight in asking riddles. They expect the correct answer.",
     descriptionKo: "수수께끼 내기를 매우 즐기는 저편 세계(Otherworld)의 거대한 수호자. 올바른 답을 듣기 전에는 길을 비켜주지 않습니다.",
     stat: 4, wounds: 4, speed: 4,
     attacks: "Club 4 (2 sq)", attacksKo: "곤봉 4점 (사거리 2칸)",
     armor: "helmet, cuirass, gauntlets", armorKo: "투구, 흉갑, 건틀릿 (AP 2)",
-    talents: ["Regenerate Wound"], talentsKo: ["부상 재생"]
+    talents: ["Regenerate Wound"],
+    talentsKo: ["부상 재생"]
   },
   {
-    id: 21, name: "Wicker Man", nameKo: "위커맨 (고리버들 거인)",
+    id: 20, name: "Wicker Man", nameKo: "위커맨 (고리버들 거인)",
     description: "Mirthless giants woven of twigs and sticks. They collect peasants by placing them in their hollow chests.",
     descriptionKo: "가지와 막대를 엮어 만든 웃음기 없는 거인. 속이 빈 몸통 속에 희생자를 가두어 수집합니다.",
     stat: 4, wounds: 5, speed: 4,
@@ -346,15 +344,108 @@ export const BESTIARY: Monster[] = [
     talentsKo: ["잡아가두기", "자연 발화"]
   },
   {
-    id: 22, name: "Woodwose", nameKo: "우드워즈 (숲의 야인)",
+    id: 21, name: "Woodwose", nameKo: "우드워즈 (숲의 야인)",
     description: "Tall, simple folk who live in secluded forests and mostly keep to themselves. Defend themselves if threatened.",
     descriptionKo: "외딴 숲속에 조용히 은둔해 사는 몸집이 크고 소박한 야인 무리. 위협받을 때만 자신을 방어합니다.",
     stat: 3, wounds: 6, speed: 3,
     attacks: "Club 2 (1 sq)", attacksKo: "곤봉 2점 (사거리 1칸)",
     armor: "moss (torso)", armorKo: "이끼 보호막 (몸통 AP 2)",
-    talents: ["Meld into Foliage"], talentsKo: ["수풀 속 동화"]
+    talents: ["Meld into Foliage"],
+    talentsKo: ["수풀 속 동화"]
   }
 ];
+
+export const ARCANE_MINOR_WORDS: { [suit: string]: { [key: string]: { en: string; ko: string } } } = {
+  Cups: {
+    "A": { en: "Fill", ko: "채우다" },
+    "2": { en: "Attract", ko: "끌어당기다" },
+    "3": { en: "Delight", ko: "기쁘게 하다" },
+    "4": { en: "Protect from", ko: "대비해 보호하다" },
+    "5": { en: "Disintegrate", ko: "붕괴하다" },
+    "6": { en: "Mend", ko: "치유/수리하다" },
+    "7": { en: "Conjure", ko: "소환하다" },
+    "8": { en: "Weaken", ko: "약화시키다" },
+    "9": { en: "Solidify/liquefy", ko: "고체화/액체화" },
+    "10": { en: "Calm", ko: "진정시키다" },
+    "P": { en: "Speak with", ko: "대화하다" },
+    "Kn": { en: "Charm", ko: "매혹하다" },
+    "Q": { en: "Heal", ko: "치료하다" },
+    "K": { en: "Become", ko: "~이 되다" }
+  },
+  Wands: {
+    "A": { en: "Energize", ko: "활성화하다" },
+    "2": { en: "Change", ko: "변화하다" },
+    "3": { en: "Grow", ko: "성장하다" },
+    "4": { en: "Gather", ko: "수집하다" },
+    "5": { en: "Enrage", ko: "분노하게 하다" },
+    "6": { en: "Conquer", ko: "정복하다" },
+    "7": { en: "Control", ko: "통제하다" },
+    "8": { en: "Quick", ko: "가속하다" },
+    "9": { en: "Toughen", ko: "단단하게 하다" },
+    "10": { en: "Command", ko: "명령하다" },
+    "P": { en: "Release", ko: "해방하다" },
+    "Kn": { en: "Incite", ko: "선동하다" },
+    "Q": { en: "Heat", ko: "가열하다" },
+    "K": { en: "Create", ko: "창조하다" }
+  },
+  Swords: {
+    "A": { en: "Explode", ko: "폭발하다" },
+    "2": { en: "Hide", ko: "숨기다" },
+    "3": { en: "Afflict", ko: "괴롭히다" },
+    "4": { en: "Silence", ko: "침묵하다" },
+    "5": { en: "Intimidate", ko: "위협하다" },
+    "6": { en: "Teleport", ko: "순간이동" },
+    "7": { en: "Steal", ko: "훔치다" },
+    "8": { en: "Ensnare", ko: "함정에 빠뜨리다" },
+    "9": { en: "Discourage", ko: "좌절시키다" },
+    "10": { en: "Defeat", ko: "패배시키다" },
+    "P": { en: "Transmute", ko: "변형하다" },
+    "Kn": { en: "Force", ko: "강제하다" },
+    "Q": { en: "Detect", ko: "탐지하다" },
+    "K": { en: "Comprehend", ko: "이해하다" }
+  },
+  Coins: {
+    "A": { en: "Give", ko: "주다" },
+    "2": { en: "Balance", ko: "균형을 맞추다" },
+    "3": { en: "Combine", ko: "결합하다" },
+    "4": { en: "Take", ko: "취하다" },
+    "5": { en: "Isolate", ko: "고립시키다" },
+    "6": { en: "Share", ko: "공유하다" },
+    "7": { en: "Harvest", ko: "수확하다" },
+    "8": { en: "Sculpt", ko: "조각하다" },
+    "9": { en: "Summon", ko: "소환하다" },
+    "10": { en: "Transcend", ko: "초월하다" },
+    "P": { en: "Enthrall", ko: "매료시키다" },
+    "Kn": { en: "Slow", ko: "감속하다" },
+    "Q": { en: "Protect", ko: "보호하다" },
+    "K": { en: "Multiply", ko: "증식시키다" }
+  }
+};
+
+export const ARCANE_MAJOR_WORDS: { [key: string]: { en: string; ko: string; revEn: string; revKo: string } } = {
+  "0": { en: "Self", ko: "자신", revEn: "Distraction", revKo: "주의 산만" },
+  "I": { en: "Mind", ko: "정신", revEn: "Illusion", revKo: "환상" },
+  "II": { en: "Consciousness", ko: "의식", revEn: "Voice", revKo: "목소리" },
+  "III": { en: "Beauty", ko: "미", revEn: "Ugliness", revKo: "추함" },
+  "IV": { en: "Authority", ko: "권위", revEn: "Ice", revKo: "얼음" },
+  "V": { en: "Knowledge", ko: "지식", revEn: "Ignorance", revKo: "무지" },
+  "VI": { en: "Temptation", ko: "유혹", revEn: "Conflict", revKo: "갈등" },
+  "VII": { en: "Metal", ko: "금속", revEn: "Barrier", revKo: "장벽" },
+  "VIII": { en: "Strength", ko: "힘", revEn: "Weakness", revKo: "약함" },
+  "IX": { en: "Person", ko: "인물", revEn: "Isolation", revKo: "고독" },
+  "X": { en: "Fate", ko: "운명", revEn: "Delay", revKo: "지체" },
+  "XI": { en: "Truth", ko: "진실", revEn: "Blood", revKo: "피" },
+  "XII": { en: "Flesh", ko: "육체", revEn: "Emptiness", revKo: "공허" },
+  "XIII": { en: "Death", ko: "죽음", revEn: "Life", revKo: "생명" },
+  "XIV": { en: "Water", ko: "물", revEn: "Imbalance", revKo: "불균형" },
+  "XV": { en: "Pain", ko: "고통", revEn: "Control", revKo: "제어" },
+  "XVI": { en: "Earth", ko: "대지", revEn: "Chaos", revKo: "혼돈" },
+  "XVII": { en: "Faith", ko: "믿음", revEn: "Time", revKo: "시간" },
+  "XVIII": { en: "Beast", ko: "야수", revEn: "Secret", revKo: "비밀" },
+  "XIX": { en: "Light", ko: "빛", revEn: "Sorrow", revKo: "슬픔" },
+  "XX": { en: "Undead", ko: "언데드", revEn: "Purpose", revKo: "목적" },
+  "XXI": { en: "Fire", ko: "불", revEn: "Darkness", revKo: "어둠" }
+};
 
 export const WILDERNESS_EVENTS = [
   "강한 돌풍이 붑니다 (Strong gust of wind)",
