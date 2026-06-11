@@ -496,40 +496,55 @@ const sanitizeGameState = (loaded: any): GameState => {
 };
 
 const GLOAM_RULES: Record<string, { page: string; title: string; content: string }> = {
+  "판정": {
+    page: "8",
+    title: "판정 (Tests)",
+    content: "결과가 불확실한 행동은 관련 스탯(Cups, Wands, Swords, Coins)을 정하고 플레이어 덱에서 카드 1장을 뽑아 카드값 + 스탯을 더합니다. 합계 14 이상이면 성공, 13 이하이면 실패입니다. 첫 카드로 성공했고 카드 수트가 판정 스탯과 일치하면 대성공(Great Success)입니다. 도움은 카드가 뽑히기 전에 선언하며, 한 명만 관련 스탯을 더할 수 있고 실패의 결과도 함께 나눕니다."
+  },
   "선제권": {
     page: "30",
     title: "선제권 (Initiative)",
-    content: "전투 개시 시 모든 캐릭터와 몬스터는 선제권 카드를 결정합니다. 플레이어는 손패에서 카드를 비공개로 제출하고 동시에 공개합니다. 메이저 아르카나 카드는 기재된 로마 숫자(0~21)가 선제권 수치가 되며, 마이너 아르카나 카드는 에이스(1), 2~10, 시종(11), 기사(12), 여왕(13), 왕(14)으로 계산합니다. 선제권 수치가 낮을수록 먼저 행동합니다. 만약 선제권 카드가 역방향(Reversed)인 경우 해당 카드의 행동에 패널티를 받거나 상대에게 행동 기회를 먼저 내주게 됩니다."
+    content: "전투 라운드 시작 시 플레이어는 손패가 4장이 될 때까지 뽑고, 레프리는 NPC/몬스터마다 3장을 뽑습니다. 각 전투원은 손패에서 1장을 비공개로 선제권 카드로 내고, 0부터 14까지 낮은 수부터 차례대로 행동합니다. 선제권 카드는 적이 자신을 공격할 때 맞히기 위해 넘겨야 하는 목표값이기도 합니다. 낮은 수는 먼저 움직이지만 맞기 쉽고, 높은 수는 늦게 움직이지만 맞히기 어렵습니다."
   },
   "푸시": {
-    page: "25",
+    page: "8",
     title: "푸시 (Pushing the Test)",
-    content: "테스트 결과에 불만족할 경우, 캐릭터는 결의(Resolve)를 1점 소비하고 플레이어 덱에서 추가 카드를 1장 더 뽑아 합산할 수 있습니다. 추가 카드의 수트가 테스트 스탯과 일치하면 보너스 효과가 발생하지만, 추가 카드 드로우 중 대실패(Great Failure)가 발생하면 상황이 더욱 치명적으로 꼬이게 되며 결의 1점을 즉시 얻습니다."
+    content: "첫 카드 결과가 13 이하라면, 원할 때 푸시를 선언해 플레이어 덱에서 두 번째 카드를 뽑고 합계에 더할 수 있습니다. 푸시는 선택 사항입니다. 두 번째 카드까지 더해 14 이상이 되면 성공합니다. 푸시 후에도 실패하면 대실패(Great Failure)가 되며 상황이 크게 악화되지만 결의(Resolve)를 1점 얻습니다."
   },
   "대실패": {
-    page: "25",
+    page: "8",
     title: "대실패 (Great Failure)",
-    content: "테스트 중 카드의 수치 및 스탯 합계가 극히 낮거나(일반적으로 14 미만), 특정 조건 하에서 테스트 결과가 실패로 판명되고 장면에 치명적인 비틀림이 생길 때를 의미합니다. 대실패는 시련을 통해 더 강한 정신력을 단련하게 되므로 캐릭터에게 결의(Resolve) 1점을 즉시 회복시켜 줍니다."
+    content: "판정을 푸시했는데도 최종 합계가 14 미만이면 대실패입니다. 목표 달성에 실패할 뿐 아니라 일이 훨씬 나쁘게 꼬입니다. 그 대신 캐릭터는 결의(Resolve)를 1점 얻습니다."
+  },
+  "장비": {
+    page: "25",
+    title: "장비와 구매 (Equipment)",
+    content: "Gloam은 슬롯 기반 장비 추적을 사용합니다. 배낭은 10 + Coins 스탯만큼의 슬롯을 가지며, 착용 중인 방어구를 포함해 대부분의 아이템은 슬롯 1개를 차지합니다. 새 캐릭터는 무료 아이템 5개로 시작합니다. 물건을 사려면 아이템의 Coins 수정치를 적용한 Coins 판정을 합니다. 성공하면 획득하고, 실패하면 너무 비싸거나 품절인 등의 이유로 사지 못합니다. 구매 판정도 일반 판정처럼 푸시와 도움을 받을 수 있습니다."
   },
   "광대": {
     page: "30",
     title: "광대 (The Fool - Major 0)",
-    content: "광대 카드는 전투 중 손패에 쥐고 있다가 결정적인 순간에 선제권 0(가장 먼저 행동)으로 제출하거나, 혹은 일반 판정/공격 시 행동에 +3 보너스를 부여하기 위해 소모할 수 있습니다. 광대 카드가 플레이어 또는 레프리에 의해 사용된 경우, 해당 라운드가 끝나는 즉시 버려진 카드 더미를 모두 모아 덱 전체를 새로 셔플하고 모든 손패를 반납한 뒤 초기화해야 합니다."
+    content: "누군가 광대를 뽑으면 반드시 알립니다. 광대는 어떤 행동에든 +3 보너스로 낼 수 있으며, 다른 사람의 행동에도 보탤 수 있습니다. 선제권 0으로도 낼 수 있습니다. 광대가 뽑힌 라운드가 끝나면 플레이 중인 카드를 모두 버리고, 양쪽 버림 더미를 각자의 덱에 다시 섞습니다."
   },
   "민속 마법": {
-    page: "20",
+    page: "37",
     title: "민속 마법 (Folk Magick)",
-    content: "민속 마법은 누구나 사용할 수 있는 기초적인 일상 주술로, 치유(Healing), 원소 소환(Elemental), 예지(Foresight), 퇴마(Ward Evil), 달의 오라클(Moon Oracle) 등이 있습니다. 민속 마법을 시전하려면 해당하는 스탯 판정(난이도 14)을 치러야 하며, 판정 성공 여부와 상관없이 시전 시 결의(Resolve) 1점을 소모합니다."
+    content: "민속 마법은 누구나 사용할 수 있는 전승 주술입니다. 피해를 입히는 용도로는 사용할 수 없습니다. 시전하려면 천, 불꽃, 약초, 돌 같은 부적/매개물을 정하고, 목표를 정한 뒤, 그 매개물을 어울리는 방식으로 사용합니다. 마지막으로 레프리와 함께 어떤 수트의 판정이 맞는지 정하고 필요한 보너스나 페널티를 적용해 판정합니다."
+  },
+  "결의": {
+    page: "34",
+    title: "결의 (Resolve)",
+    content: "결의는 캐릭터의 내면의 불꽃이자 의지입니다. 최대 10점까지 보유할 수 있습니다. 세션 시작, 목표 달성 또는 목표가 불가능해짐, 본능이 문제를 만들거나 이야기를 움직임, 대실패, Carousing 표 결과 등으로 얻습니다. 결의는 재능 활성화, 판정 결과를 본 뒤 1점당 판정 합계 +1, 결의가 필요한 아이템 발동에 사용할 수 있습니다."
   },
   "세션 종료 정산": {
     page: "35",
     title: "세션 종료 정산 (End of Session)",
-    content: "세션이 종료될 때 플레이어는 3가지 서사적 질문에 답하여 경험치(XP) 및 결의(Resolve) 보상을 정산합니다:\n1. 세션에 온전히 참여했는가? (+1 XP)\n2. 생명이 위태로운 조우를 극복했는가? (+1 XP)\n3. 캐릭터의 개인적 목표(Goal)를 하나라도 달성했는가? (+1 XP 및 +1 결의)\n결의는 최대 10점까지 보관되며, 소모한 1 XP당 캠페인 날짜가 1일 경과합니다."
+    content: "세션이 끝나면 캐릭터는 아래 항목마다 XP 1점을 얻습니다:\n1. 세션에 참여했는가?\n2. 목표(Goal) 하나를 달성했는가?\n3. 생명이 위태로운 상황에 처했는가?\n목표 달성으로 인한 결의 획득은 결의 규칙(p.34)에 따로 포함됩니다. XP를 쓸 때는 새 직업 재능 5 XP, 다른 직업 재능 10 XP, 스탯 증가 10 XP가 필요하며, 쓴 XP 1점마다 학습에 하루가 걸립니다."
   },
   "용병 급여": {
-    page: "22",
+    page: "52",
     title: "용병 및 고용 (Hirelings & Wages)",
-    content: "용병은 모험가의 든든한 동료로, 캐릭터의 Cups 스탯 수만큼 고용할 수 있습니다. 용병은 고유한 아머나 전투 능력을 지원하며, 매주 다운타임 시 주간 급여(보통 1 Coin)를 Coins 판정을 통해 지급해야 합니다. 급여 지급 판정에 실패하면 용병의 충성도(Loyalty)가 하락하거나 계약이 해지되어 이탈합니다."
+    content: "정착지에 있을 때 Cups 판정에 성공하면 고용 후보를 찾고, 이어 Coins 판정에 성공하면 고용할 수 있습니다. 캐릭터가 고용할 수 있는 용병 수는 자신의 Cups 스탯과 같습니다. 용병은 합리적인 지시를 따르지만 직접적인 위험에 뛰어드는 일은 피합니다. 고용된 동안 매주 Coins 판정으로 급여를 지급합니다. 성공하면 계속 일하고, 실패하면 보수를 받지 못했거나 일이 너무 위험하다고 판단해 그만둡니다."
   }
 };
 
@@ -601,10 +616,12 @@ const renderTextWithRules = (text: string, showRule: (key: string) => void) => {
       const pageNum = match[1];
       let ruleKey = "";
       if (pageNum === "30") ruleKey = "선제권";
-      else if (pageNum === "25") ruleKey = "푸시";
-      else if (pageNum === "20") ruleKey = "민속 마법";
+      else if (pageNum === "8") ruleKey = "판정";
+      else if (pageNum === "25") ruleKey = "장비";
+      else if (pageNum === "34") ruleKey = "결의";
+      else if (pageNum === "37") ruleKey = "민속 마법";
       else if (pageNum === "35") ruleKey = "세션 종료 정산";
-      else if (pageNum === "22") ruleKey = "용병 급여";
+      else if (pageNum === "52") ruleKey = "용병 급여";
       
       if (ruleKey) {
         return (
@@ -2531,15 +2548,24 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Gothic Aesthetic Header */}
+      <section className="folio-shell" aria-label="Gloam character folio">
+      <div className="folio-clasp folio-clasp-left" aria-hidden="true"></div>
+      <div className="folio-clasp folio-clasp-right" aria-hidden="true"></div>
+
+      {/* Folio Cover Header */}
       <header className="header-decor">
         <div className="header-title-container">
           <h1 className="gothic-title">
-            GLOAM <span className="title-ko-sub">어스름의 동반자</span>
+            GLOAM <span className="title-ko-sub">황혼의 폴리오</span>
           </h1>
           <p className="subtitle">
-            1인 전용 타로카드 RPG 컴패니언
+            캐릭터 장부, 캠페인 연대기, 타로 지도책
           </p>
+          <div className="folio-ledger-mark" aria-hidden="true">
+            <span>CHARACTER FOLIO</span>
+            <span>CAMPAIGN JOURNAL</span>
+            <span>TAROT ATLAS</span>
+          </div>
         </div>
 
         <div className="auth-bar">
@@ -2582,39 +2608,38 @@ export default function App() {
         </div>
       </header>
 
-      {/* Primary Tab Navigation */}
+      {/* Folio Index Navigation */}
       <nav className="tab-navigation">
         <button className={`tab-btn ${activeTab === "dashboard" ? "active" : ""}`} onClick={() => setActiveTab("dashboard")}>
-          <BookOpen size={16} /> 황혼 요약
+          <BookOpen size={16} /> 권두 색인
         </button>
         <button className={`tab-btn ${activeTab === "character" ? "active" : ""}`} onClick={() => setActiveTab("character")}>
-          <UserIcon size={16} /> 캐릭터 시트
+          <UserIcon size={16} /> 인물 장부
         </button>
         <button className={`tab-btn ${activeTab === "oracles" ? "active" : ""}`} onClick={() => setActiveTab("oracles")}>
-          <Sparkles size={16} /> 타로 &amp; 신탁
+          <Sparkles size={16} /> 타로 도감
         </button>
         <button className={`tab-btn ${activeTab === "map" ? "active" : ""}`} onClick={() => setActiveTab("map")}>
-          <MapIcon size={16} /> 지도 &amp; 전투
+          <MapIcon size={16} /> 원정 지도
         </button>
         <button className={`tab-btn ${activeTab === "journal" ? "active" : ""}`} onClick={() => setActiveTab("journal")}>
-          <Compass size={16} /> 모험 연대기
+          <Compass size={16} /> 현장 일지
         </button>
       </nav>
 
       {/* Main Panel Routing */}
       <main className="main-content">
         {activeTab === "dashboard" && (
-          <div className="dashboard-grid">
+          <div className="dashboard-grid folio-index-grid">
             {/* 첫 번째 열: 컴패니언 환영 및 시간 추적기 */}
             <div className="card-panel gold-border">
-              <h2 className="gothic-sub">글롬(Gloam) Companion</h2>
-              <p style={{ lineHeight: "1.6", color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                이 웹앱은 타로 카드 기반의 다크 판타지 RPG인 <strong>Gloam (v1.02)</strong>을 원활하게 
-                플레이하기 위한 디지털 서적 겸 컴패니언입니다. 룰북 지침, 오라클, 전투 트래커, 캐릭터 시트가 연동됩니다.
+              <h2 className="gothic-sub">권두 색인 (Frontispiece)</h2>
+              <p className="folio-prose">
+                이 folio는 <strong>Gloam (v1.02)</strong> 여정을 한 권의 물건처럼 다룹니다. 왼쪽에는 인물의 흔적, 가운데에는 시간과 판정, 오른쪽에는 신탁과 원정 기록이 접혀 있습니다.
               </p>
               
-              <div className="alert alert-note" style={{ marginTop: "1rem", border: "1px solid var(--border-color)", padding: "10px", backgroundColor: "var(--bg-panel-light)", fontSize: "0.85rem" }}>
-                <strong>💡 캐릭터 시트 상태 안내:</strong> 현재 캐릭터는 <strong>{state.character.name} ({detectedVocation})</strong>입니다.<br />
+              <div className="alert alert-note folio-status-strip" style={{ marginTop: "1rem" }}>
+                <strong>현재 장부:</strong> <strong>{state.character.name} ({detectedVocation})</strong><br />
                 속도(Speed): <strong>{speed}</strong>, 
                 소지 한도(Backpack): <strong>{carryCapacity}슬롯</strong>, 
                 판정 페널티(Torso): <strong>{testPenalty}</strong>.
@@ -2622,7 +2647,7 @@ export default function App() {
 
               {/* 시간 및 워치 추적기 */}
               <div style={{ marginTop: "1.5rem", borderTop: "1px solid #333", paddingTop: "15px" }}>
-                <h4 className="gothic-sub" style={{ fontSize: "1.05rem", margin: "0 0 10px 0" }}>⏱️ 여정 시간 및 환경 추적기 (Time &amp; Watch Tracker)</h4>
+                <h4 className="gothic-sub" style={{ fontSize: "1.05rem", margin: "0 0 10px 0" }}>여정 시계 (Time &amp; Watch)</h4>
                 <div style={{ display: "flex", gap: "15px", alignItems: "center", marginTop: "10px" }}>
                   <div style={{ background: "rgba(42,37,33,0.1)", border: "1px solid var(--border-color)", padding: "8px 12px", borderRadius: "4px", textAlign: "center", minWidth: "70px" }}>
                     <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>DAY</div>
@@ -2674,7 +2699,7 @@ export default function App() {
 
             {/* 두 번째 열: 최근 일지 요약 */}
             <div className="card-panel">
-              <h3 className="gothic-sub">최근 일지 요약</h3>
+              <h3 className="gothic-sub">최근 낱장 기록</h3>
               <div className="summary-journals">
                 {state.journals.slice(0, 4).map((j) => (
                   <div key={j.id} className="summary-journal-item" style={{ borderLeft: "2px solid var(--border-color)", paddingLeft: "10px", marginBottom: "10px" }}>
@@ -2684,14 +2709,14 @@ export default function App() {
                 ))}
                 {state.journals.length === 0 && <p className="empty-text">기록된 연대기가 없습니다.</p>}
                 <button className="btn-medieval text-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--color-gold)", padding: 0, marginTop: "10px", display: "block" }} onClick={() => setActiveTab("journal")}>
-                  전체 기록 보기 &rarr;
+                  현장 일지 펼치기 &rarr;
                 </button>
               </div>
             </div>
 
             {/* 세 번째 열: 범용 운명 판정판 (General Test Roller) */}
             <div className="card-panel gold-border">
-              <h3 className="gothic-sub">🔮 운명의 판정판 (General Test Roller)</h3>
+              <h3 className="gothic-sub">운명의 판정판 (General Test)</h3>
               <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "5px 0 12px 0", lineHeight: "1.3" }}>
                 캐릭터 스탯, 보정치, 대항 페널티(Opposed)를 결합하여 운명의 판정을 드로우합니다. (성공 기준: 14점 이상)
               </p>
@@ -5424,6 +5449,7 @@ export default function App() {
         )}
 
       </main>
+      </section>
 
       {/* Item Purchase Test Modal Popup */}
       {buyCatalogItem && (
