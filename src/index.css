@@ -1788,23 +1788,13 @@ input[type="checkbox"]:checked::after {
 /* Crenellated battlement header with black block teeth and parchment gaps */
 .crenellation-header {
   position: relative;
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
   background-color: var(--bg-panel-light);
   margin-top: 12px;
 }
 
 .crenellation-header::before {
-  content: '';
-  position: absolute;
-  top: -12px;
-  left: -2px;
-  right: -2px;
-  height: 10px;
-  background-color: var(--border-color);
-  background-image: linear-gradient(to right, transparent 50%, var(--bg-dark) 50%);
-  background-size: 24px 10px;
-  border-left: 2px solid var(--border-color);
-  border-right: 2px solid var(--border-color);
+  display: none;
 }
 
 /* Scroll / Hanging flag card style */
@@ -1905,43 +1895,19 @@ input[type="checkbox"]:checked::after {
   display: block;
   width: min(100%, 1380px);
   margin: 0 auto;
-  padding: 28px 30px 34px;
-  border: 3px double var(--border-color);
+  padding: 24px;
+  border: 1px solid var(--border-color);
   background:
-    linear-gradient(90deg, rgba(30, 27, 24, 0.08), transparent 4%, transparent 96%, rgba(30, 27, 24, 0.08)),
-    radial-gradient(circle at 20% 18%, rgba(150, 111, 35, 0.08), transparent 28%),
-    radial-gradient(circle at 78% 82%, rgba(128, 28, 29, 0.055), transparent 30%),
-    repeating-linear-gradient(0deg, rgba(30, 27, 24, 0.018) 0 1px, transparent 1px 28px),
+    radial-gradient(circle at 20% 18%, rgba(150, 111, 35, 0.04), transparent 28%),
+    radial-gradient(circle at 78% 82%, rgba(128, 28, 29, 0.03), transparent 30%),
     var(--bg-panel);
   box-shadow:
-    0 24px 60px rgba(30, 27, 24, 0.22),
-    inset 0 0 0 9px rgba(250, 245, 235, 0.7),
-    inset 0 0 58px rgba(30, 27, 24, 0.1);
+    0 10px 30px rgba(30, 27, 24, 0.08);
 }
 
 .folio-shell::before,
 .folio-shell::after {
-  content: "";
-  position: absolute;
-  top: 16px;
-  bottom: 16px;
-  width: 10px;
-  border: 1px solid rgba(30, 27, 24, 0.45);
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(30, 27, 24, 0.78) 0 9px,
-    rgba(150, 111, 35, 0.42) 9px 15px
-  );
-  opacity: 0.38;
-  pointer-events: none;
-}
-
-.folio-shell::before {
-  left: 10px;
-}
-
-.folio-shell::after {
-  right: 10px;
+  display: none;
 }
 
 .folio-clasp {
@@ -1970,25 +1936,13 @@ input[type="checkbox"]:checked::after {
   position: relative;
   align-items: flex-start;
   gap: 20px;
-  padding: 8px 8px 22px;
-  border-bottom: 4px double var(--border-color);
+  padding: 8px 8px 16px;
+  border-bottom: 1px solid var(--border-color);
   margin-bottom: 0;
 }
 
 .header-decor::after {
-  content: "";
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: -10px;
-  height: 10px;
-  background-image:
-    linear-gradient(135deg, var(--border-color) 25%, transparent 25%),
-    linear-gradient(225deg, var(--border-color) 25%, transparent 25%);
-  background-position: 0 0, 8px 0;
-  background-size: 16px 10px;
-  background-repeat: repeat-x;
-  opacity: 0.85;
+  display: none;
 }
 
 .gothic-title {
@@ -2031,19 +1985,12 @@ input[type="checkbox"]:checked::after {
   gap: 0;
   padding: 18px 12px 0;
   margin-bottom: 20px;
-  border-bottom: 3px solid var(--border-color);
+  border-bottom: 2px solid var(--border-color);
   overflow: visible;
 }
 
 .tab-navigation::before {
-  content: "INDEX";
-  position: absolute;
-  top: 0;
-  left: 14px;
-  font-family: var(--gothic);
-  font-size: 0.62rem;
-  letter-spacing: 0.16em;
-  color: var(--text-muted);
+  display: none;
 }
 
 .tab-btn {
@@ -2077,12 +2024,12 @@ input[type="checkbox"]:checked::after {
 }
 
 .tab-btn.active {
-  transform: translateY(-6px);
+  transform: translateY(-4px);
   background: var(--bg-panel);
   border-color: var(--border-color);
-  border-bottom: 3px solid var(--bg-panel);
+  border-bottom: 2px solid var(--bg-panel);
   color: var(--text-bright);
-  box-shadow: 0 -4px 14px rgba(30, 27, 24, 0.1);
+  box-shadow: 0 -4px 14px rgba(30, 27, 24, 0.06);
 }
 
 .main-content {

@@ -2563,8 +2563,6 @@ export default function App() {
   return (
     <div className="app-container">
       <section className="folio-shell" aria-label="Gloam character folio">
-      <div className="folio-clasp folio-clasp-left" aria-hidden="true"></div>
-      <div className="folio-clasp folio-clasp-right" aria-hidden="true"></div>
 
       {/* Folio Cover Header */}
       <header className="header-decor">
@@ -2575,11 +2573,6 @@ export default function App() {
           <p className="subtitle">
             캐릭터 장부, 캠페인 연대기, 타로 지도책
           </p>
-          <div className="folio-ledger-mark" aria-hidden="true">
-            <span>CHARACTER FOLIO</span>
-            <span>CAMPAIGN JOURNAL</span>
-            <span>TAROT ATLAS</span>
-          </div>
         </div>
 
         <div className="auth-bar">
@@ -4257,7 +4250,7 @@ export default function App() {
             
             {/* Left side: Card Drawer & Hand */}
             <div className="card-panel gold-border flex-2">
-              <div className="flex-row justify-between align-center" style={{ borderBottom: "1px solid #333", paddingBottom: "10px" }}>
+              <div className="flex-row justify-between align-center" style={{ borderBottom: "1px solid #333", paddingBottom: "10px", flexWrap: "wrap", gap: "10px" }}>
                 <h3 className="gothic-sub">타로 핸드 매니저 (Player Hand)</h3>
                 <div style={{ display: "flex", gap: "10px" }}>
                   <button className="btn-medieval" onClick={() => drawCardForPlayer(1)} disabled={state.hand.length >= 4}>
@@ -4740,7 +4733,7 @@ export default function App() {
             
             {/* Visual Tarot Grid Map */}
             <div className="card-panel gold-border flex-2">
-              <div className="flex-row justify-between align-center" style={{ borderBottom: "1px solid #333", paddingBottom: "10px" }}>
+              <div className="flex-row justify-between align-center" style={{ borderBottom: "1px solid #333", paddingBottom: "10px", flexWrap: "wrap", gap: "10px" }}>
                 <h3 className="gothic-sub">모험 유적 격자 지도 (4x4 Tarot Map)</h3>
                 <div style={{ display: "flex", gap: "10px" }}>
                   <select className="inline-select" value={state.mapType} onChange={e => updateState(s => ({ ...s, mapType: e.target.value as any }))}>
