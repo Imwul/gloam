@@ -2971,3 +2971,171 @@ textarea,
     border-bottom: 2px solid var(--border-color) !important;
   }
 }
+
+/* RC visual correction: closer to a printed folio, less boxed dashboard. */
+.folio-shell {
+  border-width: 2px !important;
+  outline: none !important;
+  padding: clamp(14px, 2vw, 24px) !important;
+}
+
+.folio-shell::before {
+  inset: 12px !important;
+  border-width: 1px !important;
+  opacity: 0.55 !important;
+}
+
+.folio-shell::after,
+.card-panel::before,
+.open-book-container::before {
+  display: none !important;
+}
+
+.sheet-container,
+.header-decor,
+.medieval-banner-header,
+.open-book-container {
+  border-width: 2px !important;
+}
+
+.card-panel,
+.hanging-scroll-box,
+.scroll-card,
+.injury-card,
+.wreath-card,
+.hanging-banner-box,
+.modal-content-panel,
+.downtime-column,
+.npc-card-woodcut,
+.combat-tracker-box,
+.grimoire-spellbook-container {
+  border-width: 1px !important;
+}
+
+.card-panel.gold-border {
+  border-top-width: 1px !important;
+}
+
+.hanging-scroll-box,
+.scroll-card {
+  border-top-width: 4px !important;
+}
+
+.tab-navigation {
+  border-bottom-width: 2px !important;
+  gap: 0.2rem !important;
+}
+
+.tab-btn,
+.btn-medieval,
+.btn-medieval-small,
+.btn-card-small,
+.btn-counter-small {
+  border-width: 1px !important;
+}
+
+.oracles-layout,
+.map-combat-layout,
+.guidebook-layout,
+.journal-layout {
+  gap: 16px !important;
+}
+
+.downtime-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)) !important;
+  gap: 16px !important;
+}
+
+.gothic-sub,
+.combat-tracker-box h4,
+.downtime-column h4,
+.card-panel h3,
+.card-panel h4 {
+  display: block !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: keep-all;
+  line-height: 1.18 !important;
+}
+
+.downtime-column h4 {
+  min-height: 2.6em;
+}
+
+.downtime-column p[style*="height"] {
+  height: auto !important;
+  min-height: 3.2em;
+}
+
+.grimoire-spellbook-container {
+  background: transparent !important;
+  border-color: var(--border-color) !important;
+  box-shadow: none !important;
+  color: var(--text-normal) !important;
+}
+
+.grimoire-spellbook-container .book-page-header {
+  color: var(--text-bright) !important;
+  border-color: var(--border-color) !important;
+}
+
+.downtime-column [style*="rgba(107,70,193"],
+.downtime-column [style*="#c4b5fd"],
+.downtime-column [style*="rgba(0,0,0,0.3"],
+.player-initiative-status {
+  background: transparent !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-normal) !important;
+}
+
+.downtime-column [style*="#c4b5fd"],
+.downtime-column [style*="#6b46c1"] {
+  color: var(--text-bright) !important;
+}
+
+@media(max-width: 900px) {
+  .oracles-layout,
+  .map-combat-layout,
+  .guidebook-layout {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .journal-layout {
+    flex-direction: column !important;
+  }
+
+  .oracles-layout > *,
+  .map-combat-layout > *,
+  .guidebook-layout > *,
+  .journal-layout > *,
+  .downtime-panel {
+    grid-column: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .downtime-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .flex-row {
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+  }
+
+  .flex-row > *,
+  .flex-row > div {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex-wrap: wrap !important;
+  }
+
+  .btn-medieval,
+  .btn-medieval-small,
+  .btn-card-small,
+  .btn-counter-small {
+    white-space: normal !important;
+  }
+}

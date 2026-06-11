@@ -3678,10 +3678,10 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
               {/* Stat Wreaths */}
               <div className="stat-wreaths-row" style={{ gridTemplateColumns: "repeat(4, 1fr)", marginBottom: 0 }}>
                 {[
-                  { key: "cups", label: "Cups (컵)", desc: "판단, 지식, 의술, 돌봄", icon: "🏆" },
-                  { key: "swords", label: "Swords (소드)", desc: "근력, 용기, 전투, 지구력", icon: "⚔️" },
-                  { key: "coins", label: "Coins (코인)", desc: "민첩, 은신, 교활, 자금", icon: "🪙" },
-                  { key: "wands", label: "Wands (완드)", desc: "의지, 마법, 정신, 오컬트", icon: "🪄" }
+                  { key: "cups", label: "Cups (컵)", desc: "판단, 지식, 의술, 돌봄", icon: "C" },
+                  { key: "swords", label: "Swords (소드)", desc: "근력, 용기, 전투, 지구력", icon: "S" },
+                  { key: "coins", label: "Coins (코인)", desc: "민첩, 은신, 교활, 자금", icon: "Co" },
+                  { key: "wands", label: "Wands (완드)", desc: "의지, 마법, 정신, 오컬트", icon: "W" }
                 ].map(stat => renderStatWreath(stat.key as any, stat.label, stat.desc, stat.icon))}
               </div>
 
@@ -4542,25 +4542,25 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
                     {/* Spellbook section */}
                     <div className="grimoire-spellbook-container" style={{
-                      background: "antiquewhite",
-                      border: "2px solid #8b5a2b",
+                      background: "transparent",
+                      border: "1px solid var(--border-color)",
                       padding: "15px",
-                      borderRadius: "5px",
-                      boxShadow: "inset 0 0 10px rgba(0,0,0,0.1), 0 2px 5px rgba(0,0,0,0.2)",
-                      color: "#2a2521",
+                      borderRadius: 0,
+                      boxShadow: "none",
+                      color: "var(--text-normal)",
                       marginTop: "15px"
                     }}>
                       <div className="book-page-header" style={{ 
                         fontSize: "1.1rem", 
                         fontWeight: "bold",
                         textAlign: "center",
-                        borderBottom: "2px solid #8b5a2b",
+                        borderBottom: "1px solid var(--border-color)",
                         paddingBottom: "5px",
                         marginBottom: "10px",
-                        color: "#4a121a",
+                        color: "var(--text-bright)",
                         fontFamily: "Georgia, serif"
                       }}>
-                        📜 Grimoire (비문 마도서)
+                        Grimoire (비문 마도서)
                       </div>
                       <div style={{ maxHeight: "160px", overflowY: "auto" }}>
                         {(state.character.spellbook || []).map((spell, idx) => {
@@ -4577,17 +4577,17 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                               fontSize: "0.82rem"
                             }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <strong style={{ color: "#3b1e08" }}>⚡ {namePart}</strong>
+                                <strong style={{ color: "var(--text-bright)" }}>{namePart}</strong>
                                 <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                                   <button 
                                     className="btn-medieval-small"
                                     style={{ 
                                       fontSize: "0.68rem", 
                                       padding: "2px 5px", 
-                                      background: "#4a121a", 
-                                      color: "antiquewhite", 
-                                      border: "1px solid #8b5a2b",
-                                      borderRadius: "3px" 
+                                      background: "transparent", 
+                                      color: "var(--text-bright)", 
+                                      border: "1px solid var(--border-color)",
+                                      borderRadius: 0 
                                     }}
                                     onClick={() => prepareSpellCast(spell)}
                                   >
@@ -5474,7 +5474,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                           }}
                           onClick={() => setShopTab(tab)}
                         >
-                          {tab === "weapons" ? "⚔️ 무기" : tab === "armor" ? "🛡️ 방어구" : "🎒 교역품"}
+                          {tab === "weapons" ? "무기" : tab === "armor" ? "방어구" : "교역품"}
                         </button>
                       ))}
                     </div>
@@ -6063,25 +6063,25 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                       {[
-                        { title: "🌿 치유 (Healing)", stat: "Cups", cost: "1 Resolve", effect: "Cups 판정(vs 14). 성공 시 자신 또는 인접 대상의 부상 1개를 제거합니다." },
-                        { title: "🔥 원소 소환 (Elemental)", stat: "Wands", cost: "1 Resolve", effect: "Wands 판정(vs 14). 성공 시 불, 물, 바람, 흙 중 하나의 원소 효과를 발동합니다." },
-                        { title: "👁️ 예지 (Foresight)", stat: "Cups", cost: "1 Resolve", effect: "Cups 판정(vs 14). 성공 시 레프리에게 Yes/No 신탁 1회 무료 사용 또는 다음 테스트에 +2 보너스." },
-                        { title: "🕯️ 퇴마 (Ward Evil)", stat: "Wands", cost: "1 Resolve", effect: "Wands 판정(vs 14). 성공 시 이번 전투에서 언데드/악령 유형 몬스터의 대항 패널티를 -2 감소." },
-                        { title: "🍄 자연 독 (Natural Poison)", stat: "Wands", cost: "재료", effect: "Wands 판정(vs 14) + 독초 재료. 성공 시 독약 1회분(다음 공격 시 추가 피해 1) 제조." },
-                        { title: "🌙 달의 오라클 (Moon Oracle)", stat: "Cups", cost: "1 Resolve + 야간", effect: "Cups 판정(vs 14). 밤에만 사용 가능. 성공 시 행운의 오라클 카드 1장을 뒤로 돌려두고 나중에 사용." },
+                        { title: "치유 (Healing)", stat: "Cups", cost: "1 Resolve", effect: "Cups 판정(vs 14). 성공 시 자신 또는 인접 대상의 부상 1개를 제거합니다." },
+                        { title: "원소 소환 (Elemental)", stat: "Wands", cost: "1 Resolve", effect: "Wands 판정(vs 14). 성공 시 불, 물, 바람, 흙 중 하나의 원소 효과를 발동합니다." },
+                        { title: "예지 (Foresight)", stat: "Cups", cost: "1 Resolve", effect: "Cups 판정(vs 14). 성공 시 레프리에게 Yes/No 신탁 1회 무료 사용 또는 다음 테스트에 +2 보너스." },
+                        { title: "퇴마 (Ward Evil)", stat: "Wands", cost: "1 Resolve", effect: "Wands 판정(vs 14). 성공 시 이번 전투에서 언데드/악령 유형 몬스터의 대항 패널티를 -2 감소." },
+                        { title: "자연 독 (Natural Poison)", stat: "Wands", cost: "재료", effect: "Wands 판정(vs 14) + 독초 재료. 성공 시 독약 1회분(다음 공격 시 추가 피해 1) 제조." },
+                        { title: "달의 오라클 (Moon Oracle)", stat: "Cups", cost: "1 Resolve + 야간", effect: "Cups 판정(vs 14). 밤에만 사용 가능. 성공 시 행운의 오라클 카드 1장을 뒤로 돌려두고 나중에 사용." },
                       ].map((spell, idx) => (
-                        <div key={idx} style={{ background: "rgba(107,70,193,0.08)", border: "1px solid rgba(107,70,193,0.3)", borderRadius: "4px", padding: "7px 9px" }}>
-                          <div style={{ fontSize: "0.82rem", fontWeight: "bold", color: "#c4b5fd", marginBottom: "3px" }}>{spell.title}</div>
-                          <div style={{ fontSize: "0.7rem", color: "#888", marginBottom: "3px" }}>
+                        <div key={idx} style={{ background: "transparent", border: "1px solid var(--border-color)", borderRadius: 0, padding: "7px 9px" }}>
+                          <div style={{ fontSize: "0.82rem", fontWeight: "bold", color: "var(--text-bright)", marginBottom: "3px" }}>{spell.title}</div>
+                          <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginBottom: "3px" }}>
                             사용 스탯: <strong style={{ color: "var(--color-gold)" }}>{spell.stat}</strong> · 비용: {spell.cost}
                           </div>
-                          <div style={{ fontSize: "0.7rem", color: "#bbb", lineHeight: "1.3" }}>{spell.effect}</div>
+                          <div style={{ fontSize: "0.7rem", color: "var(--text-normal)", lineHeight: "1.3" }}>{spell.effect}</div>
                         </div>
                       ))}
                     </div>
 
-                    <div style={{ marginTop: "10px", padding: "8px", background: "rgba(0,0,0,0.3)", borderRadius: "4px", fontSize: "0.7rem", color: "#777", lineHeight: "1.4" }}>
-                      <strong style={{ color: "#999" }}>공통 규칙 (p.37):</strong><br />
+                    <div style={{ marginTop: "10px", padding: "8px", background: "transparent", border: "1px solid var(--border-color)", borderRadius: 0, fontSize: "0.7rem", color: "var(--text-normal)", lineHeight: "1.4" }}>
+                      <strong style={{ color: "var(--text-bright)" }}>공통 규칙 (p.37):</strong><br />
                       • 민속 마법은 판정 후 결의(Resolve)를 1점 소모합니다.<br />
                       • 대실패(Great Failure) 시 시전자가 마법 반동으로 피해 1점을 받습니다.<br />
                       • 같은 마법을 같은 날 두 번 사용하면 +3 패널티가 누적됩니다.
@@ -6379,7 +6379,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
               {/* Combat Tracker */}
               <div className="combat-tracker-box" style={{ marginTop: "1.5rem" }}>
-                <h4>⚔️ 전투 관리자 (Round: {state.combatRound})</h4>
+                <h4>전투 관리자 (Round: {state.combatRound})</h4>
                 
                 {/* Player Initiative Status */}
                 <div className="player-initiative-status" style={{ 
@@ -6527,7 +6527,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                     style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px" }}
                     onClick={() => setShowCombatRef(v => !v)}
                   >
-                    <span>⚔️ 전술 행동 빠른 참조 (Combat Reference - p.31)</span>
+                    <span>전술 행동 빠른 참조 (Combat Reference - p.31)</span>
                     <span>{showCombatRef ? "▲ 접기" : "▼ 펼치기"}</span>
                   </button>
 
@@ -6535,98 +6535,98 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                     <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "6px" }}>
                       {[
                         {
-                          icon: "⚔️",
+                          icon: "I",
                           name: "공격 (Attack) - 행동",
                           stat: "Swords",
                           rule: "Swords 판정 vs 대상의 선제권 수치. 성공 시 무기 Wound 피해 적용.",
                           note: "첫 드로우 카드와 테스트 스탯(Swords) 슈트가 일치하여 14점 이상이면 극적 성공(Great Success)으로 추가 1 Wound 피해."
                         },
                         {
-                          icon: "🔮",
+                          icon: "II",
                           name: "주문 시전 (Cast a Spell) - 행동",
                           stat: "Wands",
                           rule: "결의(Resolve)를 1점 이상 소비하여 시전. 적 타격 시 대항 Wands 판정 필요.",
                           note: "전투 중 주문 시전은 적과의 대항 Wands 판정에서 성공해야 시전 완료됩니다."
                         },
                         {
-                          icon: "🛡️",
+                          icon: "III",
                           name: "무기 탈착 (Draw/Sheathe) - 행동",
                           stat: "Any",
                           rule: "손패에서 카드 1장을 버리고 무기를 뽑거나 검집에 넣습니다.",
                           note: "자유 행동(Free Action)이 아니며 카드 소모가 필요합니다."
                         },
                         {
-                          icon: "🏃",
+                          icon: "IV",
                           name: "도주 (Flee) - 행동",
                           stat: "Coins",
                           rule: "대항 Coins 판정 수행. 성공 시 인카운터/전투를 즉시 벗어나 안전하게 도망칩니다.",
                           note: "도망치기 어려운 험난한 환경에서는 대항 난이도가 올라갈 수 있습니다."
                         },
                         {
-                          icon: "🤼",
+                          icon: "V",
                           name: "잡기 (Grapple) - 행동",
                           stat: "Swords",
                           rule: "대항 Swords 판정 수행. 성공 시 대상을 붙잡아 고정(immobilize)합니다.",
                           note: "이후 이동 행동(Move) 시 자신의 이동 속도(Speed)의 절반만큼 대상을 끌고 함께 갈 수 있습니다."
                         },
                         {
-                          icon: "👣",
+                          icon: "VI",
                           name: "이동 (Move) - 행동",
                           stat: "Any",
                           rule: "손패에서 카드 1장을 버리고 자신의 속도(Speed)만큼 직교(orthogonal) 이동하거나 점프합니다.",
                           note: "대각선 이동은 불가능하며, 부상을 입어 속도가 0이 되면 혼자 이동 불가합니다."
                         },
                         {
-                          icon: "🌊",
+                          icon: "VII",
                           name: "밀쳐내기 (Shove) - 행동",
                           stat: "Swords",
                           rule: "대항 Swords 판정 수행. 성공 시 대상을 자신의 Swords 스탯만큼의 칸 수(squares)로 밀쳐냅니다.",
                           note: "몬스터가 아군을 밀칠 때도 자신의 Stat만큼 밀어냅니다 (p.31)."
                         },
                         {
-                          icon: "☄️",
+                          icon: "VIII",
                           name: "던지기 (Throw) - 행동",
                           stat: "Swords",
                           rule: "카드 1장을 버리고, [버린 카드 값 + Swords 스탯] 칸만큼 물체/투척 무기를 멀리 던집니다.",
                           note: "무기 투척 피해는 해당 투척품의 Wound 수치를 따릅니다."
                         },
                         {
-                          icon: "👟",
+                          icon: "IX",
                           name: "회피 (Dodge) - 반응",
                           stat: "Coins",
                           rule: "상대 턴에 피격 전 대항 Coins 판정. 성공 시 피해를 완전히 무력화합니다.",
                           note: "극적 성공(Great Success) 시 즉시 공격자에게 원하는 신체 부위에 1 Wound 피해를 가합니다."
                         },
                         {
-                          icon: "⚡",
+                          icon: "X",
                           name: "반격 (Riposte) - 반응",
                           stat: "Swords",
                           rule: "적의 근접 공격이 나에게 빗나갔을 때(실패), 카드 1장을 내어 대항 근접 공격을 수행합니다.",
                           note: "상대의 헛점을 노리는 날카로운 카운터 공격입니다."
                         },
                         {
-                          icon: "🎯",
+                          icon: "XI",
                           name: "부위 조준 (Called Shot) - 특수",
                           stat: "Swords",
                           rule: "공격 시 아머가 얇거나 없는 특정 부위(머리, 몸통 등)를 지정해 대항 Swords 판정 공격을 가합니다.",
                           note: "일반 공격은 피격자가 피격 부위를 결정(방패 올리기 등)하지만, Called Shot은 공격자가 지정합니다."
                         }
                       ].map((action, idx) => (
-                        <div key={idx} style={{ background: "rgba(30,25,20,0.5)", border: "1px solid #444", borderRadius: "4px", padding: "8px 10px" }}>
+                        <div key={idx} style={{ background: "transparent", border: "1px solid var(--border-color)", borderRadius: 0, padding: "8px 10px" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <span style={{ fontSize: "0.85rem", fontWeight: "bold", color: "var(--text-bright)" }}>
                               {action.icon} {action.name}
                             </span>
-                            <span style={{ fontSize: "0.7rem", padding: "1px 6px", background: "rgba(184,142,80,0.2)", color: "var(--color-gold)", borderRadius: "3px", border: "1px solid rgba(184,142,80,0.4)" }}>
+                            <span style={{ fontSize: "0.7rem", padding: "1px 6px", background: "transparent", color: "var(--text-bright)", borderRadius: 0, border: "1px solid var(--border-color)" }}>
                               {action.stat}
                             </span>
                           </div>
-                          <p style={{ fontSize: "0.72rem", color: "#bbb", margin: "4px 0 2px 0", lineHeight: "1.3" }}>{action.rule}</p>
-                          <p style={{ fontSize: "0.67rem", color: "#777", margin: 0, lineHeight: "1.2", fontStyle: "italic" }}>* {action.note}</p>
+                          <p style={{ fontSize: "0.72rem", color: "var(--text-normal)", margin: "4px 0 2px 0", lineHeight: "1.3" }}>{action.rule}</p>
+                          <p style={{ fontSize: "0.67rem", color: "var(--text-muted)", margin: 0, lineHeight: "1.2", fontStyle: "italic" }}>* {action.note}</p>
                         </div>
                       ))}
 
-                      <div style={{ padding: "7px 10px", background: "rgba(184,142,80,0.07)", border: "1px solid rgba(184,142,80,0.25)", borderRadius: "4px", fontSize: "0.7rem", color: "#999", lineHeight: "1.4" }}>
+                      <div style={{ padding: "7px 10px", background: "transparent", border: "1px solid var(--border-color)", borderRadius: 0, fontSize: "0.7rem", color: "var(--text-normal)", lineHeight: "1.4" }}>
                         <strong style={{ color: "var(--color-gold)" }}>전투 기본 순서 (p.30):</strong><br />
                         ① 핸드 보충: 라운드 시작 시 플레이어는 손패가 4장이 될 때까지 카드 보충. 레프리는 몬스터당 3장 드로우.<br />
                         ② 선제권 결정: 손패 중 1장을 Facedown으로 내고 동시 공개. 선제권 카드 숫자가 낮을수록(0~14) 먼저 행동.<br />
@@ -6656,21 +6656,21 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                 style={{ padding: "6px 14px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "5px" }}
                 onClick={() => setJournalSubView("field")}
               >
-                🗺️ 현장 일지 (Field Journal)
+                현장 일지 (Field Journal)
               </button>
               <button
                 className={`btn-medieval-small ${journalSubView === "chronicle" ? "gold-btn" : ""}`}
                 style={{ padding: "6px 14px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "5px" }}
                 onClick={() => setJournalSubView("chronicle")}
               >
-                📜 캐릭터 대서사 (Character Chronicle)
+                캐릭터 대서사 (Character Chronicle)
               </button>
               <button
                 className={`btn-medieval-small ${journalSubView === "retirement" ? "gold-btn" : ""}`}
                 style={{ padding: "6px 14px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "5px" }}
                 onClick={() => setJournalSubView("retirement")}
               >
-                🪵 은퇴 기록장 (Retirement / Epilogue)
+                은퇴 기록장 (Retirement / Epilogue)
               </button>
             </div>
 
@@ -6680,7 +6680,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                 {/* Left Column: Chronicle Editor & Daily Feed */}
                 <div className="card-panel gold-border" style={{ flex: 2, padding: "20px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "10px", marginBottom: "15px", flexWrap: "wrap", gap: "10px" }}>
-                    <h3 className="gothic-sub" style={{ margin: 0 }}>📜 모험 연대기 &amp; 서사 일지</h3>
+                    <h3 className="gothic-sub" style={{ margin: 0 }}>모험 연대기 &amp; 서사 일지</h3>
                     <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                       <button 
                         className={`btn-medieval-small ${journalDisplayMode === "thematic" ? "gold-btn" : ""}`} 
@@ -6758,7 +6758,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                         return (
                           <div key={dayNum} className="chronicle-day-group" style={{ marginBottom: "20px", borderLeft: "2px solid var(--color-gold)", paddingLeft: "12px" }}>
                             <h4 style={{ color: "var(--color-gold)", margin: "0 0 10px 0", fontSize: "1.15rem", fontFamily: "Cinzel, serif" }}>
-                              ⚔️ 제 {dayNum}일 (Day {dayNum})
+                              제 {dayNum}일 (Day {dayNum})
                             </h4>
                             
                             {Object.keys(dayGroup)
@@ -6773,7 +6773,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                                 return (
                                   <div key={watchNum} className="chronicle-watch-group" style={{ marginBottom: "10px" }}>
                                     <div style={{ fontSize: "0.8rem", color: "#888", fontWeight: "bold", borderBottom: "1px dashed rgba(255,255,255,0.08)", paddingBottom: "2px", marginBottom: "6px" }}>
-                                      ⏳ {watchName}
+                                      {watchName}
                                     </div>
                                     
                                     {watchEntries.map(j => (
@@ -6783,7 +6783,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                                             <span className="date" style={{ fontSize: "0.75rem", color: "#666" }}>{j.date}</span>
                                             {j.x !== null && j.y !== null && (
                                               <span style={{ fontSize: "0.72rem", color: "var(--color-gold)", background: "rgba(255, 215, 0, 0.08)", padding: "1px 4px", borderRadius: "3px" }}>
-                                                📍 좌표 ({j.x}, {j.y})
+                                                좌표 ({j.x}, {j.y})
                                               </span>
                                             )}
                                           </div>
@@ -6832,7 +6832,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                 {/* Right Column: Pinned Chronicle Summary Sidebar */}
                 <div className="card-panel gold-border" style={{ flex: 1, padding: "20px", background: "var(--color-card-bg)", borderColor: "var(--color-gold)", position: "sticky", top: "20px" }}>
                   <h4 className="gothic-sub" style={{ borderBottom: "2px solid var(--color-gold)", paddingBottom: "5px", color: "var(--color-gold)", marginTop: 0 }}>
-                    📜 황혼의 대서사 (Chronicle)
+                    황혼의 대서사 (Chronicle)
                   </h4>
                   <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic", margin: "5px 0 15px 0" }}>
                     일지에서 고정(★)한 역사적 사건들이 서사 요약집을 형성하여 남습니다.
@@ -7016,14 +7016,14 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                   <div style={{ background: "rgba(0,0,0,0.2)", padding: "12px", borderRadius: "6px", border: "1px solid #333", maxHeight: "400px", overflowY: "auto", fontSize: "0.78rem", display: "flex", flexDirection: "column", gap: "15px" }}>
                     {/* Character Base info */}
                     <div>
-                      <h5 style={{ color: "var(--color-gold)", margin: "0 0 5px 0", fontSize: "0.82rem", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "2px" }}>🛡️ 모험가 프로필</h5>
+                      <h5 style={{ color: "var(--color-gold)", margin: "0 0 5px 0", fontSize: "0.82rem", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "2px" }}>모험가 프로필</h5>
                       <div>이름: {state.character.name} | 직업: {state.character.vocation} | {state.character.age}세</div>
                       <div>XP: {state.character.xp} | 결의: {state.character.resolve} | 생존: 총 {state.day}일</div>
                     </div>
 
                     {/* Milestones */}
                     <div>
-                      <h5 style={{ color: "var(--color-gold)", margin: "0 0 5px 0", fontSize: "0.82rem", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "2px" }}>🏆 달성한 업적</h5>
+                      <h5 style={{ color: "var(--color-gold)", margin: "0 0 5px 0", fontSize: "0.82rem", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "2px" }}>달성한 업적</h5>
                       {state.character.goals.filter(g => g.status === "completed").length === 0 ? (
                         <span style={{ color: "#666", fontStyle: "italic" }}>달성한 목표가 없습니다.</span>
                       ) : (
@@ -7037,7 +7037,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
                     {/* Scars */}
                     <div>
-                      <h5 style={{ color: "var(--color-gold)", margin: "0 0 5px 0", fontSize: "0.82rem", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "2px" }}>🩹 부상 및 흉터</h5>
+                      <h5 style={{ color: "var(--color-gold)", margin: "0 0 5px 0", fontSize: "0.82rem", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "2px" }}>부상 및 흉터</h5>
                       {(!state.character.injuryLogs || state.character.injuryLogs.length === 0) ? (
                         <span style={{ color: "#666", fontStyle: "italic" }}>기록된 신체 흉터가 없습니다.</span>
                       ) : (
@@ -7051,7 +7051,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
                     {/* Relationships */}
                     <div>
-                      <h5 style={{ color: "var(--color-gold)", margin: "0 0 5px 0", fontSize: "0.82rem", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "2px" }}>🤝 인연 &amp; 원수</h5>
+                      <h5 style={{ color: "var(--color-gold)", margin: "0 0 5px 0", fontSize: "0.82rem", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "2px" }}>인연 &amp; 원수</h5>
                       <div style={{ paddingLeft: "5px" }}>
                         <strong>인연:</strong> {state.character.friends.map(f => `${f.name}(${f.relationship || "중립"})`).join(", ") || "없음"}
                       </div>
@@ -7069,7 +7069,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
               <div className="journal-layout" style={{ display: "flex", gap: "20px", width: "100%", justifyContent: "center" }}>
                 <div className="card-panel gold-border" style={{ maxWidth: "600px", width: "100%", padding: "25px", background: "rgba(30, 25, 20, 0.75)" }}>
                   <h3 className="gothic-sub" style={{ margin: "0 0 10px 0", borderBottom: "2px solid var(--color-gold)", paddingBottom: "5px", textAlign: "center" }}>
-                    🪵 모험가의 은퇴 및 에필로그 (Retirement &amp; Epilogue)
+                    모험가의 은퇴 및 에필로그 (Retirement &amp; Epilogue)
                   </h3>
                   
                   <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center", lineHeight: "1.5", margin: "0 0 20px 0" }}>
@@ -7079,7 +7079,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
                   <div className="export-monologue-frame" style={{ border: "1px solid rgba(187,153,93,0.3)", padding: "15px", borderRadius: "6px", background: "rgba(0,0,0,0.3)", marginBottom: "20px" }}>
                     <h5 style={{ margin: "0 0 8px 0", fontSize: "0.82rem", color: "var(--color-gold)", fontFamily: "Cinzel, serif" }}>
-                      ✒️ 마지막 독백 / 캐릭터의 종장 (The Epilogue)
+                      마지막 독백 / 캐릭터의 종장 (The Epilogue)
                     </h5>
                     <textarea
                       value={state.character.epilogue || ""}
