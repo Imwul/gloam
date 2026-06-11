@@ -5825,7 +5825,7 @@ export default function App() {
             </div>
 
             {/* Right Column: Pinned Chronicle Summary Sidebar */}
-            <div className="card-panel gold-border hanging-scroll-box scroll-card" style={{ flex: 1, padding: "20px", background: "var(--color-card-bg)", borderColor: "var(--color-gold)", position: "sticky", top: "20px" }}>
+            <div className="card-panel gold-border" style={{ flex: 1, padding: "20px", background: "var(--color-card-bg)", borderColor: "var(--color-gold)", position: "sticky", top: "20px" }}>
               <h4 className="gothic-sub" style={{ borderBottom: "2px solid var(--color-gold)", paddingBottom: "5px", color: "var(--color-gold)", marginTop: 0 }}>
                 📜 황혼의 대서사 (Chronicle)
               </h4>

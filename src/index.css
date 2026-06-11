@@ -2202,7 +2202,7 @@ textarea {
     width: 100% !important;
   }
 
-  .journal-layout > .scroll-card {
+  .journal-layout > div:nth-child(2) {
     position: static !important;
   }
 }
