@@ -386,6 +386,39 @@ const shuffle = (arr: Card[]): Card[] => {
   return a;
 };
 
+const getCardNumericValue = (card: Card): number => {
+  if (card.card === "A") return 1;
+  if (card.card === "Page") return 11;
+  if (card.card === "Knight") return 12;
+  if (card.card === "Queen") return 13;
+  if (card.card === "King") return 14;
+  if (card.card === "0") return 0;
+  return parseInt(card.card) || 0;
+};
+
+const getTableCardKey = (card: Card): string => {
+  if (card.card === "Page") return "P";
+  if (card.card === "Knight") return "Kn";
+  if (card.card === "Queen") return "Q";
+  if (card.card === "King") return "K";
+  return card.card;
+};
+
+const getCardIdentity = (card: Card): string => `${card.type}-${card.suit || ""}-${card.card}`;
+
+const appendUniqueCards = (cards: Card[], additions: Card[]): Card[] => {
+  const seen = new Set(cards.map(getCardIdentity));
+  const next = [...cards];
+  additions.forEach(card => {
+    const identity = getCardIdentity(card);
+    if (!seen.has(identity)) {
+      seen.add(identity);
+      next.push(card);
+    }
+  });
+  return next;
+};
+
 const sanitizeGameState = (loaded: any): GameState => {
   if (!loaded) return {
     ...INITIAL_STATE,
@@ -721,6 +754,18 @@ export default function App() {
   // General Test Resolve spending state
   const [testCurrentTotal, setTestCurrentTotal] = useState<number>(0);
   const [testResolveSpent, setTestResolveSpent] = useState<number>(0);
+  const [testStat, setTestStat] = useState<"cups" | "swords" | "coins" | "wands" | "none">("none");
+  const [testMod, setTestMod] = useState<number>(0);
+  const [testOppMonsterId, setTestOppMonsterId] = useState<string>("none");
+  const [testCustomOppPenalty, setTestCustomOppPenalty] = useState<number>(0);
+  const [testHelpStat, setTestHelpStat] = useState<number>(0);
+  const [testPurpose, setTestPurpose] = useState<string>("");
+  const [testDrawnCards, setTestDrawnCards] = useState<Card[]>([]);
+  const [testPushed, setTestPushed] = useState<boolean>(false);
+  const [testStatus, setTestStatus] = useState<"idle" | "rolled" | "success" | "failed" | "great_success" | "great_failure">("idle");
+
+  // Alchemy state
+  const [brewingIngredient, setBrewingIngredient] = useState<string>("Basilisk Eyeball");
 
   // UI and Immersion states
   const [selectedMapCellIdx, setSelectedMapCellIdx] = useState<number | null>(null);
@@ -1034,6 +1079,9 @@ export default function App() {
 
   const startNextRound = () => {
     updateState(s => {
+      const monsterInitiativeCards = s.combatMonsters
+        .map(mon => mon.initiativeCard)
+        .filter((card): card is Card => !!card);
       // Clear monster initiative cards
       const nextMonsters = s.combatMonsters.map(mon => ({
         ...mon,
@@ -1116,6 +1164,7 @@ export default function App() {
         combatMonsters: nextMonsters,
         playerDeck: deck,
         playerDiscard: discard,
+        refereeDiscard: appendUniqueCards(s.refereeDiscard, monsterInitiativeCards),
         hand,
         playerInitiativeCard: null,
         journals: [
@@ -1143,6 +1192,12 @@ export default function App() {
       if (s.playerInitiativeCard) {
         nextDiscard.push(s.playerInitiativeCard);
       }
+      const nextRefereeDiscard = appendUniqueCards(
+        s.refereeDiscard,
+        s.combatMonsters
+          .map(mon => mon.initiativeCard)
+          .filter((card): card is Card => !!card)
+      );
       
       const triggerFoolReshuffle = nextDiscard.some(c => c.type === "major" && c.card === "0");
 
@@ -1194,6 +1249,7 @@ export default function App() {
         combatRound: 1,
         combatMonsters: [],
         playerDiscard: nextDiscard,
+        refereeDiscard: nextRefereeDiscard,
         playerInitiativeCard: null,
         journals: [
           {
@@ -1229,6 +1285,33 @@ export default function App() {
       if (c) {
         cardDrawn = { ...c, reversed: Math.random() < 0.25 };
         discard.push(cardDrawn);
+      }
+
+      return {
+        ...s,
+        refereeDeck: deck,
+        refereeDiscard: discard
+      };
+    });
+    if (cardDrawn) {
+      onDraw(cardDrawn);
+    }
+  };
+
+  const drawRefereeCardToHold = (onDraw: (card: Card) => void) => {
+    let cardDrawn: Card | null = null;
+    updateState(s => {
+      let deck = [...s.refereeDeck];
+      let discard = [...s.refereeDiscard];
+
+      if (deck.length === 0) {
+        if (discard.length === 0) return s;
+        deck = shuffle(discard);
+        discard = [];
+      }
+      const c = deck.shift();
+      if (c) {
+        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
       }
 
       return {
@@ -1425,16 +1508,6 @@ export default function App() {
   // =================================================================
   // GENERAL TEST ROLLER FUNCTIONS
   // =================================================================
-  const [testStat, setTestStat] = useState<"cups" | "swords" | "coins" | "wands" | "none">("none");
-  const [testMod, setTestMod] = useState<number>(0);
-  const [testOppMonsterId, setTestOppMonsterId] = useState<string>("none");
-  const [testCustomOppPenalty, setTestCustomOppPenalty] = useState<number>(0);
-  const [testHelpStat, setTestHelpStat] = useState<number>(0);
-  const [testPurpose, setTestPurpose] = useState<string>("");
-  const [testDrawnCards, setTestDrawnCards] = useState<Card[]>([]);
-  const [testPushed, setTestPushed] = useState<boolean>(false);
-  const [testStatus, setTestStatus] = useState<"idle" | "rolled" | "success" | "failed" | "great_success" | "great_failure">("idle");
-
   const resetTestState = () => {
     setTestStat("none");
     setTestMod(0);
@@ -1477,13 +1550,7 @@ export default function App() {
       return;
     }
 
-    let cardVal = 0;
-    if (card.card === "A") cardVal = 1;
-    else if (card.card === "Page") cardVal = 11;
-    else if (card.card === "Knight") cardVal = 12;
-    else if (card.card === "Queen") cardVal = 13;
-    else if (card.card === "King") cardVal = 14;
-    else cardVal = parseInt(card.card) || 0;
+    const cardVal = getCardNumericValue(card);
 
     const total = cardVal + statVal + testMod - oppPenalty + testHelpStat + testPenalty;
     const isSuccess = total >= 14;
@@ -1518,13 +1585,7 @@ export default function App() {
       return;
     }
 
-    let cardVal = 0;
-    if (card.card === "A") cardVal = 1;
-    else if (card.card === "Page") cardVal = 11;
-    else if (card.card === "Knight") cardVal = 12;
-    else if (card.card === "Queen") cardVal = 13;
-    else if (card.card === "King") cardVal = 14;
-    else cardVal = parseInt(card.card) || 0;
+    const cardVal = getCardNumericValue(card);
 
     let statVal = 0;
     if (testStat !== "none" && state?.character?.stats) {
@@ -1717,13 +1778,7 @@ export default function App() {
 
   const rollMonsterMoraleTest = (monName: string, monStat: number) => {
     drawRefereeCard((card) => {
-      let cardVal = 0;
-      if (card.card === "A") cardVal = 1;
-      else if (card.card === "Page") cardVal = 11;
-      else if (card.card === "Knight") cardVal = 12;
-      else if (card.card === "Queen") cardVal = 13;
-      else if (card.card === "King") cardVal = 14;
-      else cardVal = parseInt(card.card) || 0;
+      const cardVal = getCardNumericValue(card);
 
       const total = cardVal + monStat;
       const success = total >= 14;
@@ -1749,23 +1804,14 @@ export default function App() {
     const card = drawPlayerCard("reaction");
     if (!card) return;
 
-    let cardVal = 0;
-    if (card.card === "A") cardVal = 1;
-    else if (card.card === "Page") cardVal = 11;
-    else if (card.card === "Knight") cardVal = 12;
-    else if (card.card === "Queen") cardVal = 13;
-    else if (card.card === "King") cardVal = 14;
-    else cardVal = parseInt(card.card) || 0;
+    const cardVal = getCardNumericValue(card);
 
     const total = cardVal + statVal;
     const success = total >= 14;
     
-    let outcomeText = "";
-    if (success) {
-      outcomeText = "우호적임 (Friendly/Helpful) - 협조적이거나 호의를 보입니다.";
-    } else {
-      outcomeText = "비우호적임 (Hostile/Unfriendly) - 대화를 거부하거나 적대감을 드러냅니다.";
-    }
+    const outcomeText = success
+      ? "우호적임 (Friendly/Helpful) - 협조적이거나 호의를 보입니다."
+      : "비우호적임 (Hostile/Unfriendly) - 대화를 거부하거나 적대감을 드러냅니다.";
     
     const text = `[NPC 반응 판정] ${npcName} -> Cups 판정합: ${total} (플레이어 카드: ${getCardDisplayName(card)} + Cups: ${statVal}) -> 결과: ${outcomeText}`;
     alert(text);
@@ -1785,8 +1831,6 @@ export default function App() {
   // =================================================================
   // ALCHEMY & ARCANE SPELL FUNCTIONS
   // =================================================================
-  const [brewingIngredient, setBrewingIngredient] = useState<string>("Basilisk Eyeball");
-
   const brewAlchemyPotion = () => {
     let potionName = "";
     if (brewingIngredient === "Basilisk Eyeball") potionName = "석화 물약 (Petrifying Potion)";
@@ -1800,13 +1844,7 @@ export default function App() {
     const card = drawPlayerCard("alchemy");
     if (!card) return;
 
-    let cardVal = 0;
-    if (card.card === "A") cardVal = 1;
-    else if (card.card === "Page") cardVal = 11;
-    else if (card.card === "Knight") cardVal = 12;
-    else if (card.card === "Queen") cardVal = 13;
-    else if (card.card === "King") cardVal = 14;
-    else cardVal = parseInt(card.card) || 0;
+    const cardVal = getCardNumericValue(card);
 
     const total = cardVal + statVal + testPenalty;
     const success = total >= 14;
@@ -1895,7 +1933,7 @@ export default function App() {
     let minorWordKo = "";
     if (minCard.suit) {
       const suitFolder = minCard.suit === "cups" ? "Cups" : minCard.suit === "wands" ? "Wands" : minCard.suit === "swords" ? "Swords" : "Coins";
-      const wInfo = ARCANE_MINOR_WORDS[suitFolder]?.[minCard.card];
+      const wInfo = ARCANE_MINOR_WORDS[suitFolder]?.[getTableCardKey(minCard)];
       if (wInfo) {
         minorWord = wInfo.en;
         minorWordKo = wInfo.ko;
@@ -1984,13 +2022,7 @@ export default function App() {
 
     if (!searchCard) return;
     const sCard = searchCard as Card;
-    let sCardVal = 0;
-    if (sCard.card === "A") sCardVal = 1;
-    else if (sCard.card === "Page") sCardVal = 11;
-    else if (sCard.card === "Knight") sCardVal = 12;
-    else if (sCard.card === "Queen") sCardVal = 13;
-    else if (sCard.card === "King") sCardVal = 14;
-    else sCardVal = parseInt(sCard.card) || 0;
+    const sCardVal = getCardNumericValue(sCard);
 
     const cupsStat = state.character.stats.cups;
     const searchTotal = sCardVal + cupsStat + testPenalty;
@@ -2045,13 +2077,7 @@ export default function App() {
 
     if (!hireCard) return;
     const hCard = hireCard as Card;
-    let hCardVal = 0;
-    if (hCard.card === "A") hCardVal = 1;
-    else if (hCard.card === "Page") hCardVal = 11;
-    else if (hCard.card === "Knight") hCardVal = 12;
-    else if (hCard.card === "Queen") hCardVal = 13;
-    else if (hCard.card === "King") hCardVal = 14;
-    else hCardVal = parseInt(hCard.card) || 0;
+    const hCardVal = getCardNumericValue(hCard);
 
     const coinsStat = state.character.stats.coins;
     const hireTotal = hCardVal + coinsStat + testPenalty;
@@ -2120,13 +2146,7 @@ export default function App() {
 
     if (!cardDrawn) return;
     const card = cardDrawn as Card;
-    let cardVal = 0;
-    if (card.card === "A") cardVal = 1;
-    else if (card.card === "Page") cardVal = 11;
-    else if (card.card === "Knight") cardVal = 12;
-    else if (card.card === "Queen") cardVal = 13;
-    else if (card.card === "King") cardVal = 14;
-    else cardVal = parseInt(card.card) || 0;
+    const cardVal = getCardNumericValue(card);
 
     const coinsStat = state.character.stats.coins;
     const total = cardVal + coinsStat + testPenalty;
@@ -2309,13 +2329,7 @@ export default function App() {
 
     if (!hireCard) return;
     const hCard = hireCard as Card;
-    let hCardVal = 0;
-    if (hCard.card === "A") hCardVal = 1;
-    else if (hCard.card === "Page") hCardVal = 11;
-    else if (hCard.card === "Knight") hCardVal = 12;
-    else if (hCard.card === "Queen") hCardVal = 13;
-    else if (hCard.card === "King") hCardVal = 14;
-    else hCardVal = parseInt(hCard.card) || 0;
+    const hCardVal = getCardNumericValue(hCard);
 
     const coinsStat = state.character.stats.coins;
     const hireTotal = hCardVal + coinsStat + testPenalty;
@@ -3440,10 +3454,10 @@ export default function App() {
                         else if (card.card === "0") valNum = 0;
                         else valNum = parseInt(card.card) || 0;
 
-                        let bgDesc = "";
-                        if (card.card === "0") {
-                          bgDesc = "광대의 운명: 과거 기억을 전부 잃고 낯선 황혼의 벌판에서 홀로 깨어난 수수께끼의 기원 (Mysterious memoryless origin)";
-                        } else {
+                        const bgDesc = (() => {
+                          if (card.card === "0") {
+                            return "광대의 운명: 과거 기억을 전부 잃고 낯선 황혼의 벌판에서 홀로 깨어난 수수께끼의 기원 (Mysterious memoryless origin)";
+                          }
                           const suit = card.suit || "cups";
                           const mapping: { [key: string]: string } = {
                             "wands": "신비하고 기이한 영적 비술 및 야생 숲림 환경 (Wands)",
@@ -3451,8 +3465,8 @@ export default function App() {
                             "cups": "학구적이며 비교적 유복하고 안전한 상업/사원 환경 (Cups)",
                             "coins": "영지 빈민가와 차가운 길거리, 근본 없는 유랑민 환경 (Coins)"
                           };
-                          bgDesc = mapping[suit] || "평범한 정착민 출생 환경";
-                        }
+                          return mapping[suit] || "평범한 정착민 출생 환경";
+                        })();
 
                         const logText = `[출생배경] ${getCardDisplayName(card)}: ${bgDesc} (나이 +${valNum}년)`;
                         updateState(s => ({
@@ -3477,12 +3491,9 @@ export default function App() {
                         else if (card.card === "0") valNum = 0;
                         else valNum = parseInt(card.card) || 0;
 
-                        let eventDesc = "";
-                        if (card.card === "0") {
-                          eventDesc = "광대의 장난: 내 과거 행적에 대한 온갖 서류와 기록이 돌풍과 함께 날아가 완전히 세탁됨 (Mysterious twist of fate)";
-                        } else {
-                          eventDesc = getLifepathEvent(card.suit || "cups", card.card);
-                        }
+                        const eventDesc = card.card === "0"
+                          ? "광대의 장난: 내 과거 행적에 대한 온갖 서류와 기록이 돌풍과 함께 날아가 완전히 세탁됨 (Mysterious twist of fate)"
+                          : getLifepathEvent(card.suit || "cups", card.card);
 
                         const logText = `[과거사건] ${getCardDisplayName(card)}: ${eventDesc} (나이 +${valNum}년)`;
                         updateState(s => ({
@@ -5097,11 +5108,22 @@ export default function App() {
                           <span>선제권: {mon.initiativeCard ? getCardDisplayName(mon.initiativeCard) : "미정"}</span>
                           <button className="btn-medieval-small" onClick={() => {
                             // Draw initiative for monster from player/referee logic
-                            drawRefereeCard((card) => {
+                            drawRefereeCardToHold((card) => {
                               updateState(s => {
                                 const nextMonsters = [...s.combatMonsters];
-                                nextMonsters[mIdx].initiativeCard = card;
-                                return { ...s, combatMonsters: nextMonsters };
+                                if (!nextMonsters[mIdx]) return s;
+                                const previousInitiative = nextMonsters[mIdx].initiativeCard;
+                                nextMonsters[mIdx] = {
+                                  ...nextMonsters[mIdx],
+                                  initiativeCard: card
+                                };
+                                return {
+                                  ...s,
+                                  combatMonsters: nextMonsters,
+                                  refereeDiscard: previousInitiative
+                                    ? appendUniqueCards(s.refereeDiscard, [previousInitiative])
+                                    : s.refereeDiscard
+                                };
                               });
                             });
                           }}>선제권 카드 결정</button>
