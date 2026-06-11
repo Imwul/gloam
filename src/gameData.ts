@@ -225,53 +225,64 @@ export const BESTIARY: Monster[] = [
     id: 9, name: "Goblin", nameKo: "고블린",
     description: "Small chaotic troglodytes who hate humans and have a disturbing sense of humor.",
     descriptionKo: "인간을 증오하며 기괴한 유머 감각을 가진 무질서하고 작은 혈거인.",
-    stat: 1, wounds: 1, speed: 3,
-    attacks: "Cleaver 1 (1 sq)", attacksKo: "식칼 1점 (사거리 1칸)",
-    armor: "helmet", armorKo: "투구 (머리 AP 2)",
-    talents: ["Call Reinforcement"], talentsKo: ["지원군 소환"]
+    stat: 2, wounds: 2, speed: 3,
+    attacks: "Rusty dagger 1 (1 sq)", attacksKo: "녹슨 단검 1점 (사거리 1칸)",
+    armor: "helmet", armorKo: "가죽 투구 (머리에만 AP 2)",
+    talents: ["Sneak attack", "Scurry"], talentsKo: ["은밀한 기습 (아머 무시)", "엄폐물로 빠르게 숨기"]
   },
   {
-    id: 10, name: "Harpy", nameKo: "하피",
-    description: "Birds of prey with twisted human faces.",
-    descriptionKo: "뒤틀린 인간의 얼굴을 한 맹금류 크리처.",
-    stat: 1, wounds: 2, speed: 6,
-    attacks: "Talons 1 (1 sq)", attacksKo: "발톱 1점 (사거리 1칸)",
-    armor: "None", armorKo: "없음",
-    talents: ["Modifier Voice"], talentsKo: ["목소리 흉내"]
+    id: 10, name: "Lindwurm", nameKo: "린트부름",
+    description: "Long, legless dragons with venomous breath, living in deep swamps or mud.",
+    descriptionKo: "깊은 늪지나 진흙 속에 사는 독성을 지닌 다리 없는 긴 드래곤.",
+    stat: 5, wounds: 7, speed: 4,
+    attacks: "Bite 3 (2 sq)", attacksKo: "물기 3점 (사거리 2칸)",
+    armor: "tough leather scales (torso)", armorKo: "질긴 가죽 비늘 (몸통 AP 2)",
+    talents: ["Acid spit (4 sq)", "Meld into Mud"],
+    talentsKo: ["강산성 침 뱉기 (범위 4칸)", "진흙탕 속 은신"]
   },
   {
-    id: 11, name: "Hag", nameKo: "해그 (늪지 마녀)",
-    description: "Scheming swamp-dwellers who practice black magick and eat children. They cannot pass up a good bargain.",
-    descriptionKo: "흑마법을 수행하고 어린아이들을 잡아먹는 사악한 늪지 거주자. 흥미로운 거래는 결코 그냥 지나치지 못합니다.",
-    stat: 4, wounds: 6, speed: 3,
-    attacks: "Claws 2 (1 sq)", attacksKo: "손톱 2점 (사거리 1칸)",
-    armor: "None", armorKo: "없음",
-    talents: ["Mimic Voice", "Invisibility", "Breathe Water", "Weaken"],
-    talentsKo: ["목소리 흉내", "투명화", "수중 호흡", "약화"]
+    id: 11, name: "Manticore", nameKo: "만티코어",
+    description: "Monsters with a lion's body, a human face, and a venomous scorpion's tail.",
+    descriptionKo: "사자의 몸, 인간의 얼굴, 그리고 치명적인 전갈의 독꼬리를 가진 괴수.",
+    stat: 5, wounds: 6, speed: 4,
+    attacks: "Claws 2 (1 sq) or Tail spike 2 (3 sq)", attacksKo: "발톱 2점 (1칸) 또는 꼬리 침 2점 (3칸)",
+    armor: "thick fur (torso)", armorKo: "두꺼운 모피 (몸통 AP 2)",
+    talents: ["Fly (6 speed)", "Poison tail spike"],
+    talentsKo: ["비행 (이동 6)", "독 꼬리침 (마비 및 중독)"]
   },
   {
-    id: 12, name: "Lycanthrope", nameKo: "늑대인간 (라이칸스로프)",
-    description: "Men and women whose heinous actions manifested in a monstrous, bloodthirsty second form.",
-    descriptionKo: "자신들의 사악한 행동이 피에 굶주린 괴수 형태의 두 번째 모습으로 발현된 인간들.",
-    stat: 5, wounds: 4, speed: 5,
-    attacks: "Bite 3 (1 sq), Slash 4 (1 sq)", attacksKo: "물기 3점 (1칸), 찢기 4점 (1칸)",
-    armor: "None", armorKo: "없음",
-    weakness: "silver", weaknessKo: "은",
-    talents: ["Shapechange", "Great Leap", "Transmit Lycanthropy"],
-    talentsKo: ["형상변환", "거대한 도약", "늑대인간 병 감염"]
+    id: 12, name: "Nightmare", nameKo: "나이트메어",
+    description: "Demonic flaming steeds that spread fear and incinerate their surroundings.",
+    descriptionKo: "공포를 퍼뜨리고 주변을 불태우는 사악한 불꽃의 마마.",
+    stat: 4, wounds: 5, speed: 8,
+    attacks: "Burning hooves 2 (1 sq)", attacksKo: "불타는 발굽 2점 (사거리 1칸)",
+    armor: "scorched hide (full body)", armorKo: "그을린 악마 가죽 (전신 AP 2)",
+    weakness: "water", weaknessKo: "다량의 물",
+    talents: ["Incite fear", "Spontaneous combustion"],
+    talentsKo: ["눈빛 공포 유발", "발굽 주변 발화"]
   },
   {
     id: 13, name: "Oathbreaker", nameKo: "배역자 (기사 서약 파기자)",
     description: "Gave up on being chivalrous long ago.",
     descriptionKo: "오래전에 기사도를 저버리고 타락한 옛 기사들.",
     stat: 6, wounds: 6, speed: 6,
-    attacks: "Sword 3 (1 sq)", attacksKo: "검 3점 (사거리 1칸)",
+    attacks: "Depraved greatsword 4 (2 sq)", attacksKo: "타락의 대검 4점 (사거리 2칸)",
     armor: "full plate", armorKo: "전신 판금 갑옷 (전신 AP 2)",
-    talents: ["Sally Forth", "Mock", "Martial Dominance"],
-    talentsKo: ["과감한 돌격", "조롱", "전투 지배"]
+    talents: ["Martial dominance", "Geas"],
+    talentsKo: ["전투 지배 (범위 이탈 시 선공)", "기아스 속박"]
   },
   {
-    id: 14, name: "Pixy", nameKo: "픽시",
+    id: 14, name: "Ogre", nameKo: "오우거",
+    description: "Huge, dim-witted brutes who love treasure and have a terrifying roar.",
+    descriptionKo: "보물을 탐내고 무시무시한 포효를 지르는 지능이 낮고 거대한 야수.",
+    stat: 3, wounds: 7, speed: 3,
+    attacks: "Club 2 (2 sq)", attacksKo: "단단한 곤봉 2점 (사거리 2칸)",
+    armor: "thick hide (torso)", armorKo: "통가죽 털옷 (몸통 AP 2)",
+    talents: ["Frightening roar", "Smell treasure"],
+    talentsKo: ["심장 저격 포효", "보물 상자 냄새 맡기"]
+  },
+  {
+    id: 15, name: "Pixy", nameKo: "픽시",
     description: "Tiny fey with insect wings and a knack for mischief.",
     descriptionKo: "곤충의 날개를 가졌고 장난에 특화된 초소형 요정.",
     stat: 3, wounds: 1, speed: 7,
@@ -281,7 +292,7 @@ export const BESTIARY: Monster[] = [
     talentsKo: ["수면 유도", "매혹", "회피", "사라지기"]
   },
   {
-    id: 15, name: "Redcap", nameKo: "레드캡",
+    id: 16, name: "Redcap", nameKo: "레드캡",
     description: "Gaunt, murderous fairies with blood-soaked caps.",
     descriptionKo: "희생자의 피로 모자를 붉게 물들이는 수척하고 살인적인 요정.",
     stat: 3, wounds: 3, speed: 3,
@@ -291,7 +302,7 @@ export const BESTIARY: Monster[] = [
     talentsKo: ["생명력 흡수", "태클"]
   },
   {
-    id: 16, name: "Restless Dead", nameKo: "떠도는 시체들",
+    id: 17, name: "Restless Dead", nameKo: "떠도는 시체들",
     description: "Skeletons, zombies, bog-men, ghouls.",
     descriptionKo: "스켈레톤, 좀비, 늪지 미라, 구울 등 안식에 들지 못한 망자.",
     stat: 2, wounds: 2, speed: 2,
@@ -301,7 +312,7 @@ export const BESTIARY: Monster[] = [
     talentsKo: ["목 조르기"]
   },
   {
-    id: 17, name: "Scarecrow", nameKo: "허수아비",
+    id: 18, name: "Scarecrow", nameKo: "허수아비",
     description: "Animated by the Gloaming. Having killed their farmers long ago, they wander the fields for prey.",
     descriptionKo: "황혼(Gloaming)의 기운으로 생명을 얻은 존재. 오래전 자신들의 주인을 살해하고 들판을 배회하며 사냥감을 찾습니다.",
     stat: 6, wounds: 6, speed: 2,
@@ -310,17 +321,6 @@ export const BESTIARY: Monster[] = [
     weakness: "fire", weaknessKo: "불",
     talents: ["Summon Murder"],
     talentsKo: ["까마귀 떼 소환"]
-  },
-  {
-    id: 18, name: "Shade", nameKo: "그림자 영(Shade)",
-    description: "Evil incorporeal manifestations of the Gloaming.",
-    descriptionKo: "황혼(Gloaming)의 기운이 형체 없이 사악하게 구현된 실체.",
-    stat: 2, wounds: 3, speed: 4,
-    attacks: "Tendrils 1 (2 sq)", attacksKo: "덩굴손 1점 (사거리 2칸)",
-    armor: "None", armorKo: "없음",
-    weakness: "light", weaknessKo: "빛",
-    talents: ["Possess", "Teleport to Shadow", "Slow"],
-    talentsKo: ["빙의", "그림자 이동", "속도 저하"]
   },
   {
     id: 19, name: "Troll", nameKo: "트롤",
@@ -625,7 +625,6 @@ export const ORACLE_SUITS = {
 };
 
 export const ORACLE_SUBJECTS: { [key: string]: { name: string; meaning: string; reversed: string } } = {
-  "0": { name: "The Fool", meaning: "자기 자신 (Self)", reversed: "주의 산만 / 방해물 (Distraction)" },
   "I": { name: "The Magician", meaning: "기술 / 숙련 (Skill)", reversed: "속임수 / 기만 (Trickery)" },
   "II": { name: "The High Priestess", meaning: "신비 / 미스터리 (Mystery)", reversed: "혼란 / 당혹 (Confusion)" },
   "III": { name: "The Empress", meaning: "자연 (Nature)", reversed: "공허 / 빈곤 (Emptiness)" },
@@ -651,20 +650,20 @@ export const ORACLE_SUBJECTS: { [key: string]: { name: string; meaning: string; 
 
 export const MAGICK_ITEMS = {
   Swords: [
-    { key: "A", name: "Begallta (Little Fierce One)", text: "베갈타 (작은 흉포) - 모랄타와 쌍으로 장착하여 보조 손(off-hand)에 들면, 모랄타의 명중 보장을 위한 결의 소모가 면제됩니다." },
-    { key: "2", name: "Dáinsleif (Dáinn’s Heirloom)", text: "다인슬라이프 (다인의 유산) - 일단 뽑으면 반드시 누군가의 목숨을 앗아가야 하는 저주받은 드워프의 검입니다. 그렇지 않으면 1 워치(8시간) 내에 산산조각 납니다. 이 검으로 입힌 부상은 결코 자연 치유되지 않습니다." },
-    { key: "3", name: "Draugr (The Night Blade)", text: "드로우거 (밤의 검) - 거인의 뼈로 만든 자루와 희귀 철로 단조된 무게 없는 검입니다. 소지품 슬롯을 차지하지 않으며 Swords 능력치 요구치가 1입니다. 밤에만 검집에서 뽑을 수 있습니다." },
-    { key: "4", name: "Dyrnwyn (White-Hilt)", text: "디른윈 (흰 손잡이) - 은빛 검자루를 가진 날렵한 검입니다. 고귀한 혈통(귀족 등)을 지닌 자가 뽑아 들면 검신이 밝은 불길로 휩싸입니다." },
-    { key: "5", name: "Elf-Shot", text: "엘프-샷 - 이 활에서 발사된 화살은 투명해지고 무형태가 되어 대상에게 부상을 입히되 어떠한 흔적도 남기지 않습니다." },
-    { key: "6", name: "Fragarach (Sword of Air)", text: "프라가라흐 (대기의 검) - 바람의 힘을 부여합니다. 1 워치(8시간)에 한 번, 결의를 소비하여 적을 최대 10칸 밀쳐내는 바람 돌풍을 방출할 수 있습니다." },
-    { key: "7", name: "La Scàvara (Unhorsing Lance)", text: "라 스카바라 (낙마의 랜스) - 이 랜스에 공격당한 승마 상태의 모든 기수는 즉시 지면으로 낙마하여 쓰러집니다." },
-    { key: "8", name: "Mistletoe", text: "미슬토 (겨우살이) - 오랜 역사 동안 무뎌지거나 무디어진 적이 없는 고대 검입니다. 공격당 항상 1 Wound를 입히며, 결의를 소비할 경우 적의 아머(AP)를 완전히 무시합니다." },
-    { key: "9", name: "Morallta (Great Fierce One)", text: "모랄타 (거대한 흉포) - 반드시 표적에 꽂히는 신성 단조의 검입니다. 이 검을 사용한 공격이 실패(빗나감)했을 때, 결의를 소비하여 공격을 즉시 성공으로 바꿀 수 있습니다." },
-    { key: "10", name: "Orna (The Chronicler)", text: "오르나 (기록관) - 검집에서 뽑히면 웅장한 목소리로 말하며, 역대 주인이 이 검으로 저지르고 완수했던 모든 행적을 읊어줍니다." },
-    { key: "P", name: "Sling", text: "돌팔매 (Sling) - 돌을 던지는 소박한 가죽 슬링입니다. 거인이나 그와 유사한 거대 괴수(오우거, 트롤, 위커맨 등)를 상대로 사용하면 3 Wounds의 엄청난 피해를 가합니다." },
-    { key: "Kn", name: "Szczerbiec", text: "슈체르비에츠 (Szczerbiec) - 톱니 모양 홈이 파인 튼튼한 대검/단검입니다. 전투 중 반격(Riposte)을 가할 때, 적에게 상처를 입히는 대신 상대의 무기를 맞물려 포획한 뒤 박살 낼 수 있습니다." },
-    { key: "Q", name: "Thunderbolt", text: "썬더볼트 (뇌전 투창) - 순수한 전기로 이루어진 투창입니다. 투척 시 3 Wounds의 피해를 줍니다. 결의를 1점 소비할 때마다 다른 새로운 대상으로 전기가 튕겨 나가 연쇄 피해를 가합니다." },
-    { key: "K", name: "Tizona (Firebrand)", text: "티조나 (Tizona) - 기사 엘 시드의 전설적인 검입니다. 검을 뽑을 때 결의를 소비하여 대치 중인 적에게 즉시 사기 판정(Morale Test)을 강제할 수 있습니다." }
+    { key: "A", name: "Ascalon (아스칼론)", text: "아스칼론 (Ascalon) - 성 조지의 칼. 비술이나 요정의 능력에 의해 흠집 나거나 파괴될 수 없습니다." },
+    { key: "2", name: "Balmung (발뭉)", text: "발뭉 (Balmung) - 시구르드의 검. 이 무기로 입힌 상처는 오직 초자연적 마법 치료로만 수복됩니다." },
+    { key: "3", name: "Caladbolg (칼라드볼그)", text: "칼라드볼그 (Caladbolg) - 무지개 대검. 결의 1점을 소비 시, 내 주변 3칸 내 모든 존재에게 부상 1점씩 분사합니다." },
+    { key: "4", name: "Curtana (쿠르타나)", text: "쿠르타나 (Curtana) - 자비의 검. 결의 1점을 사용하면, 칼등 치기로 죽이지 않고 상대를 즉시 기절시킵니다." },
+    { key: "5", name: "Durendal (듀란달)", text: "듀란달 (Durendal) - 롤랑의 보검. 칼끝의 단단함이 무쇠에 달해, 적의 어떠한 갑옷 AP 방어력도 완전히 무시합니다." },
+    { key: "6", name: "Excalibur (엑스칼리버)", text: "엑스칼리버 (Excalibur) - 눈부신 신검. 결의 1점을 소비해 칼날을 밝혀, 주변 3칸 내 눈이 있는 적의 명중률에 -3 페널티를 입힙니다." },
+    { key: "7", name: "Gram (그람)", text: "그람 (Gram) - 용살검. 불결한 용이나 거대 괴수에게 두 배의 피해 부상을 입깁니다." },
+    { key: "8", name: "Joyeuse (루아즈)", text: "루아즈 (Joyeuse) - 샤를마뉴의 30색 검. 하루에 딱 한 번 판정을 수행할 때 결의 소모 없이 즉석 +3 보너스 판정을 받습니다." },
+    { key: "9", name: "Lobera (로베라)", text: "로베라 (Lobera) - 야수 사냥검. 야수와 격투 중 결의 1점을 지불하면 아군 턴에 보너스 공격을 즉각 행사합니다." },
+    { key: "10", name: "Mistilteinn (미스틸테인)", text: "미스틸테인 (Mistilteinn) - 기생 겨우살이 검. 철제 갑옷을 입지 않는 요정 크리처에게 부상 가타 시 +2의 추가 피해를 줍니다." },
+    { key: "P", name: "Orna (오르나)", text: "오르나 (Orna) - 수다쟁이 검. 주인이 기절하면 검이 알아서 허공에 부양해 주인 주변을 사수하고 칼부림을 칩니다." },
+    { key: "Kn", name: "Tizona (티조나)", text: "티조나 (Tizona) - 겁쟁이 사냥검. 검을 꺼내 흔들면 적은 마크당 즉각 사기 판정을 치러야 합니다." },
+    { key: "Q", name: "Tyrfing (티르핑)", text: "티르핑 (Tyrfing) - 피를 탐하는 저주검. 칼집에 넣을 때 반드시 결의 1점을 바쳐야만 들어갑니다." },
+    { key: "K", name: "Zulfiqar (줄피카르)", text: "줄피카르 (Zulfiqar) - 두 갈래 끝의 검. 결의 1점을 지불하면 이번 칼질의 딜을 두 배로 증폭시킵니다." }
   ],
   Coins: [
     { key: "A", name: "Circlet of Agony", text: "고통의 원형관. 명령어를 외치면 지름이 좁아지며 조여옵니다. 착용한 채 조여지면 절대 벗을 수 없으며 고통사할 수 있습니다." },
@@ -714,6 +713,58 @@ export const MAGICK_ITEMS = {
     { key: "Q", name: "Trumpet of Shattering", text: "산개의 나팔. 결의 1점을 소비하여 나팔을 크게 불면 돌, 나무, 금속, 유리 등으로 된 튼튼한 무생물 물체 하나를 산산조각 냅니다." },
     { key: "K", name: "Vagabond's Concertina", text: "방랑자의 아코디언. 이 작은 아코디언을 연주하면 어떠한 낯선 마을이나 심지어 위험한 요정 정착지에서도 공짜 잠자리와 식사를 극진히 제공받습니다." }
   ]
+};
+
+export interface LifepathEvent {
+  en: string;
+  ko: string;
+}
+
+export const LIFEPATH_EVENTS: { [suit: string]: { [cardRange: string]: LifepathEvent } } = {
+  Cups: {
+    "A-2": { en: "Had a brief romantic relationship", ko: "짧고 강렬한 로맨스 관계를 맺음" },
+    "3-4": { en: "Fell out of favor with a group", ko: "어떤 집단이나 군중으로부터 신뢰를 잃고 눈 밖에 남" },
+    "5-6": { en: "Passed up an alluring opportunity", ko: "매우 매력적이고 유혹적인 일생일대의 기회를 스쳐 보냄" },
+    "7-8": { en: "Disillusioned of a belief", ko: "오랫동안 굳게 믿어왔던 가치관이나 사상에 환멸을 느낌" },
+    "9-10": { en: "Lived in a far-off land", ko: "고향과 완전히 단절된 아주 먼 타국 땅에서 거주함" },
+    "P": { en: "Pursued an ambition", ko: "가슴 깊이 품은 거대한 야망을 향해 헌신적으로 매진함" },
+    "Kn": { en: "Were in a long-term relationship", ko: "평생에 걸친 장기적이고 진지한 관계를 이어감" },
+    "Q": { en: "Took care of someone", ko: "아프거나 불우한 누군가를 정성껏 보살피며 지냄" },
+    "K": { en: "Mentored by a patron", ko: "예술이나 기술 분야의 든든한 후원자를 만나 사사받음" }
+  },
+  Swords: {
+    "A-2": { en: "Realized a difficult truth", ko: "뼈아프고 받아들이기 힘든 잔혹한 진실을 목격하고 깨달음" },
+    "3-4": { en: "Mourned the loss of someone close", ko: "곁에 있던 매우 소중하고 가까운 사람의 죽음을 애도함" },
+    "5-6": { en: "Fled from a dangerous situation", ko: "끔찍한 위험이나 참화가 닥친 구역에서 목숨 걸고 탈출함" },
+    "7-8": { en: "Imprisoned for a crime", ko: "억울하거나 실제 지은 범죄로 인해 감옥에 투옥됨" },
+    "9-10": { en: "Betrayed by a friend", ko: "가장 믿었던 가까운 동료나 친구에게 배신당함" },
+    "P": { en: "Made a terrible mistake that cost you", ko: "돌이킬 수 없는 뼈아픈 실수로 막대한 대가를 치름" },
+    "Kn": { en: "Killed someone", ko: "싸움 끝에 누군가의 목숨을 빼앗아 손에 피를 묻힘" },
+    "Q": { en: "Withdrew from life for a time", ko: "세상과 인연을 끊고 한동안 어두운 곳에 은둔하며 지냄" },
+    "K": { en: "Embarked on an intense intellectual study", ko: "지독하게 몰입하는 치열한 학술적/지적 탐구를 완수함" }
+  },
+  Wands: {
+    "A-2": { en: "Learned a new skill or language", ko: "생소한 외국어나 완전히 새로운 이색 기술을 습득함" },
+    "3-4": { en: "Went on a journey to a distant land", ko: "머나먼 미지의 땅으로 모험 가득한 기나긴 여정을 다녀옴" },
+    "5-6": { en: "Joined a group or guild", ko: "장인 길드나 비밀 결사 같은 조직에 정식 가입함" },
+    "7-8": { en: "Overcame an obstacle", ko: "불가능해 보였던 거대한 난관이나 두려움을 극복해냄" },
+    "9-10": { en: "Received an unexpected burden", ko: "원치 않는 뜻밖의 무거운 짐이나 임무를 떠맡게 됨" },
+    "P": { en: "Went on an adventure or quest", ko: "신비로운 모험이나 숭고한 퀘스트를 수행하러 떠남" },
+    "Kn": { en: "Saved a village from disaster", ko: "자연재해나 몬스터의 위협으로부터 마을 전체를 구해냄" },
+    "Q": { en: "Started a new career", ko: "과거의 삶을 청산하고 완전히 새로운 커리어를 개척함" },
+    "K": { en: "Achieved a position of authority", ko: "집단의 존경을 받아 강력한 권위와 권력의 자리에 오름" }
+  },
+  Coins: {
+    "A-2": { en: "Worked hard days in a difficult job", ko: "척박하고 힘겨운 노동 환경에서 기나긴 하루를 묵묵히 버팀" },
+    "3-4": { en: "Apprenticed a trade under a teacher", ko: "일류 기술자 밑에서 도제 계약을 맺고 기술을 사사받음" },
+    "5-6": { en: "Lost everything and became a vagabond", ko: "전 재산을 유실하고 완전히 빈털터리 방랑자 신세로 전락함" },
+    "7-8": { en: "Mastered a craft or skill", ko: "특정 공예 기술이나 수련 분야를 마스터해 독자 영역을 개척함" },
+    "9-10": { en: "Achieved an affluent lifestyle", ko: "큰 재물을 모아 여유롭고 호화로운 삶을 잠시 누림" },
+    "P": { en: "Studied at a prestigious academy", ko: "명성 높은 명문 아카데미나 학술 기관에 입학해 공부함" },
+    "Kn": { en: "Oversaw operation of a business", ko: "상업 거래망이나 핵심 비즈니스를 직접 총괄하여 운영함" },
+    "Q": { en: "Raised a child", ko: "아이를 품에 안고 헌신적으로 길러냄" },
+    "K": { en: "Spent time in a noble court", ko: "화려하지만 암투가 가득한 귀족 궁정에서 오랜 세월을 지냄" }
+  }
 };
 
 export const RULEBOOK_PAGES: RulePage[] = [
