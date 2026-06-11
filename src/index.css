@@ -3347,3 +3347,14 @@ textarea,
     width: 86px !important;
   }
 }
+
+.oracle-heading {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.05em !important;
+}
+
+.oracle-heading .heading-subline {
+  display: block !important;
+  white-space: nowrap !important;
+}

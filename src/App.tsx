@@ -5679,7 +5679,10 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
             {/* Right side: Fate Oracles */}
             <div className="card-panel flex-1">
-              <h3 className="gothic-sub">운명의 신탁 (Solo Oracles)</h3>
+              <h3 className="gothic-sub oracle-heading">
+                <span>운명의 신탁</span>
+                <span className="heading-subline">(Solo Oracles)</span>
+              </h3>
               <p className="rules-helper-text">
                 마스터가 없을 때 무작위 질문에 답하거나, 황혼이 내린 계략을 해석하는 단어를 구성합니다.
               </p>
