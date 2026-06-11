@@ -27,7 +27,6 @@ import {
   Compass, 
   Sparkles, 
   Map as MapIcon,
-  Trash2, 
   LogOut, 
   LogIn, 
   Upload, 
@@ -95,6 +94,43 @@ export interface Card {
   reversed?: boolean;
 }
 
+export interface Friend {
+  name: string;
+  info: string;
+  relationship?: "Devoted" | "Friendly" | "Neutral" | "Wary" | "Hostile";
+  memoryLogs?: string[];
+}
+
+export interface Foe {
+  name: string;
+  info: string;
+  relationship?: "Devoted" | "Friendly" | "Neutral" | "Wary" | "Hostile";
+  memoryLogs?: string[];
+}
+
+export interface Hireling {
+  name: string;
+  info: string;
+  woundsTaken?: number;
+  maxWounds?: number;
+  paidThisWeek?: boolean;
+  loyalty?: number;
+  memoryLogs?: string[];
+}
+
+export interface JournalEntry {
+  id: string;
+  text: string;
+  date: string;
+  day?: number;
+  watch?: number;
+  x?: number | null;
+  y?: number | null;
+  pinned?: boolean;
+  isThematic?: boolean;
+  systemLog?: string;
+}
+
 export interface Character {
   name: string;
   vocation: string;
@@ -130,9 +166,9 @@ export interface Character {
   inventory: string[];
   instincts: string[];
   goals: string[];
-  friends: { name: string; info: string }[];
-  foes: { name: string; info: string }[];
-  hirelings: { name: string; info: string }[];
+  friends: Friend[];
+  foes: Foe[];
+  hirelings: Hireling[];
   unlockedTalents: string[];
   lifepathLogs: string[];
   spellbook: string[]; // Arcane spells known by the character
@@ -178,7 +214,7 @@ export interface GameState {
   refereeDiscard: Card[];
   hand: Card[];
   mapGrid: MapCell[];
-  journals: { id: string; text: string; date: string }[];
+  journals: JournalEntry[];
   combatMonsters: CombatMonster[];
   combatRound: number;
   mapType: "wilderness" | "dungeon" | "settlement";
@@ -188,6 +224,7 @@ export interface GameState {
   activeTest: ActiveTest | null;
   arcaneSpellResult: { minorCard: Card; majorCard: Card; spellName: string; ruleSummary: string } | null;
   alchemicalBrewResult: { success: boolean; potionName: string; ingredient: string; total: number; card: Card } | null;
+  playerInitiativeCard: Card | null;
 }
 
 const INITIAL_CHARACTER: Character = {
@@ -267,7 +304,8 @@ const INITIAL_STATE: GameState = {
   lastDrawnOracleCardValue: null,
   activeTest: null,
   arcaneSpellResult: null,
-  alchemicalBrewResult: null
+  alchemicalBrewResult: null,
+  playerInitiativeCard: null
 };
 
 // =================================================================
@@ -348,6 +386,186 @@ const shuffle = (arr: Card[]): Card[] => {
   return a;
 };
 
+const sanitizeGameState = (loaded: any): GameState => {
+  if (!loaded) return {
+    ...INITIAL_STATE,
+    playerDeck: createPlayerDeck(),
+    refereeDeck: createRefereeDeck()
+  };
+
+  const character = { ...INITIAL_CHARACTER, ...loaded.character };
+  
+  character.stats = { ...INITIAL_CHARACTER.stats, ...loaded.character?.stats };
+  character.wounds = { ...INITIAL_CHARACTER.wounds, ...loaded.character?.wounds };
+  character.armorNotches = { ...INITIAL_CHARACTER.armorNotches, ...loaded.character?.armorNotches };
+  
+  character.inventory = Array.isArray(loaded.character?.inventory) ? loaded.character.inventory : [...INITIAL_CHARACTER.inventory];
+  character.instincts = Array.isArray(loaded.character?.instincts) ? loaded.character.instincts : [...INITIAL_CHARACTER.instincts];
+  character.goals = Array.isArray(loaded.character?.goals) ? loaded.character.goals : [...INITIAL_CHARACTER.goals];
+  
+  const rawFriends = Array.isArray(loaded.character?.friends) ? loaded.character.friends : [...INITIAL_CHARACTER.friends];
+  character.friends = rawFriends.map((f: any) => {
+    if (typeof f === 'string') return { name: f, info: '', relationship: 'Neutral', memoryLogs: [] };
+    return {
+      name: f.name || '',
+      info: f.info || '',
+      relationship: f.relationship || 'Neutral',
+      memoryLogs: Array.isArray(f.memoryLogs) ? f.memoryLogs : []
+    };
+  });
+
+  const rawFoes = Array.isArray(loaded.character?.foes) ? loaded.character.foes : [...INITIAL_CHARACTER.foes];
+  character.foes = rawFoes.map((f: any) => {
+    if (typeof f === 'string') return { name: f, info: '', relationship: 'Neutral', memoryLogs: [] };
+    return {
+      name: f.name || '',
+      info: f.info || '',
+      relationship: f.relationship || 'Neutral',
+      memoryLogs: Array.isArray(f.memoryLogs) ? f.memoryLogs : []
+    };
+  });
+
+  const rawHirelings = Array.isArray(loaded.character?.hirelings) ? loaded.character.hirelings : [...INITIAL_CHARACTER.hirelings];
+  character.hirelings = rawHirelings.map((h: any) => {
+    if (typeof h === 'string') return { name: h, info: '', woundsTaken: 0, maxWounds: 2, paidThisWeek: false, loyalty: 5, memoryLogs: [] };
+    return {
+      name: h.name || '',
+      info: h.info || '',
+      woundsTaken: typeof h.woundsTaken === 'number' ? h.woundsTaken : 0,
+      maxWounds: typeof h.maxWounds === 'number' ? h.maxWounds : 2,
+      paidThisWeek: !!h.paidThisWeek,
+      loyalty: typeof h.loyalty === 'number' ? h.loyalty : 5,
+      memoryLogs: Array.isArray(h.memoryLogs) ? h.memoryLogs : []
+    };
+  });
+
+  character.unlockedTalents = Array.isArray(loaded.character?.unlockedTalents) ? loaded.character.unlockedTalents : [...INITIAL_CHARACTER.unlockedTalents];
+  character.lifepathLogs = Array.isArray(loaded.character?.lifepathLogs) ? loaded.character.lifepathLogs : [...INITIAL_CHARACTER.lifepathLogs];
+  character.spellbook = Array.isArray(loaded.character?.spellbook) ? loaded.character.spellbook : [...INITIAL_CHARACTER.spellbook];
+
+  const mapGrid = Array.isArray(loaded.mapGrid) ? loaded.mapGrid : Array.from({ length: 16 }, (_, i) => ({
+    x: i % 4,
+    y: Math.floor(i / 4)
+  }));
+
+  const playerDeck = Array.isArray(loaded.playerDeck) ? loaded.playerDeck : createPlayerDeck();
+  const playerDiscard = Array.isArray(loaded.playerDiscard) ? loaded.playerDiscard : [];
+  const refereeDeck = Array.isArray(loaded.refereeDeck) ? loaded.refereeDeck : createRefereeDeck();
+  const refereeDiscard = Array.isArray(loaded.refereeDiscard) ? loaded.refereeDiscard : [];
+  const hand = Array.isArray(loaded.hand) ? loaded.hand : [];
+  const rawJournals = Array.isArray(loaded.journals) ? loaded.journals : [];
+  
+  const journals = rawJournals.map((j: any) => {
+    if (typeof j === 'string') return { id: (Date.now() + Math.random()).toString(), text: j, date: new Date().toLocaleString(), day: 1, watch: 1, x: null, y: null, pinned: false, isThematic: false, systemLog: j };
+    return {
+      id: j.id || (Date.now() + Math.random()).toString(),
+      text: j.text || '',
+      date: j.date || new Date().toLocaleString(),
+      day: typeof j.day === 'number' ? j.day : 1,
+      watch: typeof j.watch === 'number' ? j.watch : 1,
+      x: typeof j.x === 'number' ? j.x : null,
+      y: typeof j.y === 'number' ? j.y : null,
+      pinned: !!j.pinned,
+      isThematic: !!j.isThematic,
+      systemLog: j.systemLog || j.text || ''
+    };
+  });
+
+  const combatMonsters = Array.isArray(loaded.combatMonsters) ? loaded.combatMonsters : [];
+
+  return {
+    character,
+    playerDeck,
+    playerDiscard,
+    refereeDeck,
+    refereeDiscard,
+    hand,
+    mapGrid,
+    journals,
+    combatMonsters,
+    combatRound: typeof loaded.combatRound === 'number' ? loaded.combatRound : 1,
+    mapType: loaded.mapType || "wilderness",
+    day: typeof loaded.day === 'number' ? loaded.day : 1,
+    watch: typeof loaded.watch === 'number' ? loaded.watch : 1,
+    lastDrawnOracleCardValue: loaded.lastDrawnOracleCardValue !== undefined ? loaded.lastDrawnOracleCardValue : null,
+    activeTest: loaded.activeTest !== undefined ? loaded.activeTest : null,
+    arcaneSpellResult: loaded.arcaneSpellResult !== undefined ? loaded.arcaneSpellResult : null,
+    alchemicalBrewResult: loaded.alchemicalBrewResult !== undefined ? loaded.alchemicalBrewResult : null,
+    playerInitiativeCard: loaded.playerInitiativeCard !== undefined ? loaded.playerInitiativeCard : null,
+  };
+};
+
+const GLOAM_RULES: Record<string, { page: string; title: string; content: string }> = {
+  "선제권": {
+    page: "30",
+    title: "선제권 (Initiative)",
+    content: "전투 개시 시 모든 캐릭터와 몬스터는 선제권 카드를 결정합니다. 플레이어는 손패에서 카드를 비공개로 제출하고 동시에 공개합니다. 메이저 아르카나 카드는 기재된 로마 숫자(0~21)가 선제권 수치가 되며, 마이너 아르카나 카드는 에이스(1), 2~10, 시종(11), 기사(12), 여왕(13), 왕(14)으로 계산합니다. 선제권 수치가 낮을수록 먼저 행동합니다. 만약 선제권 카드가 역방향(Reversed)인 경우 해당 카드의 행동에 패널티를 받거나 상대에게 행동 기회를 먼저 내주게 됩니다."
+  },
+  "푸시": {
+    page: "25",
+    title: "푸시 (Pushing the Test)",
+    content: "테스트 결과에 불만족할 경우, 캐릭터는 결의(Resolve)를 1점 소비하고 플레이어 덱에서 추가 카드를 1장 더 뽑아 합산할 수 있습니다. 추가 카드의 수트가 테스트 스탯과 일치하면 보너스 효과가 발생하지만, 추가 카드 드로우 중 대실패(Great Failure)가 발생하면 상황이 더욱 치명적으로 꼬이게 되며 결의 1점을 즉시 얻습니다."
+  },
+  "대실패": {
+    page: "25",
+    title: "대실패 (Great Failure)",
+    content: "테스트 중 카드의 수치 및 스탯 합계가 극히 낮거나(일반적으로 14 미만), 특정 조건 하에서 테스트 결과가 실패로 판명되고 장면에 치명적인 비틀림이 생길 때를 의미합니다. 대실패는 시련을 통해 더 강한 정신력을 단련하게 되므로 캐릭터에게 결의(Resolve) 1점을 즉시 회복시켜 줍니다."
+  },
+  "광대": {
+    page: "30",
+    title: "광대 (The Fool - Major 0)",
+    content: "광대 카드는 전투 중 손패에 쥐고 있다가 결정적인 순간에 선제권 0(가장 먼저 행동)으로 제출하거나, 혹은 일반 판정/공격 시 행동에 +3 보너스를 부여하기 위해 소모할 수 있습니다. 광대 카드가 플레이어 또는 레프리에 의해 사용된 경우, 해당 라운드가 끝나는 즉시 버려진 카드 더미를 모두 모아 덱 전체를 새로 셔플하고 모든 손패를 반납한 뒤 초기화해야 합니다."
+  },
+  "민속 마법": {
+    page: "20",
+    title: "민속 마법 (Folk Magick)",
+    content: "민속 마법은 누구나 사용할 수 있는 기초적인 일상 주술로, 치유(Healing), 원소 소환(Elemental), 예지(Foresight), 퇴마(Ward Evil), 달의 오라클(Moon Oracle) 등이 있습니다. 민속 마법을 시전하려면 해당하는 스탯 판정(난이도 14)을 치러야 하며, 판정 성공 여부와 상관없이 시전 시 결의(Resolve) 1점을 소모합니다."
+  },
+  "세션 종료 정산": {
+    page: "35",
+    title: "세션 종료 정산 (End of Session)",
+    content: "세션이 종료될 때 플레이어는 3가지 서사적 질문에 답하여 경험치(XP) 및 결의(Resolve) 보상을 정산합니다:\n1. 세션에 온전히 참여했는가? (+1 XP)\n2. 생명이 위태로운 조우를 극복했는가? (+1 XP)\n3. 캐릭터의 개인적 목표(Goal)를 하나라도 달성했는가? (+1 XP 및 +1 결의)\n결의는 최대 10점까지 보관되며, 소모한 1 XP당 캠페인 날짜가 1일 경과합니다."
+  },
+  "용병 급여": {
+    page: "22",
+    title: "용병 및 고용 (Hirelings & Wages)",
+    content: "용병은 모험가의 든든한 동료로, 캐릭터의 Cups 스탯 수만큼 고용할 수 있습니다. 용병은 고유한 아머나 전투 능력을 지원하며, 매주 다운타임 시 주간 급여(보통 1 Coin)를 Coins 판정을 통해 지급해야 합니다. 급여 지급 판정에 실패하면 용병의 충성도(Loyalty)가 하락하거나 계약이 해지되어 이탈합니다."
+  }
+};
+
+const getThematicLogText = (actionType: string, details: any): string => {
+  switch (actionType) {
+    case "card_play":
+      return `[전술: ${details.purpose}] 어둠 속에서 카드의 영험한 힘을 빌어 행동을 감행합니다. (${details.cardName} 제출)`;
+    case "stat_up":
+      return `[수련: ${details.statName}] 10일 동안 온 마음을 다해 단련하며 마침내 능력의 심연에 도달합니다. (${details.statName} ${details.prevVal} → ${details.prevVal + 1} 상승)`;
+    case "talent_unlock":
+      return `[재능 해금: ${details.talentName}] 황혼의 지혜를 마주하며 새로운 비범한 재능 '${details.talentName}'을 일깨웁니다.`;
+    case "combat_initiative":
+      return `[선제 전투 준비] 다가올 혈전을 직감하며 칼자루를 움켜쥐고 마음의 준비를 마칩니다. (선제권 카드: ${details.cardName})`;
+    case "combat_initiative_draw":
+      return `[돌발 전투 대처] 숨은 적의 살기를 느끼고 반사적으로 덱에서 선제권을 뽑아 듭니다. (드로우 선제권: ${details.cardName})`;
+    case "morale_test":
+      return details.success 
+        ? `[사기 유지] 대적하는 ${details.monName}이(가) 광폭한 투지를 불태우며 아직 굴복하지 않았음을 과시합니다.`
+        : `[전의 상실] 매서운 공격에 질린 ${details.monName}이(가) 비명을 지르며 후퇴하거나 자비를 구하기 시작합니다. (사기 꺾임)`;
+    case "npc_reaction":
+      return `[대화 교섭] 황혼의 눈빛을 마주하며 상대의 마음속 깊은 의도를 탐색합니다. (대화 결과: ${details.outcomeText})`;
+    case "alchemical_brew":
+      return details.success
+        ? `[비약 조제] 보라색 안개 속에서 진귀한 연금술 영약 '${details.potionName}' 조제에 성공합니다.`
+        : `[조제 실패] 불꽃 조절 실패로 가마솥이 폭발하며 찌꺼기만 남고 소중한 약초 재료를 잃고 맙니다.`;
+    case "goal_complete":
+      return `[맹세 이행] 황혼의 언약을 다짐하며 오랫동안 추적하던 목표 '${details.goal}'을 마침내 마침표 짓습니다. 결의 1점을 얻습니다.`;
+    case "session_end":
+      return `[장막의 세션 정산] 겪어온 위협과 극복한 도전들을 돌아보며 여정의 한 장을 넘깁니다. (XP +${details.addXp}, 결의 +${details.addResolve})`;
+    case "test_resolve_spent":
+      return `[결의의 굴절] 심장이 조여드는 위기 속에서 신념을 굳건히 하며 운명의 수레바퀴를 강제로 비틉니다. (결의 보정 적용)`;
+    default:
+      return details.text || "";
+  }
+};
+
 const getCardDisplayName = (card: Card) => {
   const suitKo = card.suit === "cups" ? "컵" :
                  card.suit === "wands" ? "완드" :
@@ -361,6 +579,60 @@ const getCardDisplayName = (card: Card) => {
     return `${majorInfo ? majorInfo.name : "메이저"} ${card.card}${orientation}`;
   }
   return `${suitKo} ${valKo}${orientation}`;
+};
+
+const getRelationshipColor = (rel: string) => {
+  switch (rel) {
+    case "Devoted": return "#85bb65";
+    case "Friendly": return "#4caf50";
+    case "Neutral": return "#bbb";
+    case "Wary": return "#ff9800";
+    case "Hostile": return "#f44336";
+    default: return "#bbb";
+  }
+};
+
+const renderTextWithRules = (text: string, showRule: (key: string) => void) => {
+  if (!text) return "";
+  const parts = text.split(/(\(p\.\d+\))/g);
+  return parts.map((part, i) => {
+    const match = part.match(/\(p\.(\d+)\)/);
+    if (match) {
+      const pageNum = match[1];
+      let ruleKey = "";
+      if (pageNum === "30") ruleKey = "선제권";
+      else if (pageNum === "25") ruleKey = "푸시";
+      else if (pageNum === "20") ruleKey = "민속 마법";
+      else if (pageNum === "35") ruleKey = "세션 종료 정산";
+      else if (pageNum === "22") ruleKey = "용병 급여";
+      
+      if (ruleKey) {
+        return (
+          <button 
+            key={i} 
+            className="rule-citation-link" 
+            onClick={(e) => {
+              e.stopPropagation();
+              showRule(ruleKey);
+            }}
+            style={{ 
+              background: "transparent", 
+              border: "none", 
+              color: "var(--color-gold)", 
+              textDecoration: "underline", 
+              cursor: "pointer", 
+              padding: 0,
+              fontFamily: "inherit",
+              fontSize: "inherit"
+            }}
+          >
+            {part}
+          </button>
+        );
+      }
+    }
+    return part;
+  });
 };
 
 const TALENT_DESCRIPTIONS: { [key: string]: string } = {
@@ -433,6 +705,27 @@ export default function App() {
   const [testCurrentTotal, setTestCurrentTotal] = useState<number>(0);
   const [testResolveSpent, setTestResolveSpent] = useState<number>(0);
 
+  // UI and Immersion states
+  const [selectedMapCellIdx, setSelectedMapCellIdx] = useState<number | null>(null);
+  const [journalDisplayMode, setJournalDisplayMode] = useState<"thematic" | "system">("thematic");
+  const [showRuleModal, setShowRuleModal] = useState<boolean>(false);
+  const [activeRuleTitle, setActiveRuleTitle] = useState<string>("");
+  const [activeRuleText, setActiveRuleText] = useState<string>("");
+  const [activeRulePage, setActiveRulePage] = useState<string>("");
+  const [expandedFriendIdx, setExpandedFriendIdx] = useState<number | null>(null);
+  const [expandedFoeIdx, setExpandedFoeIdx] = useState<number | null>(null);
+  const [expandedHirelingIdx, setExpandedHirelingIdx] = useState<number | null>(null);
+
+  const showRule = (key: string) => {
+    const rule = GLOAM_RULES[key];
+    if (rule) {
+      setActiveRuleTitle(rule.title);
+      setActiveRuleText(rule.content);
+      setActiveRulePage(rule.page || "");
+      setShowRuleModal(true);
+    }
+  };
+
   // Session End XP Wizard State
   const [showSessionXpWizard, setShowSessionXpWizard] = useState(false);
   const [sessionParticipated, setSessionParticipated] = useState(true);
@@ -454,17 +747,18 @@ export default function App() {
             const cloudData = snap.data();
             if (cloudData && cloudData["gloam_rpg_state"]) {
               const parsed = JSON.parse(cloudData["gloam_rpg_state"]);
+              const sanitized = sanitizeGameState(parsed);
               const localStr = localStorage.getItem("gloam_rpg_state");
               if (localStr) {
                 const localParsed = JSON.parse(localStr);
                 const isLocalDefault = !localParsed.character?.name || localParsed.character.name === "알릭 (Alaric)";
                 if (isLocalDefault || confirm("구글 클라우드 백업 데이터를 발견했습니다. 불러오시겠습니까?")) {
-                  setState(parsed);
-                  localStorage.setItem("gloam_rpg_state", JSON.stringify(parsed));
+                  setState(sanitized);
+                  localStorage.setItem("gloam_rpg_state", JSON.stringify(sanitized));
                 }
               } else {
-                setState(parsed);
-                localStorage.setItem("gloam_rpg_state", JSON.stringify(parsed));
+                setState(sanitized);
+                localStorage.setItem("gloam_rpg_state", JSON.stringify(sanitized));
               }
             }
           }
@@ -481,31 +775,8 @@ export default function App() {
     const loadState = async () => {
       preloadAllTarotImages();
       const loaded = await store.load("gloam_rpg_state", null);
-      if (loaded) {
-        // Safe checks/migrations
-        if (!loaded.character) loaded.character = INITIAL_CHARACTER;
-        if (!loaded.character.spellbook) loaded.character.spellbook = [];
-        if (loaded.day === undefined) loaded.day = 1;
-        if (loaded.watch === undefined) loaded.watch = 1;
-        if (loaded.lastDrawnOracleCardValue === undefined) loaded.lastDrawnOracleCardValue = null;
-        if (loaded.activeTest === undefined) loaded.activeTest = null;
-        if (loaded.arcaneSpellResult === undefined) loaded.arcaneSpellResult = null;
-        if (loaded.alchemicalBrewResult === undefined) loaded.alchemicalBrewResult = null;
-        if (!loaded.mapGrid) {
-          loaded.mapGrid = Array.from({ length: 16 }, (_, i) => ({
-            x: i % 4,
-            y: Math.floor(i / 4)
-          }));
-        }
-        setState(loaded);
-      } else {
-        // Initialize state and decks
-        setState({
-          ...INITIAL_STATE,
-          playerDeck: createPlayerDeck(),
-          refereeDeck: createRefereeDeck()
-        });
-      }
+      const sanitized = sanitizeGameState(loaded);
+      setState(sanitized);
       setLoading(false);
     };
     loadState();
@@ -537,15 +808,8 @@ export default function App() {
       try {
         await signOut(auth);
         const loaded = await store.load("gloam_rpg_state", null);
-        if (loaded) {
-          setState(loaded);
-        } else {
-          setState({
-            ...INITIAL_STATE,
-            playerDeck: createPlayerDeck(),
-            refereeDeck: createRefereeDeck()
-          });
-        }
+        const sanitized = sanitizeGameState(loaded);
+        setState(sanitized);
       } catch (e: any) {
         console.error("Sign-out error:", e);
       }
@@ -577,12 +841,8 @@ export default function App() {
     // Max carry capacity is 10 + Coins (up to Coins = 4, capped at 14)
     const carryCapacity = Math.min(14, 10 + char.stats.coins);
 
-    // Vocation mapping based on stat value 4
-    let detectedVocation = char.vocation;
-    if (char.stats.cups === 4) detectedVocation = "전령관 (Herald)";
-    else if (char.stats.swords === 4) detectedVocation = "방랑기사 (Knight-Errant)";
-    else if (char.stats.wands === 4) detectedVocation = "비술사 (Mystic)";
-    else if (char.stats.coins === 4) detectedVocation = "소매치기 (Cutpurse)";
+    // Vocation mapping based on stat value 4 - keep user-chosen vocation
+    let detectedVocation = char.vocation || "방랑기사 (Knight-Errant)";
 
     return { testPenalty, speed, carryCapacity, detectedVocation };
   };
@@ -603,7 +863,6 @@ export default function App() {
   // CORE FUNCTIONS
   // =================================================================
   const drawCardForPlayer = (count: number = 1) => {
-    let foolDrawn = false;
     updateState(s => {
       let deck = [...s.playerDeck];
       let discard = [...s.playerDiscard];
@@ -617,9 +876,6 @@ export default function App() {
         }
         const card = deck.shift();
         if (card) {
-          if (card.type === "major" && card.card === "0") {
-            foolDrawn = true;
-          }
           const isReversed = Math.random() < 0.25;
           hand.push({ ...card, reversed: isReversed });
         }
@@ -632,13 +888,6 @@ export default function App() {
         hand
       };
     });
-
-    if (foolDrawn) {
-      setTimeout(() => {
-        alert("🔄 플레이어 덱에서 광대(The Fool)가 드로우되었습니다! 규칙에 따라 모든 손패를 회수하고 양쪽 덱 전체를 새로 섞습니다.");
-        reshuffleAllDecks();
-      }, 50);
-    }
   };
 
   const playCardFromHand = (idx: number, purpose: string) => {
@@ -646,6 +895,13 @@ export default function App() {
       const card = s.hand[idx];
       const nextHand = s.hand.filter((_, i) => i !== idx);
       const nextDiscard = [...s.playerDiscard, card];
+      const cardName = getCardDisplayName(card);
+      
+      const thematicText = getThematicLogText("card_play", { cardName, purpose });
+      const systemLog = `[카드 사용] 손패에서 ${cardName} 카드를 '${purpose}' 목적을 위해 제출했습니다.`;
+
+      const x = selectedMapCellIdx !== null ? (selectedMapCellIdx % 4) : null;
+      const y = selectedMapCellIdx !== null ? Math.floor(selectedMapCellIdx / 4) : null;
 
       return {
         ...s,
@@ -653,9 +909,287 @@ export default function App() {
         playerDiscard: nextDiscard,
         journals: [
           {
-            id: Date.now().toString(),
-            text: `[카드 사용] 손패에서 ${getCardDisplayName(card)} 카드를 '${purpose}' 목적을 위해 제출했습니다.`,
-            date: new Date().toLocaleString()
+            id: (Date.now() + Math.random()).toString(),
+            text: thematicText,
+            date: new Date().toLocaleString(),
+            day: s.day,
+            watch: s.watch,
+            x,
+            y,
+            pinned: false,
+            isThematic: true,
+            systemLog
+          },
+          ...s.journals
+        ]
+      };
+    });
+  };
+
+  const playCardAsPlayerInitiative = (idx: number) => {
+    updateState(s => {
+      const card = s.hand[idx];
+      const nextHand = s.hand.filter((_, i) => i !== idx);
+      const nextDiscard = s.playerInitiativeCard 
+        ? [...s.playerDiscard, s.playerInitiativeCard] 
+        : s.playerDiscard;
+      const cardName = getCardDisplayName(card);
+
+      const thematicText = getThematicLogText("combat_initiative", { cardName });
+      const systemLog = `[선제권 결정] 손패에서 ${cardName} 카드를 이번 라운드 선제권으로 제시했습니다.`;
+
+      const x = selectedMapCellIdx !== null ? (selectedMapCellIdx % 4) : null;
+      const y = selectedMapCellIdx !== null ? Math.floor(selectedMapCellIdx / 4) : null;
+
+      return {
+        ...s,
+        hand: nextHand,
+        playerDiscard: nextDiscard,
+        playerInitiativeCard: card,
+        journals: [
+          {
+            id: (Date.now() + Math.random()).toString(),
+            text: thematicText,
+            date: new Date().toLocaleString(),
+            day: s.day,
+            watch: s.watch,
+            x,
+            y,
+            pinned: false,
+            isThematic: true,
+            systemLog
+          },
+          ...s.journals
+        ]
+      };
+    });
+  };
+
+  const drawPlayerInitiativeFromDeck = () => {
+    updateState(s => {
+      let deck = [...s.playerDeck];
+      let discard = [...s.playerDiscard];
+      
+      if (deck.length === 0) {
+        if (discard.length === 0) return s;
+        deck = shuffle(discard);
+        discard = [];
+      }
+      
+      const card = deck.shift();
+      if (!card) return s;
+
+      const cardWithReversed = { ...card, reversed: Math.random() < 0.25 };
+      const nextDiscard = s.playerInitiativeCard 
+        ? [...discard, s.playerInitiativeCard] 
+        : discard;
+      const cardName = getCardDisplayName(cardWithReversed);
+
+      const thematicText = getThematicLogText("combat_initiative_draw", { cardName });
+      const systemLog = `[선제권 결정] 플레이어 덱에서 ${cardName} 카드를 선제권으로 직접 드로우했습니다.`;
+
+      const x = selectedMapCellIdx !== null ? (selectedMapCellIdx % 4) : null;
+      const y = selectedMapCellIdx !== null ? Math.floor(selectedMapCellIdx / 4) : null;
+
+      return {
+        ...s,
+        playerDeck: deck,
+        playerDiscard: nextDiscard,
+        playerInitiativeCard: cardWithReversed,
+        journals: [
+          {
+            id: (Date.now() + Math.random()).toString(),
+            text: thematicText,
+            date: new Date().toLocaleString(),
+            day: s.day,
+            watch: s.watch,
+            x,
+            y,
+            pinned: false,
+            isThematic: true,
+            systemLog
+          },
+          ...s.journals
+        ]
+      };
+    });
+  };
+
+  const startNextRound = () => {
+    updateState(s => {
+      // Clear monster initiative cards
+      const nextMonsters = s.combatMonsters.map(mon => ({
+        ...mon,
+        initiativeCard: undefined
+      }));
+
+      // Gather current discard pile
+      let nextDiscard = [...s.playerDiscard];
+      if (s.playerInitiativeCard) {
+        nextDiscard.push(s.playerInitiativeCard);
+      }
+
+      // Check if The Fool is in the discard pile (was used this round)
+      const triggerFoolReshuffle = nextDiscard.some(c => c.type === "major" && c.card === "0");
+
+      const x = selectedMapCellIdx !== null ? (selectedMapCellIdx % 4) : null;
+      const y = selectedMapCellIdx !== null ? Math.floor(selectedMapCellIdx / 4) : null;
+
+      if (triggerFoolReshuffle) {
+        setTimeout(() => {
+          alert("🔄 이번 라운드 중 광대(The Fool) 카드가 소모되었습니다! 라운드 종료 규칙에 따라 모든 손패를 버리고 양쪽 덱 전체를 새로 섞습니다.");
+        }, 50);
+
+        const thematicText = `[광대의 대가] 광대(The Fool)의 장난이 끝나고 흩어진 힘을 수습합니다. (모든 덱 전체 셔플 및 손패 초기화)`;
+        const systemLog = `[전투 라운드 종료] 광대(The Fool) 카드 발동으로 인한 덱 셔플 및 초기화 (라운드 ${s.combatRound} → ${s.combatRound + 1})`;
+
+        return {
+          ...s,
+          combatRound: s.combatRound + 1,
+          combatMonsters: nextMonsters,
+          playerDeck: createPlayerDeck(),
+          playerDiscard: [],
+          refereeDeck: createRefereeDeck(),
+          refereeDiscard: [],
+          hand: [],
+          playerInitiativeCard: null,
+          lastDrawnOracleCardValue: null,
+          journals: [
+            {
+              id: (Date.now() + Math.random()).toString(),
+              text: thematicText,
+              date: new Date().toLocaleString(),
+              day: s.day,
+              watch: s.watch,
+              x,
+              y,
+              pinned: false,
+              isThematic: true,
+              systemLog
+            },
+            ...s.journals
+          ]
+        };
+      }
+
+      // Standard end of round: refill hand back to 4 cards
+      let deck = [...s.playerDeck];
+      let discard = nextDiscard;
+      let hand = [...s.hand];
+
+      while (hand.length < 4) {
+        if (deck.length === 0) {
+          if (discard.length === 0) break;
+          deck = shuffle(discard);
+          discard = [];
+        }
+        const c = deck.shift();
+        if (c) {
+          const isReversed = Math.random() < 0.25;
+          hand.push({ ...c, reversed: isReversed });
+        }
+      }
+
+      const thematicText = `[라운드 전열 재정비] 전열을 가다듬으며 다음 전술 행동을 구상합니다. (라운드 ${s.combatRound} → ${s.combatRound + 1})`;
+      const systemLog = `[라운드 전환] 다음 라운드를 시작합니다 (라운드 ${s.combatRound} → ${s.combatRound + 1}, 손패 4장 보충 완료)`;
+
+      return {
+        ...s,
+        combatRound: s.combatRound + 1,
+        combatMonsters: nextMonsters,
+        playerDeck: deck,
+        playerDiscard: discard,
+        hand,
+        playerInitiativeCard: null,
+        journals: [
+          {
+            id: (Date.now() + Math.random()).toString(),
+            text: thematicText,
+            date: new Date().toLocaleString(),
+            day: s.day,
+            watch: s.watch,
+            x,
+            y,
+            pinned: false,
+            isThematic: true,
+            systemLog
+          },
+          ...s.journals
+        ]
+      };
+    });
+  };
+
+  const endCombat = () => {
+    updateState(s => {
+      let nextDiscard = [...s.playerDiscard];
+      if (s.playerInitiativeCard) {
+        nextDiscard.push(s.playerInitiativeCard);
+      }
+      
+      const triggerFoolReshuffle = nextDiscard.some(c => c.type === "major" && c.card === "0");
+
+      const x = selectedMapCellIdx !== null ? (selectedMapCellIdx % 4) : null;
+      const y = selectedMapCellIdx !== null ? Math.floor(selectedMapCellIdx / 4) : null;
+
+      if (triggerFoolReshuffle) {
+        setTimeout(() => {
+          alert("🔄 이번 전투 중 광대(The Fool) 카드가 소모되었습니다! 라운드 종료 규칙에 따라 모든 손패를 버리고 양쪽 덱 전체를 새로 섞습니다.");
+        }, 50);
+
+        const thematicText = `[전투 종결 및 소집] 승리의 검을 거두지만, 광대의 마법이 덱을 헤집어 놓아 덱을 소집합니다.`;
+        const systemLog = `[전투 종료] 광대(The Fool) 카드 소모로 인한 덱 전체 셔플 초기화`;
+
+        return {
+          ...s,
+          combatRound: 1,
+          combatMonsters: [],
+          playerDeck: createPlayerDeck(),
+          playerDiscard: [],
+          refereeDeck: createRefereeDeck(),
+          refereeDiscard: [],
+          hand: [],
+          playerInitiativeCard: null,
+          lastDrawnOracleCardValue: null,
+          journals: [
+            {
+              id: (Date.now() + Math.random()).toString(),
+              text: thematicText,
+              date: new Date().toLocaleString(),
+              day: s.day,
+              watch: s.watch,
+              x,
+              y,
+              pinned: false,
+              isThematic: true,
+              systemLog
+            },
+            ...s.journals
+          ]
+        };
+      }
+
+      const thematicText = `[전투 종결] 적들의 숨통이 끊어지거나 어둠 너머로 퇴각했습니다. 무기를 거두고 호흡을 고릅니다.`;
+      const systemLog = `[전투 종료] 전투가 격파/종료되었습니다.`;
+
+      return {
+        ...s,
+        combatRound: 1,
+        combatMonsters: [],
+        playerDiscard: nextDiscard,
+        playerInitiativeCard: null,
+        journals: [
+          {
+            id: (Date.now() + Math.random()).toString(),
+            text: thematicText,
+            date: new Date().toLocaleString(),
+            day: s.day,
+            watch: s.watch,
+            x,
+            y,
+            pinned: false,
+            isThematic: true,
+            systemLog
           },
           ...s.journals
         ]
@@ -896,6 +1430,14 @@ export default function App() {
     setTestStatus("idle");
     setTestCurrentTotal(0);
     setTestResolveSpent(0);
+  };
+
+  const prepareSpellCast = (spellName: string) => {
+    resetTestState();
+    setTestStat("wands");
+    setTestPurpose(`주문 시전: ${spellName}`);
+    setActiveTab("dashboard");
+    alert(`⚡ 비술 마법 주문 [${spellName}] 시전 판정이 대시보드 테스트 영역에 설정되었습니다.\n완드(Wands) 판정(난이도 14)이 진행됩니다. 필요에 따라 모디파이어를 입력한 후 판정을 치르십시오.`);
   };
 
   const rollGeneralTest = () => {
@@ -1813,22 +2355,44 @@ export default function App() {
   };
 
   // Add Item to Journal
-  const addJournalEntry = (textOverride?: string) => {
+  const addJournalEntry = (textOverride?: string, actionType?: string, details?: any) => {
     const entryText = textOverride || newJournalText;
     if (!entryText.trim()) return;
 
+    updateState(s => {
+      const thematicText = actionType ? getThematicLogText(actionType, details) : entryText;
+      const isThematic = !!actionType;
+      
+      const x = selectedMapCellIdx !== null ? (selectedMapCellIdx % 4) : null;
+      const y = selectedMapCellIdx !== null ? Math.floor(selectedMapCellIdx / 4) : null;
+
+      return {
+        ...s,
+        journals: [
+          {
+            id: (Date.now() + Math.random()).toString(),
+            text: thematicText,
+            date: new Date().toLocaleString(),
+            day: s.day,
+            watch: s.watch,
+            x,
+            y,
+            pinned: false,
+            isThematic,
+            systemLog: entryText
+          },
+          ...s.journals
+        ]
+      };
+    });
+    if (!textOverride) setNewJournalText("");
+  };
+
+  const togglePinJournalEntry = (id: string) => {
     updateState(s => ({
       ...s,
-      journals: [
-        {
-          id: Date.now().toString(),
-          text: entryText,
-          date: new Date().toLocaleString()
-        },
-        ...s.journals
-      ]
+      journals: s.journals.map(j => j.id === id ? { ...j, pinned: !j.pinned } : j)
     }));
-    if (!textOverride) setNewJournalText("");
   };
 
   // Buy item coin test logic
@@ -1948,9 +2512,14 @@ export default function App() {
                 stats: { ...s.character.stats, [statKey]: prevVal + 1 }
               },
               journals: [{
-                id: Date.now().toString(),
-                text: `[스탯 증가] XP 10 소모하여 ${statName} 스탯이 ${prevVal}에서 ${prevVal + 1}로 증가했습니다. 10일간의 수련 시간이 경과하여 제 ${nextDay}일 제 1워치가 되었습니다.`,
-                date: new Date().toLocaleString()
+                id: (Date.now() + Math.random()).toString(),
+                text: getThematicLogText("stat_up", { statName, prevVal }),
+                date: new Date().toLocaleString(),
+                day: nextDay,
+                watch: 1,
+                pinned: false,
+                isThematic: true,
+                systemLog: `[스탯 증가] XP 10 소모하여 ${statName} 스탯이 ${prevVal}에서 ${prevVal + 1}로 증가했습니다.`
               }, ...s.journals]
             };
           })}>+</button>
@@ -2964,7 +3533,7 @@ export default function App() {
                           </div>
                           {TALENT_DESCRIPTIONS[t] && (
                             <div style={{ fontSize: "0.75rem", color: "#666", marginTop: "2px", lineHeight: "1.3" }}>
-                              {TALENT_DESCRIPTIONS[t]}
+                              {renderTextWithRules(TALENT_DESCRIPTIONS[t], showRule)}
                             </div>
                           )}
                         </div>
@@ -2975,33 +3544,89 @@ export default function App() {
                     </div>
 
                     {/* Spellbook section */}
-                    <div className="book-page-header" style={{ fontSize: "1.2rem", marginTop: "15px", marginBottom: "10px" }}>
-                      <span>Spellbook (주문첩)</span>
-                    </div>
-                    <div style={{ maxHeight: "160px", overflowY: "auto", fontSize: "0.85rem" }}>
-                      {(state.character.spellbook || []).map((spell, idx) => (
-                        <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px dashed rgba(42,37,33,0.15)", padding: "3px 0" }}>
-                          <span style={{ color: "#6b46c1", fontWeight: "bold" }}>⚡ {spell}</span>
-                          <button 
-                            className="delete-btn" 
-                            style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }}
-                            onClick={() => {
-                              if (confirm(`주문첩에서 [${spell}] 주문을 영구히 삭제하시겠습니까?`)) {
-                                updateState(s => ({ 
-                                  ...s, 
-                                  character: { 
-                                    ...s.character, 
-                                    spellbook: (s.character.spellbook || []).filter((_, i) => i !== idx) 
-                                  } 
-                                }));
-                              }
-                            }}
-                          >&times;</button>
-                        </div>
-                      ))}
-                      {(state.character.spellbook || []).length === 0 && (
-                        <p style={{ color: "var(--text-muted)", fontStyle: "italic" }}>기록된 비문 마법 주문이 없습니다.</p>
-                      )}
+                    <div className="grimoire-spellbook-container" style={{
+                      background: "antiquewhite",
+                      border: "2px solid #8b5a2b",
+                      padding: "15px",
+                      borderRadius: "5px",
+                      boxShadow: "inset 0 0 10px rgba(0,0,0,0.1), 0 2px 5px rgba(0,0,0,0.2)",
+                      color: "#2a2521",
+                      marginTop: "15px"
+                    }}>
+                      <div className="book-page-header" style={{ 
+                        fontSize: "1.1rem", 
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        borderBottom: "2px solid #8b5a2b",
+                        paddingBottom: "5px",
+                        marginBottom: "10px",
+                        color: "#4a121a",
+                        fontFamily: "Georgia, serif"
+                      }}>
+                        📜 Grimoire (비문 마도서)
+                      </div>
+                      <div style={{ maxHeight: "160px", overflowY: "auto" }}>
+                        {(state.character.spellbook || []).map((spell, idx) => {
+                          const parts = spell.split(":");
+                          const namePart = parts[0];
+                          const effectPart = parts[1] || "";
+                          
+                          return (
+                            <div key={idx} style={{ 
+                              borderBottom: "1px dashed rgba(139,90,43,0.3)", 
+                              padding: "6px 0", 
+                              display: "flex", 
+                              flexDirection: "column",
+                              fontSize: "0.82rem"
+                            }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <strong style={{ color: "#3b1e08" }}>⚡ {namePart}</strong>
+                                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                  <button 
+                                    className="btn-medieval-small"
+                                    style={{ 
+                                      fontSize: "0.68rem", 
+                                      padding: "2px 5px", 
+                                      background: "#4a121a", 
+                                      color: "antiquewhite", 
+                                      border: "1px solid #8b5a2b",
+                                      borderRadius: "3px" 
+                                    }}
+                                    onClick={() => prepareSpellCast(spell)}
+                                  >
+                                    시전
+                                  </button>
+                                  <button 
+                                    className="delete-btn" 
+                                    style={{ background: "transparent", border: "none", cursor: "pointer", color: "#666", fontSize: "1.1rem", padding: 0 }}
+                                    onClick={() => {
+                                      if (confirm(`주문첩에서 [${spell}] 주문을 영구히 삭제하시겠습니까?`)) {
+                                        updateState(s => ({ 
+                                          ...s, 
+                                          character: { 
+                                            ...s.character, 
+                                            spellbook: (s.character.spellbook || []).filter((_, i) => i !== idx) 
+                                          } 
+                                        }));
+                                      }
+                                    }}
+                                  >
+                                    &times;
+                                  </button>
+                                </div>
+                              </div>
+                              {effectPart && (
+                                <div style={{ fontSize: "0.72rem", color: "#555", marginTop: "3px", fontStyle: "italic", paddingLeft: "12px" }}>
+                                  {effectPart}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                        {(state.character.spellbook || []).length === 0 && (
+                          <p style={{ color: "#777", fontStyle: "italic", fontSize: "0.8rem", textAlign: "center", margin: "10px 0" }}>기록된 비문 마법 주문이 없습니다.</p>
+                        )}
+                      </div>
                     </div>
 
                   </div>
@@ -3020,21 +3645,112 @@ export default function App() {
                           const name = prompt("친구 이름을 적으세요:");
                           const info = prompt("설명을 적으세요:");
                           if (name && info) {
-                            updateState(s => ({ ...s, character: { ...s.character, friends: [...s.character.friends, { name, info }] } }));
+                            updateState(s => ({ ...s, character: { ...s.character, friends: [...s.character.friends, { name, info, relationship: 'Neutral', memoryLogs: [] }] } }));
                           }
                         }}
                       >+</button>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "160px", overflowY: "auto", fontSize: "0.8rem" }}>
-                      {state.character.friends.map((f, i) => (
-                        <div key={i} style={{ borderBottom: "1px dashed rgba(0,0,0,0.1)", paddingBottom: "4px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <strong>{f.name}</strong>
-                            <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, friends: s.character.friends.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "260px", overflowY: "auto", fontSize: "0.8rem" }}>
+                      {state.character.friends.map((f, i) => {
+                        const isExpanded = expandedFriendIdx === i;
+                        return (
+                          <div key={i} style={{ borderBottom: "1px dashed rgba(0,0,0,0.15)", paddingBottom: "6px", paddingTop: "4px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "3px" }} onClick={() => setExpandedFriendIdx(isExpanded ? null : i)}>
+                                <span style={{ fontSize: "0.65rem", color: "var(--color-gold)" }}>{isExpanded ? "▼" : "▶"}</span>
+                                <strong>{f.name}</strong>
+                              </div>
+                              <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                                <select
+                                  value={f.relationship || "Neutral"}
+                                  onChange={(e) => {
+                                    const newRel = e.target.value as any;
+                                    updateState(s => {
+                                      const newFriends = [...s.character.friends];
+                                      newFriends[i] = { ...newFriends[i], relationship: newRel };
+                                      return { ...s, character: { ...s.character, friends: newFriends } };
+                                    });
+                                  }}
+                                  style={{
+                                    fontSize: "0.68rem",
+                                    background: "rgba(0,0,0,0.3)",
+                                    color: getRelationshipColor(f.relationship || "Neutral"),
+                                    border: `1px solid ${getRelationshipColor(f.relationship || "Neutral")}`,
+                                    borderRadius: "3px",
+                                    padding: "0 2px",
+                                    cursor: "pointer",
+                                    height: "18px"
+                                  }}
+                                >
+                                  <option value="Devoted" style={{ background: "#222", color: "#85bb65" }}>헌신적</option>
+                                  <option value="Friendly" style={{ background: "#222", color: "#4caf50" }}>우호적</option>
+                                  <option value="Neutral" style={{ background: "#222", color: "#bbb" }}>중립적</option>
+                                  <option value="Wary" style={{ background: "#222", color: "#ff9800" }}>경계함</option>
+                                  <option value="Hostile" style={{ background: "#222", color: "#f44336" }}>적대적</option>
+                                </select>
+                                <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, friends: s.character.friends.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                              </div>
+                            </div>
+                            <div style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem", paddingLeft: "10px", marginTop: "2px" }}>{f.info}</div>
+                            
+                            {isExpanded && (
+                              <div style={{ marginLeft: "10px", marginTop: "6px", borderLeft: "1px solid rgba(255, 215, 0, 0.2)", background: "rgba(0,0,0,0.15)", padding: "5px 8px", borderRadius: "3px" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                                  <span style={{ fontSize: "0.7rem", color: "var(--color-gold)", fontWeight: "bold" }}>기억의 단편 (Memory Logs)</span>
+                                  <button
+                                    className="btn-medieval-small"
+                                    style={{ fontSize: "0.6rem", padding: "0 3px", height: "16px" }}
+                                    onClick={() => {
+                                      const log = prompt("기록할 기억/사건을 작성하세요:");
+                                      if (log) {
+                                        updateState(s => {
+                                          const newFriends = [...s.character.friends];
+                                          const logs = Array.isArray(newFriends[i].memoryLogs) ? [...newFriends[i].memoryLogs!] : [];
+                                          newFriends[i] = { ...newFriends[i], memoryLogs: [...logs, log] };
+                                          return { ...s, character: { ...s.character, friends: newFriends } };
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    + 추가
+                                  </button>
+                                </div>
+                                {(!f.memoryLogs || f.memoryLogs.length === 0) ? (
+                                  <div style={{ fontSize: "0.68rem", color: "#666", fontStyle: "italic" }}>기록이 없습니다.</div>
+                                ) : (
+                                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", maxHeight: "80px", overflowY: "auto" }}>
+                                    {f.memoryLogs.map((log, lIdx) => (
+                                      <div key={lIdx} style={{ fontSize: "0.7rem", color: "#ccc", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                        <span>&bull; {log}</span>
+                                        <button
+                                          style={{ background: "transparent", border: "none", color: "#555", cursor: "pointer", fontSize: "0.7rem" }}
+                                          onClick={() => {
+                                            if (confirm("기록을 삭제할까요?")) {
+                                              updateState(s => {
+                                                const newFriends = [...s.character.friends];
+                                                newFriends[i] = {
+                                                  ...newFriends[i],
+                                                  memoryLogs: newFriends[i].memoryLogs?.filter((_, idx) => idx !== lIdx)
+                                                };
+                                                return { ...s, character: { ...s.character, friends: newFriends } };
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          &times;
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
-                          <span style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem" }}>{f.info}</span>
-                        </div>
-                      ))}
+                        );
+                      })}
+                      {state.character.friends.length === 0 && (
+                        <p style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: "0.75rem", margin: "10px 0" }}>등록된 인연이 없습니다.</p>
+                      )}
                     </div>
                   </div>
 
@@ -3048,21 +3764,112 @@ export default function App() {
                           const name = prompt("원수 이름을 적으세요:");
                           const info = prompt("설명을 적으세요:");
                           if (name && info) {
-                            updateState(s => ({ ...s, character: { ...s.character, foes: [...s.character.foes, { name, info }] } }));
+                            updateState(s => ({ ...s, character: { ...s.character, foes: [...s.character.foes, { name, info, relationship: 'Neutral', memoryLogs: [] }] } }));
                           }
                         }}
                       >+</button>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "160px", overflowY: "auto", fontSize: "0.8rem" }}>
-                      {state.character.foes.map((f, i) => (
-                        <div key={i} style={{ borderBottom: "1px dashed rgba(0,0,0,0.1)", paddingBottom: "4px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <strong style={{ color: "var(--color-crimson)" }}>{f.name}</strong>
-                            <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, foes: s.character.foes.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "260px", overflowY: "auto", fontSize: "0.8rem" }}>
+                      {state.character.foes.map((f, i) => {
+                        const isExpanded = expandedFoeIdx === i;
+                        return (
+                          <div key={i} style={{ borderBottom: "1px dashed rgba(220,53,69,0.15)", paddingBottom: "6px", paddingTop: "4px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "3px" }} onClick={() => setExpandedFoeIdx(isExpanded ? null : i)}>
+                                <span style={{ fontSize: "0.65rem", color: "var(--color-crimson)" }}>{isExpanded ? "▼" : "▶"}</span>
+                                <strong style={{ color: "var(--color-crimson)" }}>{f.name}</strong>
+                              </div>
+                              <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                                <select
+                                  value={f.relationship || "Neutral"}
+                                  onChange={(e) => {
+                                    const newRel = e.target.value as any;
+                                    updateState(s => {
+                                      const newFoes = [...s.character.foes];
+                                      newFoes[i] = { ...newFoes[i], relationship: newRel };
+                                      return { ...s, character: { ...s.character, foes: newFoes } };
+                                    });
+                                  }}
+                                  style={{
+                                    fontSize: "0.68rem",
+                                    background: "rgba(0,0,0,0.3)",
+                                    color: getRelationshipColor(f.relationship || "Neutral"),
+                                    border: `1px solid ${getRelationshipColor(f.relationship || "Neutral")}`,
+                                    borderRadius: "3px",
+                                    padding: "0 2px",
+                                    cursor: "pointer",
+                                    height: "18px"
+                                  }}
+                                >
+                                  <option value="Devoted" style={{ background: "#222", color: "#85bb65" }}>헌신적</option>
+                                  <option value="Friendly" style={{ background: "#222", color: "#4caf50" }}>우호적</option>
+                                  <option value="Neutral" style={{ background: "#222", color: "#bbb" }}>중립적</option>
+                                  <option value="Wary" style={{ background: "#222", color: "#ff9800" }}>경계함</option>
+                                  <option value="Hostile" style={{ background: "#222", color: "#f44336" }}>적대적</option>
+                                </select>
+                                <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, foes: s.character.foes.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                              </div>
+                            </div>
+                            <div style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem", paddingLeft: "10px", marginTop: "2px" }}>{f.info}</div>
+                            
+                            {isExpanded && (
+                              <div style={{ marginLeft: "10px", marginTop: "6px", borderLeft: "1px solid rgba(220, 53, 69, 0.2)", background: "rgba(0,0,0,0.15)", padding: "5px 8px", borderRadius: "3px" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                                  <span style={{ fontSize: "0.7rem", color: "var(--color-crimson)", fontWeight: "bold" }}>악연의 역사 (Memory Logs)</span>
+                                  <button
+                                    className="btn-medieval-small danger"
+                                    style={{ fontSize: "0.6rem", padding: "0 3px", height: "16px" }}
+                                    onClick={() => {
+                                      const log = prompt("기록할 원수와의 사건을 작성하세요:");
+                                      if (log) {
+                                        updateState(s => {
+                                          const newFoes = [...s.character.foes];
+                                          const logs = Array.isArray(newFoes[i].memoryLogs) ? [...newFoes[i].memoryLogs!] : [];
+                                          newFoes[i] = { ...newFoes[i], memoryLogs: [...logs, log] };
+                                          return { ...s, character: { ...s.character, foes: newFoes } };
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    + 추가
+                                  </button>
+                                </div>
+                                {(!f.memoryLogs || f.memoryLogs.length === 0) ? (
+                                  <div style={{ fontSize: "0.68rem", color: "#666", fontStyle: "italic" }}>기록이 없습니다.</div>
+                                ) : (
+                                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", maxHeight: "80px", overflowY: "auto" }}>
+                                    {f.memoryLogs.map((log, lIdx) => (
+                                      <div key={lIdx} style={{ fontSize: "0.7rem", color: "#ccc", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                        <span>&bull; {log}</span>
+                                        <button
+                                          style={{ background: "transparent", border: "none", color: "#555", cursor: "pointer", fontSize: "0.7rem" }}
+                                          onClick={() => {
+                                            if (confirm("기록을 삭제할까요?")) {
+                                              updateState(s => {
+                                                const newFoes = [...s.character.foes];
+                                                newFoes[i] = {
+                                                  ...newFoes[i],
+                                                  memoryLogs: newFoes[i].memoryLogs?.filter((_, idx) => idx !== lIdx)
+                                                };
+                                                return { ...s, character: { ...s.character, foes: newFoes } };
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          &times;
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
-                          <span style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem" }}>{f.info}</span>
-                        </div>
-                      ))}
+                        );
+                      })}
+                      {state.character.foes.length === 0 && (
+                        <p style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: "0.75rem", margin: "10px 0" }}>등록된 원수가 없습니다.</p>
+                      )}
                     </div>
                   </div>
 
@@ -3086,24 +3893,153 @@ export default function App() {
                         >+</button>
                       </div>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "160px", overflowY: "auto", fontSize: "0.8rem" }}>
-                      {(state.character.hirelings || []).map((h, i) => (
-                        <div key={i} style={{ borderBottom: "1px dashed rgba(0,0,0,0.1)", paddingBottom: "4px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <strong style={{ color: "var(--color-gold)" }}>{h.name}</strong>
-                            <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
-                              <button 
-                                className="btn-medieval-small" 
-                                style={{ fontSize: "0.65rem", padding: "1px 4px", background: "transparent", color: "var(--color-gold)", border: "1px solid var(--color-gold)" }}
-                                onClick={() => payWeeklyHireling(i)}
-                                title="주간 급여 Coins 판정"
-                              >급여판정</button>
-                              <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, hirelings: s.character.hirelings.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "260px", overflowY: "auto", fontSize: "0.8rem" }}>
+                      {(state.character.hirelings || []).map((h, i) => {
+                        const isExpanded = expandedHirelingIdx === i;
+                        const loyaltyVal = typeof h.loyalty === 'number' ? h.loyalty : 5;
+                        const maxW = typeof h.maxWounds === 'number' ? h.maxWounds : 2;
+                        const wTaken = typeof h.woundsTaken === 'number' ? h.woundsTaken : 0;
+                        
+                        return (
+                          <div key={i} style={{ borderBottom: "1px dashed rgba(212,175,55,0.2)", paddingBottom: "6px", paddingTop: "4px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "3px" }} onClick={() => setExpandedHirelingIdx(isExpanded ? null : i)}>
+                                <span style={{ fontSize: "0.65rem", color: "var(--color-gold)" }}>{isExpanded ? "▼" : "▶"}</span>
+                                <strong style={{ color: "var(--color-gold)" }}>{h.name}</strong>
+                              </div>
+                              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "0.7rem", color: h.paidThisWeek ? "#85bb65" : "#ff9800", cursor: "pointer", userSelect: "none" }}>
+                                  <input 
+                                    type="checkbox"
+                                    checked={!!h.paidThisWeek}
+                                    onChange={(e) => {
+                                      const checked = e.target.checked;
+                                      updateState(s => {
+                                        const newH = [...s.character.hirelings];
+                                        newH[i] = { ...newH[i], paidThisWeek: checked };
+                                        return { ...s, character: { ...s.character, hirelings: newH } };
+                                      });
+                                    }}
+                                    style={{ margin: 0 }}
+                                  />
+                                  급여지급
+                                </label>
+                                <button 
+                                  className="btn-medieval-small" 
+                                  style={{ fontSize: "0.62rem", padding: "1px 3px", background: "transparent", color: "var(--color-gold)", border: "1px solid var(--color-gold)", height: "18px" }}
+                                  onClick={() => payWeeklyHireling(i)}
+                                  title="주간 급여 Coins 판정"
+                                >급여판정</button>
+                                <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, hirelings: s.character.hirelings.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                              </div>
                             </div>
+                            
+                            <div style={{ display: "flex", gap: "10px", fontSize: "0.72rem", color: "#bbb", paddingLeft: "10px", marginTop: "2px", alignItems: "center" }}>
+                              <span style={{ fontStyle: "italic", color: "var(--text-muted)", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{h.info}</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+                                <span style={{ color: "#888", fontSize: "0.65rem" }}>부상:</span>
+                                {Array.from({ length: maxW }).map((_, wIdx) => {
+                                  const isWounded = wIdx < wTaken;
+                                  return (
+                                    <span
+                                      key={wIdx}
+                                      onClick={() => {
+                                        updateState(s => {
+                                          const newH = [...s.character.hirelings];
+                                          newH[i] = { ...newH[i], woundsTaken: isWounded ? wIdx : wIdx + 1 };
+                                          return { ...s, character: { ...s.character, hirelings: newH } };
+                                        });
+                                      }}
+                                      style={{
+                                        cursor: "pointer",
+                                        fontSize: "0.75rem",
+                                        userSelect: "none"
+                                      }}
+                                      title={isWounded ? "부상 치료" : "부상 추가"}
+                                    >
+                                      {isWounded ? "❤️" : "🖤"}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                              <span style={{ color: "var(--color-gold)", fontSize: "0.68rem" }}>충성도: {loyaltyVal}</span>
+                            </div>
+
+                            {isExpanded && (
+                              <div style={{ marginLeft: "10px", marginTop: "6px", borderLeft: "1px solid rgba(255, 215, 0, 0.2)", background: "rgba(0,0,0,0.15)", padding: "5px 8px", borderRadius: "3px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                                  <span style={{ fontSize: "0.68rem", color: "#888", whiteSpace: "nowrap" }}>충성도 조정:</span>
+                                  <input 
+                                    type="range"
+                                    min="0"
+                                    max="10"
+                                    value={loyaltyVal}
+                                    onChange={(e) => {
+                                      const val = parseInt(e.target.value);
+                                      updateState(s => {
+                                        const newH = [...s.character.hirelings];
+                                        newH[i] = { ...newH[i], loyalty: val };
+                                        return { ...s, character: { ...s.character, hirelings: newH } };
+                                      });
+                                    }}
+                                    style={{ flex: 1, height: "4px", background: "#444", outline: "none", cursor: "pointer" }}
+                                  />
+                                  <span style={{ fontSize: "0.68rem", color: "var(--color-gold)", width: "15px", textAlign: "right" }}>{loyaltyVal}</span>
+                                </div>
+
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "5px", marginBottom: "4px" }}>
+                                  <span style={{ fontSize: "0.7rem", color: "var(--color-gold)", fontWeight: "bold" }}>용병 활동 및 계약 (Memory Logs)</span>
+                                  <button
+                                    className="btn-medieval-small"
+                                    style={{ fontSize: "0.6rem", padding: "0 3px", height: "16px" }}
+                                    onClick={() => {
+                                      const log = prompt("기록할 용병의 계약/전투 실적 등을 입력하세요:");
+                                      if (log) {
+                                        updateState(s => {
+                                          const newH = [...s.character.hirelings];
+                                          const logs = Array.isArray(newH[i].memoryLogs) ? [...newH[i].memoryLogs!] : [];
+                                          newH[i] = { ...newH[i], memoryLogs: [...logs, log] };
+                                          return { ...s, character: { ...s.character, hirelings: newH } };
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    + 추가
+                                  </button>
+                                </div>
+                                {(!h.memoryLogs || h.memoryLogs.length === 0) ? (
+                                  <div style={{ fontSize: "0.68rem", color: "#666", fontStyle: "italic" }}>기록된 활동이 없습니다.</div>
+                                ) : (
+                                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", maxHeight: "80px", overflowY: "auto" }}>
+                                    {h.memoryLogs.map((log, lIdx) => (
+                                      <div key={lIdx} style={{ fontSize: "0.7rem", color: "#ccc", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                        <span>&bull; {log}</span>
+                                        <button
+                                          style={{ background: "transparent", border: "none", color: "#555", cursor: "pointer", fontSize: "0.7rem" }}
+                                          onClick={() => {
+                                            if (confirm("기록을 삭제할까요?")) {
+                                              updateState(s => {
+                                                const newH = [...s.character.hirelings];
+                                                newH[i] = {
+                                                  ...newH[i],
+                                                  memoryLogs: newH[i].memoryLogs?.filter((_, idx) => idx !== lIdx)
+                                                };
+                                                return { ...s, character: { ...s.character, hirelings: newH } };
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          &times;
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
-                          <span style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem" }}>{h.info}</span>
-                        </div>
-                      ))}
+                        );
+                      })}
                       {(!state.character.hirelings || state.character.hirelings.length === 0) && (
                         <p style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: "0.75rem", margin: "10px 0" }}>고용된 용병이 없습니다 (최대 {state.character.stats.cups}명 가능).</p>
                       )}
@@ -3242,9 +4178,14 @@ export default function App() {
                                               unlockedTalents: [...s.character.unlockedTalents, t]
                                             },
                                             journals: [{
-                                              id: Date.now().toString(),
-                                              text: `[재능 해금] XP ${cost} 소모하여 재능 '${t}' 연마. ${cost}일간의 훈련 시간이 경과하여 제 ${nextDay}일 제 1워치가 되었습니다.`,
-                                              date: new Date().toLocaleString()
+                                              id: (Date.now() + Math.random()).toString(),
+                                              text: getThematicLogText("talent_unlock", { talentName: t }),
+                                              date: new Date().toLocaleString(),
+                                              day: nextDay,
+                                              watch: 1,
+                                              pinned: false,
+                                              isThematic: true,
+                                              systemLog: `[재능 해금] XP ${cost} 소모하여 재능 '${t}' 연마. ${cost}일간의 훈련 시간이 경과하여 제 ${nextDay}일 제 1워치가 되었습니다.`
                                             }, ...s.journals]
                                           };
                                         });
@@ -3253,7 +4194,7 @@ export default function App() {
                                   </div>
                                   {TALENT_DESCRIPTIONS[t] && (
                                     <div style={{ fontSize: "0.75rem", color: "#aaa", marginTop: "3px", lineHeight: "1.3" }}>
-                                      {TALENT_DESCRIPTIONS[t]}
+                                      {renderTextWithRules(TALENT_DESCRIPTIONS[t], showRule)}
                                     </div>
                                   )}
                                 </div>
@@ -3311,6 +4252,9 @@ export default function App() {
                           const purpose = prompt("이 카드를 제출하는 목적/행동을 간단히 적으세요:");
                           if (purpose) playCardFromHand(idx, purpose);
                         }}>행동/판정에 내기</button>
+                        <button className="btn-card-small gold-btn" onClick={() => {
+                          playCardAsPlayerInitiative(idx);
+                        }}>선제권으로 제시</button>
                         <button className="btn-card-small toggle" onClick={() => updateState(s => {
                           const nextHand = [...s.hand];
                           nextHand[idx].reversed = !nextHand[idx].reversed;
@@ -3782,37 +4726,13 @@ export default function App() {
               
               <div className="grid-map-board" style={{ marginTop: "1rem" }}>
                 {state.mapGrid.map((cell, idx) => (
-                  <div key={idx} className="map-grid-cell" onClick={() => {
-                    if (cell.card) {
-                      // Toggle description
-                      const nextDesc = prompt("이 격자 구역에 관한 스토리 묘사/노트를 저장합니다:", cell.description || "");
-                      updateState(s => {
-                        const nextGrid = [...s.mapGrid];
-                        nextGrid[idx].description = nextDesc || "";
-                        return { ...s, mapGrid: nextGrid };
-                      });
-                      return;
-                    }
-
-                    // Draw card from Referee deck to lay down terrain
-                    drawRefereeCard((card) => {
-                      // Map major to terrain
-                      const index = MAJORS.filter(m => m !== "0").indexOf(card.card);
-                      const terrainList = state.mapType === "wilderness" ? MAP_WILDERNESS : state.mapType === "dungeon" ? MAP_DUNGEON : MAP_SETTLEMENT;
-                      const terrain = terrainList[index] || "미지의 구역";
-
-                      updateState(s => {
-                        const nextGrid = [...s.mapGrid];
-                        nextGrid[idx] = {
-                          ...cell,
-                          card,
-                          type: s.mapType,
-                          description: terrain
-                        };
-                        return { ...s, mapGrid: nextGrid };
-                      });
-                    });
-                  }}>
+                  <div 
+                    key={idx} 
+                    className={`map-grid-cell ${selectedMapCellIdx === idx ? "selected" : ""}`} 
+                    onClick={() => {
+                      setSelectedMapCellIdx(idx);
+                    }}
+                  >
                     {cell.card ? (
                       <div className="revealed-map-cell">
                         <img 
@@ -3834,8 +4754,208 @@ export default function App() {
                 ))}
               </div>
               <p className="rules-helper-text" style={{ marginTop: "10px" }}>
-                * 빈 격자 칸을 클릭하면 레프리 덱(메이저 아르카나)에서 카드를 한 장씩 뽑아 지형이 즉석 생성 배치됩니다. 지도를 클릭해 구역 스토리를 메모할 수도 있습니다.
+                * 지도 격자 구역을 클릭하여 선택하면 아래에 세부 정보가 표시되며, 지형 탐색, 스토리 일지 기록 및 만난 인연/원수 확인이 가능합니다.
               </p>
+
+              {/* Selected Cell Detail Panel */}
+              {selectedMapCellIdx !== null && (() => {
+                const cell = state.mapGrid[selectedMapCellIdx];
+                if (!cell) return null;
+                
+                // Find matching journal entries (convert to 0-based for matching state)
+                const cellJournals = state.journals.filter(j => j.x === cell.x && j.y === cell.y);
+                
+                // Find NPCs met in this cell by checking text match
+                const npcNamesInCell = new Set<string>();
+                cellJournals.forEach(j => {
+                  const combinedText = `${j.text} ${j.systemLog || ""}`.toLowerCase();
+                  [...state.character.friends, ...state.character.foes, ...state.character.hirelings].forEach(npc => {
+                    if (npc.name && combinedText.includes(npc.name.toLowerCase())) {
+                      npcNamesInCell.add(npc.name);
+                    }
+                  });
+                });
+
+                return (
+                  <div style={{ marginTop: "20px", borderTop: "2px solid var(--color-gold)", paddingTop: "15px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                      <h4 className="gothic-sub" style={{ margin: 0, fontSize: "1.05rem", display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span>📍 구역 세부 정보: ({cell.x + 1}, {cell.y + 1})</span>
+                        {cell.card && (
+                          <span style={{ fontSize: "0.8rem", color: "var(--color-gold)" }}>
+                            [{getCardDisplayName(cell.card)}]
+                          </span>
+                        )}
+                      </h4>
+                      <div style={{ display: "flex", gap: "5px" }}>
+                        {!cell.card && (
+                          <button
+                            className="btn-medieval-small"
+                            onClick={() => {
+                              drawRefereeCard((card) => {
+                                const index = MAJORS.filter(m => m !== "0").indexOf(card.card);
+                                const terrainList = state.mapType === "wilderness" ? MAP_WILDERNESS : state.mapType === "dungeon" ? MAP_DUNGEON : MAP_SETTLEMENT;
+                                const terrain = terrainList[index] || "미지의 구역";
+
+                                updateState(s => {
+                                  const nextGrid = [...s.mapGrid];
+                                  nextGrid[selectedMapCellIdx] = {
+                                    ...cell,
+                                    card,
+                                    type: s.mapType,
+                                    description: terrain
+                                  };
+                                  return { ...s, mapGrid: nextGrid };
+                                });
+                              });
+                            }}
+                          >
+                            지형 탐색
+                          </button>
+                        )}
+                        <button
+                          className="btn-medieval-small"
+                          onClick={() => {
+                            const nextDesc = prompt("이 격자 구역에 관한 스토리 묘사/노트를 저장합니다:", cell.description || "");
+                            if (nextDesc !== null) {
+                              updateState(s => {
+                                const nextGrid = [...s.mapGrid];
+                                nextGrid[selectedMapCellIdx].description = nextDesc;
+                                return { ...s, mapGrid: nextGrid };
+                              });
+                            }
+                          }}
+                        >
+                          메모 편집
+                        </button>
+                        <button
+                          className="btn-medieval-small danger"
+                          onClick={() => setSelectedMapCellIdx(null)}
+                        >
+                          선택 해제
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ background: "rgba(0,0,0,0.25)", border: "1px solid #333", borderRadius: "4px", padding: "12px", fontSize: "0.85rem", lineHeight: "1.5" }}>
+                      <div style={{ marginBottom: "8px" }}>
+                        <span style={{ color: "#aaa" }}>지형 묘사:</span>{" "}
+                        <strong style={{ color: "var(--text-bright)" }}>
+                          {cell.description || (cell.card ? "묘사 없음" : "아직 탐색되지 않은 지역입니다.")}
+                        </strong>
+                      </div>
+
+                      {/* Synced Journals */}
+                      <div style={{ marginTop: "12px", borderTop: "1px dashed #444", paddingTop: "8px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                          <span style={{ color: "var(--color-gold)", fontWeight: "bold", fontSize: "0.8rem" }}>📖 이 구역의 탐험 일지 ({cellJournals.length})</span>
+                          <button
+                            className="btn-medieval-small"
+                            style={{ fontSize: "0.68rem", padding: "2px 5px", height: "22px" }}
+                            onClick={() => {
+                              const newLog = prompt("이 구역에 기록할 새 일지를 작성하세요:");
+                              if (newLog) {
+                                updateState(s => {
+                                  return {
+                                    ...s,
+                                    journals: [
+                                      {
+                                        id: (Date.now() + Math.random()).toString(),
+                                        text: newLog,
+                                        date: new Date().toLocaleString(),
+                                        day: s.day,
+                                        watch: s.watch,
+                                        x: cell.x,
+                                        y: cell.y,
+                                        pinned: false,
+                                        isThematic: false,
+                                        systemLog: newLog
+                                      },
+                                      ...s.journals
+                                    ]
+                                  };
+                                });
+                              }
+                            }}
+                          >
+                            + 새 일지 기록
+                          </button>
+                        </div>
+                        {cellJournals.length === 0 ? (
+                          <div style={{ fontSize: "0.75rem", color: "#666", fontStyle: "italic" }}>기록된 일지가 없습니다.</div>
+                        ) : (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "150px", overflowY: "auto" }}>
+                            {cellJournals.map(j => (
+                              <div key={j.id} style={{ borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "4px" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "#888" }}>
+                                  <span>제 {j.day || 1}일 {j.watch || 1}워치 ({j.date})</span>
+                                  <button
+                                    style={{ background: "transparent", border: "none", color: "#666", cursor: "pointer", padding: "0 3px" }}
+                                    onClick={() => {
+                                      if (confirm("이 일지를 삭제하시겠습니까?")) {
+                                        updateState(s => ({
+                                          ...s,
+                                          journals: s.journals.filter(x => x.id !== j.id)
+                                        }));
+                                      }
+                                    }}
+                                  >
+                                    &times;
+                                  </button>
+                                </div>
+                                <div style={{ fontSize: "0.8rem", color: "#ddd", marginTop: "2px" }}>
+                                  {j.text}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Synced NPCs */}
+                      <div style={{ marginTop: "12px", borderTop: "1px dashed #444", paddingTop: "8px" }}>
+                        <span style={{ color: "var(--color-gold)", fontWeight: "bold", fontSize: "0.8rem", display: "block", marginBottom: "6px" }}>
+                          👥 이 구역에서 조우한 인물 ({npcNamesInCell.size})
+                        </span>
+                        {npcNamesInCell.size === 0 ? (
+                          <div style={{ fontSize: "0.75rem", color: "#666", fontStyle: "italic" }}>기록에 언급된 NPC가 없습니다.</div>
+                        ) : (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                            {[...npcNamesInCell].map(name => {
+                              const isFriend = state.character.friends.some(f => f.name === name);
+                              const isFoe = state.character.foes.some(f => f.name === name);
+                              const isHireling = state.character.hirelings.some(h => h.name === name);
+                              
+                              let typeKo = "NPC";
+                              let color = "#bbb";
+                              if (isFriend) { typeKo = "친구"; color = "#4caf50"; }
+                              else if (isFoe) { typeKo = "원수"; color = "var(--color-crimson)"; }
+                              else if (isHireling) { typeKo = "용병"; color = "var(--color-gold)"; }
+
+                              return (
+                                <span
+                                  key={name}
+                                  style={{
+                                    fontSize: "0.75rem",
+                                    background: "rgba(0,0,0,0.3)",
+                                    border: `1px solid ${color}`,
+                                    color: "#eee",
+                                    padding: "2px 6px",
+                                    borderRadius: "3px"
+                                  }}
+                                >
+                                  {name} <span style={{ fontSize: "0.65rem", color }}>({typeKo})</span>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Adventure Events & Combat Tracker */}
@@ -3863,6 +4983,33 @@ export default function App() {
               {/* Combat Tracker */}
               <div className="combat-tracker-box" style={{ marginTop: "1.5rem" }}>
                 <h4>⚔️ 전투 관리자 (Round: {state.combatRound})</h4>
+                
+                {/* Player Initiative Status */}
+                <div className="player-initiative-status" style={{ 
+                  padding: "8px 12px", 
+                  background: "rgba(255, 215, 0, 0.05)", 
+                  border: "1px solid rgba(255, 215, 0, 0.15)", 
+                  borderRadius: "4px", 
+                  marginBottom: "12px", 
+                  display: "flex", 
+                  justifyContent: "space-between", 
+                  alignItems: "center",
+                  fontSize: "0.9rem" 
+                }}>
+                  <div>
+                    <strong>플레이어 선제권: </strong>
+                    {state.playerInitiativeCard ? (
+                      <span style={{ color: "var(--color-gold)", fontWeight: "bold" }}>
+                        {getCardDisplayName(state.playerInitiativeCard)}
+                      </span>
+                    ) : (
+                      <span style={{ color: "#888" }}>미정 (손패에서 제시하거나 덱에서 드로우)</span>
+                    )}
+                  </div>
+                  <button className="btn-medieval-small" onClick={drawPlayerInitiativeFromDeck}>
+                    선제권 덱에서 드로우
+                  </button>
+                </div>
                 
                 {/* Spawner */}
                 <div className="monster-spawner-row">
@@ -3960,8 +5107,8 @@ export default function App() {
 
                 {state.combatMonsters.length > 0 && (
                   <div style={{ display: "flex", gap: "10px", marginTop: "1rem" }}>
-                    <button className="btn-medieval flex-1" onClick={() => updateState(s => ({ ...s, combatRound: s.combatRound + 1 }))}>다음 라운드 시작</button>
-                    <button className="btn-medieval" onClick={() => updateState(s => ({ ...s, combatRound: 1, combatMonsters: [] }))}>전투 종료</button>
+                    <button className="btn-medieval flex-1" onClick={startNextRound}>다음 라운드 시작</button>
+                    <button className="btn-medieval" onClick={endCombat}>전투 종료</button>
                   </div>
                 )}
 
@@ -4092,41 +5239,185 @@ export default function App() {
 
         {/* TAB 5: JOURNAL */}
         {activeTab === "journal" && (
-          <div className="journal-layout">
-            <div className="card-panel gold-border">
-              <h3 className="gothic-sub">모험 기록 및 서사 일지</h3>
+          <div className="journal-layout" style={{ display: "flex", gap: "20px", width: "100%", alignItems: "flex-start" }}>
+            
+            {/* Left Column: Chronicle Editor & Daily Feed */}
+            <div className="card-panel gold-border" style={{ flex: 2, padding: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "10px", marginBottom: "15px" }}>
+                <h3 className="gothic-sub" style={{ margin: 0 }}>📜 모험 연대기 &amp; 서사 일지</h3>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button 
+                    className={`btn-medieval-small ${journalDisplayMode === "thematic" ? "gold-btn" : ""}`} 
+                    onClick={() => setJournalDisplayMode("thematic")}
+                  >
+                    여행 기록 모드
+                  </button>
+                  <button 
+                    className={`btn-medieval-small ${journalDisplayMode === "system" ? "gold-btn" : ""}`} 
+                    onClick={() => setJournalDisplayMode("system")}
+                  >
+                    시스템 디버그 모드
+                  </button>
+                </div>
+              </div>
+
               <p className="rules-helper-text">
-                이 란은 모험가가 행동한 타로 카드 기록이나 오라클 신탁, 몬스터 조우 결과 등을 적어두어 나만의 이야기 연대기를 만들어가는 필드입니다.
+                오늘의 사건, 계시, 검투 기록을 적어두어 나만의 이야기 연대기를 만들어가는 필드입니다. (룰북의 페이지 번호는 클릭 시 빠른 규칙 카드를 표시합니다.)
               </p>
 
-              <div className="journal-input-section" style={{ marginTop: "1rem" }}>
+              {/* Tag current coordinate if available */}
+              <div className="journal-input-section" style={{ marginTop: "1rem", position: "relative" }}>
                 <textarea 
                   className="journal-textarea" 
-                  placeholder="오늘 글롬의 여정에서 겪은 시련이나 이야기를 작성하십시오..." 
+                  style={{ width: "100%", height: "90px", padding: "10px", background: "rgba(0,0,0,0.3)", color: "#eee", border: "1px solid var(--border-color)", borderRadius: "4px", fontSize: "0.9rem" }}
+                  placeholder={selectedMapCellIdx !== null 
+                    ? `[위치: (${selectedMapCellIdx % 4}, ${Math.floor(selectedMapCellIdx / 4)})] 오늘의 황혼 속 모험 일지를 기록하십시오...`
+                    : "오늘의 황혼 속 모험 일지를 기록하십시오..."} 
                   value={newJournalText}
                   onChange={e => setNewJournalText(e.target.value)}
                 />
-                <button className="btn-medieval" onClick={() => addJournalEntry()}>일지에 기록 추가</button>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
+                  <span style={{ fontSize: "0.8rem", color: "var(--color-gold)" }}>
+                    {selectedMapCellIdx !== null ? (
+                      <span>📍 격자 좌표 <strong>({selectedMapCellIdx % 4}, {Math.floor(selectedMapCellIdx / 4)})</strong> 위치 연동 중</span>
+                    ) : (
+                      <span style={{ color: "#777" }}>📍 지도 탭에서 셀을 클릭하면 일지가 해당 좌표와 자동 연동됩니다.</span>
+                    )}
+                  </span>
+                  <button className="btn-medieval" onClick={() => addJournalEntry()}>일지에 기록 추가</button>
+                </div>
               </div>
 
+              {/* Grouped Chronicle Feed */}
               <div className="journal-history-list" style={{ marginTop: "2rem" }}>
-                <h4>일지 히스토리</h4>
-                {state.journals.map(j => (
-                  <div key={j.id} className="journal-history-card">
-                    <div className="flex-row justify-between align-center" style={{ borderBottom: "1px dashed #333", paddingBottom: "5px", marginBottom: "5px" }}>
-                      <span className="date">{j.date}</span>
-                      <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => {
-                        if (confirm("정말 이 일지 기록을 삭제하겠습니까?")) {
-                          updateState(s => ({
-                            ...s,
-                            journals: s.journals.filter(x => x.id !== j.id)
-                          }));
-                        }
-                      }}><Trash2 size={12} /></button>
-                    </div>
-                    <p style={{ whiteSpace: "pre-wrap", lineHeight: "1.7" }}>{j.text}</p>
-                  </div>
-                ))}
+                <h4 className="gothic-sub" style={{ fontSize: "1.1rem", borderBottom: "1px solid #333", paddingBottom: "5px" }}>연대기 기록 (Chronicle History)</h4>
+                
+                {state.journals.length === 0 ? (
+                  <p className="empty-text" style={{ fontStyle: "italic", textAlign: "center", color: "#666", marginTop: "20px" }}>기록된 모험 일지가 아직 존재하지 않습니다.</p>
+                ) : (() => {
+                  const groupJournalsByDayAndWatch = (entries: JournalEntry[]) => {
+                    const groups: Record<number, Record<number, JournalEntry[]>> = {};
+                    entries.forEach(j => {
+                      const d = j.day || 1;
+                      const w = j.watch || 1;
+                      if (!groups[d]) groups[d] = {};
+                      if (!groups[d][w]) groups[d][w] = [];
+                      groups[d][w].push(j);
+                    });
+                    return groups;
+                  };
+                  
+                  const grouped = groupJournalsByDayAndWatch(state.journals);
+                  const sortedDays = Object.keys(grouped).map(Number).sort((a, b) => b - a);
+                  
+                  return sortedDays.map(dayNum => {
+                    const dayGroup = grouped[dayNum];
+                    return (
+                      <div key={dayNum} className="chronicle-day-group" style={{ marginBottom: "20px", borderLeft: "2px solid var(--color-gold)", paddingLeft: "12px" }}>
+                        <h4 style={{ color: "var(--color-gold)", margin: "0 0 10px 0", fontSize: "1.15rem", fontFamily: "Cinzel, serif" }}>
+                          ⚔️ 제 {dayNum}일 (Day {dayNum})
+                        </h4>
+                        
+                        {Object.keys(dayGroup)
+                          .map(Number)
+                          .sort((a, b) => b - a)
+                          .map(watchNum => {
+                            const watchEntries = dayGroup[watchNum];
+                            const watchName = watchNum === 1 ? "제 1워치 (새벽 - Watch 1)" :
+                                              watchNum === 2 ? "제 2워치 (황혼 - Watch 2)" :
+                                              "제 3워치 (심야 - Watch 3)";
+                            
+                            return (
+                              <div key={watchNum} className="chronicle-watch-group" style={{ marginBottom: "10px" }}>
+                                <div style={{ fontSize: "0.8rem", color: "#888", fontWeight: "bold", borderBottom: "1px dashed rgba(255,255,255,0.08)", paddingBottom: "2px", marginBottom: "6px" }}>
+                                  ⏳ {watchName}
+                                </div>
+                                
+                                {watchEntries.map(j => (
+                                  <div key={j.id} className="journal-history-card" style={{ background: "rgba(0,0,0,0.15)", border: "1px solid rgba(255,255,255,0.03)", padding: "10px", borderRadius: "4px", marginBottom: "8px" }}>
+                                    <div className="flex-row justify-between align-center" style={{ borderBottom: "1px dashed rgba(255,255,255,0.06)", paddingBottom: "4px", marginBottom: "6px" }}>
+                                      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                                        <span className="date" style={{ fontSize: "0.75rem", color: "#666" }}>{j.date}</span>
+                                        {j.x !== null && j.y !== null && (
+                                          <span style={{ fontSize: "0.72rem", color: "var(--color-gold)", background: "rgba(255, 215, 0, 0.08)", padding: "1px 4px", borderRadius: "3px" }}>
+                                            📍 좌표 ({j.x}, {j.y})
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                        <button 
+                                          style={{ background: "transparent", border: "none", cursor: "pointer", color: j.pinned ? "var(--color-gold)" : "#555", fontSize: "0.95rem", padding: 0 }}
+                                          onClick={() => togglePinJournalEntry(j.id)}
+                                          title="연대기 박제 고정 (Pin to Chronicle)"
+                                        >
+                                          {j.pinned ? "★" : "☆"}
+                                        </button>
+                                        <button 
+                                          className="delete-btn" 
+                                          style={{ background: "transparent", border: "none", cursor: "pointer", color: "#888", padding: 0, fontSize: "1.1rem", lineHeight: "1" }} 
+                                          onClick={() => {
+                                            if (confirm("정말 이 일지 기록을 삭제하겠습니까?")) {
+                                              updateState(s => ({
+                                                ...s,
+                                                journals: s.journals.filter(x => x.id !== j.id)
+                                              }));
+                                            }
+                                          }}
+                                        >
+                                          &times;
+                                        </button>
+                                      </div>
+                                    </div>
+                                    
+                                    <p style={{ whiteSpace: "pre-wrap", lineHeight: "1.6", margin: 0, fontSize: "0.88rem", color: "#ddd" }}>
+                                      {journalDisplayMode === "thematic" 
+                                        ? renderTextWithRules(j.text, showRule) 
+                                        : renderTextWithRules(j.systemLog || j.text, showRule)}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })}
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+
+            {/* Right Column: Pinned Chronicle Summary Sidebar */}
+            <div className="card-panel gold-border hanging-scroll-box scroll-card" style={{ flex: 1, padding: "20px", background: "var(--color-card-bg)", borderColor: "var(--color-gold)", position: "sticky", top: "20px" }}>
+              <h4 className="gothic-sub" style={{ borderBottom: "2px solid var(--color-gold)", paddingBottom: "5px", color: "var(--color-gold)", marginTop: 0 }}>
+                📜 황혼의 대서사 (Chronicle)
+              </h4>
+              <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic", margin: "5px 0 15px 0" }}>
+                일지에서 고정(★)한 역사적 사건들이 서사 요약집을 형성하여 남습니다.
+              </p>
+
+              <div style={{ maxHeight: "450px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "5px" }}>
+                {state.journals.filter(j => j.pinned).length === 0 ? (
+                  <p style={{ fontStyle: "italic", fontSize: "0.75rem", color: "#555", textAlign: "center", margin: "20px 0" }}>
+                    아직 고정된 서사가 없습니다. 일지의 [☆]를 클릭해 박제하십시오.
+                  </p>
+                ) : (
+                  state.journals
+                    .filter(j => j.pinned)
+                    .sort((a, b) => (a.day || 1) - (b.day || 1) || (a.watch || 1) - (b.watch || 1)) // chronological order for story reading
+                    .map(j => (
+                      <div key={j.id} style={{ borderBottom: "1px dashed rgba(255, 215, 0, 0.15)", paddingBottom: "8px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--color-gold)", fontWeight: "bold", marginBottom: "3px" }}>
+                          <span>Day {j.day || 1} - Watch {j.watch || 1}</span>
+                          {j.x !== null && j.y !== null && (
+                            <span>📍 ({j.x}, {j.y})</span>
+                          )}
+                        </div>
+                        <p style={{ margin: 0, fontSize: "0.82rem", color: "#ccc", lineHeight: "1.5", fontStyle: "italic" }}>
+                          &ldquo;{j.text}&rdquo;
+                        </p>
+                      </div>
+                    ))
+                )}
               </div>
             </div>
           </div>
@@ -4283,6 +5574,28 @@ export default function App() {
               <button className="btn-medieval danger" onClick={() => setShowSessionXpWizard(false)}>
                 취소
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rulebook Reference Modal */}
+      {showRuleModal && (
+        <div className="modal-backdrop" onClick={() => setShowRuleModal(false)}>
+          <div className="modal-content-panel gold-border" style={{ maxWidth: "500px" }} onClick={(e) => e.stopPropagation()}>
+            <h3 className="gothic-sub" style={{ borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", marginBottom: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span>📖 {activeRuleTitle} {activeRulePage && `(p.${activeRulePage})`}</span>
+              <button 
+                className="delete-btn" 
+                style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "1.2rem" }}
+                onClick={() => setShowRuleModal(false)}
+              >&times;</button>
+            </h3>
+            <p style={{ color: "#ddd", fontSize: "0.9rem", lineHeight: "1.6", whiteSpace: "pre-wrap", margin: "10px 0" }}>
+              {activeRuleText}
+            </p>
+            <div style={{ textAlign: "right", marginTop: "20px" }}>
+              <button className="btn-medieval" onClick={() => setShowRuleModal(false)}>닫기</button>
             </div>
           </div>
         </div>
