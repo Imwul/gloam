@@ -465,6 +465,15 @@ const pruneJournals = (journals: JournalEntry[]): JournalEntry[] => {
   });
 };
 
+const getRandomCandidate = () => {
+  const idx = Math.floor(Math.random() * FOLK_ROAD.occupations.length);
+  return {
+    femaleName: FOLK_ROAD.femaleNames[idx] || "알 수 없음",
+    maleName: FOLK_ROAD.maleNames[idx] || "알 수 없음",
+    occupation: FOLK_ROAD.occupations[idx] || "일반인",
+    personality: FOLK_ROAD.personalities[idx] || "평범한"
+  };
+};
 
 const getCardIdentity = (card: Card): string => `${card.type}-${card.suit || ""}-${card.card}`;
 
@@ -2375,13 +2384,12 @@ export default function App() {
     }
 
     // 2. Generate Candidate NPC using FOLK_ROAD
-    // eslint-disable-next-line react-hooks/purity
-    const idx = Math.floor(Math.random() * FOLK_ROAD.occupations.length);
-    const candidateFemale = FOLK_ROAD.femaleNames[idx] || "알 수 없음";
-    const candidateMale = FOLK_ROAD.maleNames[idx] || "알 수 없음";
+    const candidate = getRandomCandidate();
+    const candidateFemale = candidate.femaleName;
+    const candidateMale = candidate.maleName;
     const candidateName = `${candidateFemale}/${candidateMale}`;
-    const candidateOccupation = FOLK_ROAD.occupations[idx] || "일반인";
-    const candidatePersonality = FOLK_ROAD.personalities[idx] || "평범한";
+    const candidateOccupation = candidate.occupation;
+    const candidatePersonality = candidate.personality;
 
     const confirmHire = confirm(
       `[용병 모집 성공!]\nCups 판정 결과: ${searchTotal}점 (성공)\n\n새로운 용병 후보를 발견했습니다!\n- 이름: ${candidateName}\n- 직업: ${candidateOccupation}\n- 성격: ${candidatePersonality}\n\n이 후보를 용병으로 고용하기 위해 고용 계약 판정(Coins Test)을 진행하시겠습니까?`
