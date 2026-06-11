@@ -3094,6 +3094,57 @@ textarea,
   color: var(--text-bright) !important;
 }
 
+.journal-subtabs {
+  border-bottom: 1px solid var(--border-color) !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px !important;
+  margin-bottom: 18px !important;
+  padding-bottom: 10px !important;
+}
+
+.journal-subtab {
+  align-items: stretch !important;
+  flex-direction: column !important;
+  gap: 1px !important;
+  justify-content: center !important;
+  min-height: 56px;
+  min-width: 0 !important;
+  overflow: hidden;
+  padding: 7px 8px !important;
+  text-align: center;
+  white-space: normal !important;
+}
+
+.journal-subtab-title,
+.journal-subtab-note {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.journal-subtab-title {
+  color: var(--text-bright);
+  font-family: var(--gothic);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.12;
+}
+
+.journal-subtab-note {
+  color: var(--text-muted);
+  font-family: var(--serif);
+  font-size: 0.72rem;
+  font-style: italic;
+  line-height: 1.08;
+}
+
+.journal-subtab.gold-btn .journal-subtab-note {
+  color: var(--text-normal);
+}
+
 @media(max-width: 900px) {
   .oracles-layout,
   .map-combat-layout,
@@ -3137,5 +3188,21 @@ textarea,
   .btn-card-small,
   .btn-counter-small {
     white-space: normal !important;
+  }
+
+  .journal-subtabs {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+
+  .journal-subtab {
+    min-height: 48px;
+    padding: 6px 10px !important;
+  }
+
+  .journal-subtab-title,
+  .journal-subtab-note {
+    overflow-wrap: normal;
+    word-break: keep-all;
   }
 }

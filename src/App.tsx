@@ -6650,27 +6650,30 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
           <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
             
             {/* Sub-tab selection bar */}
-            <div style={{ display: "flex", gap: "10px", marginBottom: "20px", borderBottom: "2px solid rgba(187, 153, 93, 0.3)", paddingBottom: "8px" }}>
+            <div className="journal-subtabs" style={{ display: "flex", gap: "10px", marginBottom: "20px", borderBottom: "2px solid rgba(187, 153, 93, 0.3)", paddingBottom: "8px" }}>
               <button
-                className={`btn-medieval-small ${journalSubView === "field" ? "gold-btn" : ""}`}
+                className={`btn-medieval-small journal-subtab ${journalSubView === "field" ? "gold-btn" : ""}`}
                 style={{ padding: "6px 14px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "5px" }}
                 onClick={() => setJournalSubView("field")}
               >
-                현장 일지 (Field Journal)
+                <span className="journal-subtab-title">현장 일지</span>
+                <span className="journal-subtab-note">Field Journal</span>
               </button>
               <button
-                className={`btn-medieval-small ${journalSubView === "chronicle" ? "gold-btn" : ""}`}
+                className={`btn-medieval-small journal-subtab ${journalSubView === "chronicle" ? "gold-btn" : ""}`}
                 style={{ padding: "6px 14px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "5px" }}
                 onClick={() => setJournalSubView("chronicle")}
               >
-                캐릭터 대서사 (Character Chronicle)
+                <span className="journal-subtab-title">캐릭터 대서사</span>
+                <span className="journal-subtab-note">Character Chronicle</span>
               </button>
               <button
-                className={`btn-medieval-small ${journalSubView === "retirement" ? "gold-btn" : ""}`}
+                className={`btn-medieval-small journal-subtab ${journalSubView === "retirement" ? "gold-btn" : ""}`}
                 style={{ padding: "6px 14px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "5px" }}
                 onClick={() => setJournalSubView("retirement")}
               >
-                은퇴 기록장 (Retirement / Epilogue)
+                <span className="journal-subtab-title">은퇴 기록장</span>
+                <span className="journal-subtab-note">Retirement / Epilogue</span>
               </button>
             </div>
 
