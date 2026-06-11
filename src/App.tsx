@@ -225,6 +225,29 @@ export interface GameState {
   arcaneSpellResult: { minorCard: Card; majorCard: Card; spellName: string; ruleSummary: string } | null;
   alchemicalBrewResult: { success: boolean; potionName: string; ingredient: string; total: number; card: Card } | null;
   playerInitiativeCard: Card | null;
+
+  // Transient UI states to persist
+  drawnOracleCard: Card | null;
+  oracleYesNo: string | null;
+  oracleAmount: string | null;
+  oracleActionSubject: { action: string; subject: string; card1: Card; card2: Card } | null;
+
+  testCurrentTotal: number;
+  testResolveSpent: number;
+  testStat: "cups" | "swords" | "coins" | "wands" | "none";
+  testMod: number;
+  testOppMonsterId: string;
+  testCustomOppPenalty: number;
+  testHelpStat: number;
+  testPurpose: string;
+  testDrawnCards: Card[];
+  testPushed: boolean;
+  testStatus: "idle" | "rolled" | "success" | "failed" | "great_success" | "great_failure";
+
+  selectedMapCellIdx: number | null;
+  carousingResult: { card: Card; text: string } | null;
+  folkNpcResult: { card: Card; femaleName: string; maleName: string; occupation: string; personality: string } | null;
+  magickItemResult: { card: Card; suit: string; name: string; text: string } | null;
 }
 
 const INITIAL_CHARACTER: Character = {
@@ -305,7 +328,29 @@ const INITIAL_STATE: GameState = {
   activeTest: null,
   arcaneSpellResult: null,
   alchemicalBrewResult: null,
-  playerInitiativeCard: null
+  playerInitiativeCard: null,
+
+  drawnOracleCard: null,
+  oracleYesNo: null,
+  oracleAmount: null,
+  oracleActionSubject: null,
+
+  testCurrentTotal: 0,
+  testResolveSpent: 0,
+  testStat: "none",
+  testMod: 0,
+  testOppMonsterId: "none",
+  testCustomOppPenalty: 0,
+  testHelpStat: 0,
+  testPurpose: "",
+  testDrawnCards: [],
+  testPushed: false,
+  testStatus: "idle",
+
+  selectedMapCellIdx: null,
+  carousingResult: null,
+  folkNpcResult: null,
+  magickItemResult: null
 };
 
 // =================================================================
@@ -404,6 +449,23 @@ const getTableCardKey = (card: Card): string => {
   return card.card;
 };
 
+const generateUniqueId = (): string => {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+};
+
+const pruneJournals = (journals: JournalEntry[]): JournalEntry[] => {
+  let unpinnedCount = 0;
+  return journals.filter(j => {
+    if (j.pinned) return true;
+    if (unpinnedCount < 50) {
+      unpinnedCount++;
+      return true;
+    }
+    return false;
+  });
+};
+
+
 const getCardIdentity = (card: Card): string => `${card.type}-${card.suit || ""}-${card.card}`;
 
 const appendUniqueCards = (cards: Card[], additions: Card[]): Card[] => {
@@ -489,9 +551,9 @@ const sanitizeGameState = (loaded: any): GameState => {
   const rawJournals = Array.isArray(loaded.journals) ? loaded.journals : [];
   
   const journals = rawJournals.map((j: any) => {
-    if (typeof j === 'string') return { id: (Date.now() + Math.random()).toString(), text: j, date: new Date().toLocaleString(), day: 1, watch: 1, x: null, y: null, pinned: false, isThematic: false, systemLog: j };
+    if (typeof j === 'string') return { id: generateUniqueId(), text: j, date: new Date().toLocaleString(), day: 1, watch: 1, x: null, y: null, pinned: false, isThematic: false, systemLog: j };
     return {
-      id: j.id || (Date.now() + Math.random()).toString(),
+      id: j.id || generateUniqueId(),
       text: j.text || '',
       date: j.date || new Date().toLocaleString(),
       day: typeof j.day === 'number' ? j.day : 1,
@@ -525,6 +587,28 @@ const sanitizeGameState = (loaded: any): GameState => {
     arcaneSpellResult: loaded.arcaneSpellResult !== undefined ? loaded.arcaneSpellResult : null,
     alchemicalBrewResult: loaded.alchemicalBrewResult !== undefined ? loaded.alchemicalBrewResult : null,
     playerInitiativeCard: loaded.playerInitiativeCard !== undefined ? loaded.playerInitiativeCard : null,
+
+    drawnOracleCard: loaded.drawnOracleCard !== undefined ? loaded.drawnOracleCard : null,
+    oracleYesNo: loaded.oracleYesNo !== undefined ? loaded.oracleYesNo : null,
+    oracleAmount: loaded.oracleAmount !== undefined ? loaded.oracleAmount : null,
+    oracleActionSubject: loaded.oracleActionSubject !== undefined ? loaded.oracleActionSubject : null,
+
+    testCurrentTotal: typeof loaded.testCurrentTotal === 'number' ? loaded.testCurrentTotal : 0,
+    testResolveSpent: typeof loaded.testResolveSpent === 'number' ? loaded.testResolveSpent : 0,
+    testStat: loaded.testStat !== undefined ? loaded.testStat : "none",
+    testMod: typeof loaded.testMod === 'number' ? loaded.testMod : 0,
+    testOppMonsterId: loaded.testOppMonsterId !== undefined ? loaded.testOppMonsterId : "none",
+    testCustomOppPenalty: typeof loaded.testCustomOppPenalty === 'number' ? loaded.testCustomOppPenalty : 0,
+    testHelpStat: typeof loaded.testHelpStat === 'number' ? loaded.testHelpStat : 0,
+    testPurpose: loaded.testPurpose !== undefined ? loaded.testPurpose : "",
+    testDrawnCards: Array.isArray(loaded.testDrawnCards) ? loaded.testDrawnCards : [],
+    testPushed: typeof loaded.testPushed === 'boolean' ? loaded.testPushed : false,
+    testStatus: loaded.testStatus !== undefined ? loaded.testStatus : "idle",
+
+    selectedMapCellIdx: loaded.selectedMapCellIdx !== undefined ? loaded.selectedMapCellIdx : null,
+    carousingResult: loaded.carousingResult !== undefined ? loaded.carousingResult : null,
+    folkNpcResult: loaded.folkNpcResult !== undefined ? loaded.folkNpcResult : null,
+    magickItemResult: loaded.magickItemResult !== undefined ? loaded.magickItemResult : null,
   };
 };
 
@@ -730,19 +814,46 @@ export default function App() {
   const [buyTestResult, setBuyTestResult] = useState<{ success: boolean; total: number; card: Card; statUsed: number } | null>(null);
 
   // Oracle drawn states
-  const [drawnOracleCard, setDrawnOracleCard] = useState<Card | null>(null);
-  const [oracleYesNo, setOracleYesNo] = useState<string | null>(null);
-  const [oracleAmount, setOracleAmount] = useState<string | null>(null);
-  const [oracleActionSubject, setOracleActionSubject] = useState<{ action: string; subject: string; card1: Card; card2: Card } | null>(null);
+  const drawnOracleCard = state?.drawnOracleCard ?? null;
+  const setDrawnOracleCard = (val: Card | null | ((prev: Card | null) => Card | null)) => {
+    updateState(s => ({ ...s, drawnOracleCard: typeof val === "function" ? val(s.drawnOracleCard) : val }));
+  };
+
+  const oracleYesNo = state?.oracleYesNo ?? null;
+  const setOracleYesNo = (val: string | null | ((prev: string | null) => string | null)) => {
+    updateState(s => ({ ...s, oracleYesNo: typeof val === "function" ? val(s.oracleYesNo) : val }));
+  };
+
+  const oracleAmount = state?.oracleAmount ?? null;
+  const setOracleAmount = (val: string | null | ((prev: string | null) => string | null)) => {
+    updateState(s => ({ ...s, oracleAmount: typeof val === "function" ? val(s.oracleAmount) : val }));
+  };
+
+  const oracleActionSubject = state?.oracleActionSubject ?? null;
+  const setOracleActionSubject = (val: any | null | ((prev: any | null) => any | null)) => {
+    updateState(s => ({ ...s, oracleActionSubject: typeof val === "function" ? val(s.oracleActionSubject) : val }));
+  };
 
   // Combat States
   const [selectedMonsterToSpawn, setSelectedMonsterToSpawn] = useState<number>(1);
 
   // Downtime & Special Tables States
-  const [carousingResult, setCarousingResult] = useState<{ card: Card; text: string } | null>(null);
-  const [folkNpcResult, setFolkNpcResult] = useState<{ card: Card; femaleName: string; maleName: string; occupation: string; personality: string } | null>(null);
+  const carousingResult = state?.carousingResult ?? null;
+  const setCarousingResult = (val: any | null | ((prev: any | null) => any | null)) => {
+    updateState(s => ({ ...s, carousingResult: typeof val === "function" ? val(s.carousingResult) : val }));
+  };
+
+  const folkNpcResult = state?.folkNpcResult ?? null;
+  const setFolkNpcResult = (val: any | null | ((prev: any | null) => any | null)) => {
+    updateState(s => ({ ...s, folkNpcResult: typeof val === "function" ? val(s.folkNpcResult) : val }));
+  };
+
   const [selectedMagickSuit, setSelectedMagickSuit] = useState<"Swords" | "Coins" | "Cups" | "Wands">("Swords");
-  const [magickItemResult, setMagickItemResult] = useState<{ card: Card; suit: string; name: string; text: string } | null>(null);
+  
+  const magickItemResult = state?.magickItemResult ?? null;
+  const setMagickItemResult = (val: any | null | ((prev: any | null) => any | null)) => {
+    updateState(s => ({ ...s, magickItemResult: typeof val === "function" ? val(s.magickItemResult) : val }));
+  };
 
   // Shop Tab State
   const [shopTab, setShopTab] = useState<"weapons" | "armor" | "trade">("weapons");
@@ -752,23 +863,69 @@ export default function App() {
   const [showCombatRef, setShowCombatRef] = useState(false);
 
   // General Test Resolve spending state
-  const [testCurrentTotal, setTestCurrentTotal] = useState<number>(0);
-  const [testResolveSpent, setTestResolveSpent] = useState<number>(0);
-  const [testStat, setTestStat] = useState<"cups" | "swords" | "coins" | "wands" | "none">("none");
-  const [testMod, setTestMod] = useState<number>(0);
-  const [testOppMonsterId, setTestOppMonsterId] = useState<string>("none");
-  const [testCustomOppPenalty, setTestCustomOppPenalty] = useState<number>(0);
-  const [testHelpStat, setTestHelpStat] = useState<number>(0);
-  const [testPurpose, setTestPurpose] = useState<string>("");
-  const [testDrawnCards, setTestDrawnCards] = useState<Card[]>([]);
-  const [testPushed, setTestPushed] = useState<boolean>(false);
-  const [testStatus, setTestStatus] = useState<"idle" | "rolled" | "success" | "failed" | "great_success" | "great_failure">("idle");
+  const testCurrentTotal = state?.testCurrentTotal ?? 0;
+  const setTestCurrentTotal = (val: number | ((prev: number) => number)) => {
+    updateState(s => ({ ...s, testCurrentTotal: typeof val === "function" ? val(s.testCurrentTotal) : val }));
+  };
+
+  const testResolveSpent = state?.testResolveSpent ?? 0;
+  const setTestResolveSpent = (val: number | ((prev: number) => number)) => {
+    updateState(s => ({ ...s, testResolveSpent: typeof val === "function" ? val(s.testResolveSpent) : val }));
+  };
+
+  const testStat = state?.testStat ?? "none";
+  const setTestStat = (val: any | ((prev: any) => any)) => {
+    updateState(s => ({ ...s, testStat: typeof val === "function" ? val(s.testStat) : val }));
+  };
+
+  const testMod = state?.testMod ?? 0;
+  const setTestMod = (val: number | ((prev: number) => number)) => {
+    updateState(s => ({ ...s, testMod: typeof val === "function" ? val(s.testMod) : val }));
+  };
+
+  const testOppMonsterId = state?.testOppMonsterId ?? "none";
+  const setTestOppMonsterId = (val: string | ((prev: string) => string)) => {
+    updateState(s => ({ ...s, testOppMonsterId: typeof val === "function" ? val(s.testOppMonsterId) : val }));
+  };
+
+  const testCustomOppPenalty = state?.testCustomOppPenalty ?? 0;
+  const setTestCustomOppPenalty = (val: number | ((prev: number) => number)) => {
+    updateState(s => ({ ...s, testCustomOppPenalty: typeof val === "function" ? val(s.testCustomOppPenalty) : val }));
+  };
+
+  const testHelpStat = state?.testHelpStat ?? 0;
+  const setTestHelpStat = (val: number | ((prev: number) => number)) => {
+    updateState(s => ({ ...s, testHelpStat: typeof val === "function" ? val(s.testHelpStat) : val }));
+  };
+
+  const testPurpose = state?.testPurpose ?? "";
+  const setTestPurpose = (val: string | ((prev: string) => string)) => {
+    updateState(s => ({ ...s, testPurpose: typeof val === "function" ? val(s.testPurpose) : val }));
+  };
+
+  const testDrawnCards = state?.testDrawnCards ?? [];
+  const setTestDrawnCards = (val: Card[] | ((prev: Card[]) => Card[])) => {
+    updateState(s => ({ ...s, testDrawnCards: typeof val === "function" ? val(s.testDrawnCards) : val }));
+  };
+
+  const testPushed = state?.testPushed ?? false;
+  const setTestPushed = (val: boolean | ((prev: boolean) => boolean)) => {
+    updateState(s => ({ ...s, testPushed: typeof val === "function" ? val(s.testPushed) : val }));
+  };
+
+  const testStatus = state?.testStatus ?? "idle";
+  const setTestStatus = (val: any | ((prev: any) => any)) => {
+    updateState(s => ({ ...s, testStatus: typeof val === "function" ? val(s.testStatus) : val }));
+  };
 
   // Alchemy state
   const [brewingIngredient, setBrewingIngredient] = useState<string>("Basilisk Eyeball");
 
   // UI and Immersion states
-  const [selectedMapCellIdx, setSelectedMapCellIdx] = useState<number | null>(null);
+  const selectedMapCellIdx = state?.selectedMapCellIdx ?? null;
+  const setSelectedMapCellIdx = (val: number | null | ((prev: number | null) => number | null)) => {
+    updateState(s => ({ ...s, selectedMapCellIdx: typeof val === "function" ? val(s.selectedMapCellIdx) : val }));
+  };
   const [journalDisplayMode, setJournalDisplayMode] = useState<"thematic" | "system">("thematic");
   const [showRuleModal, setShowRuleModal] = useState<boolean>(false);
   const [activeRuleTitle, setActiveRuleTitle] = useState<string>("");
@@ -929,6 +1086,7 @@ export default function App() {
       let deck = [...s.playerDeck];
       let discard = [...s.playerDiscard];
       let hand = [...s.hand];
+      let hasFool = false;
 
       for (let i = 0; i < count; i++) {
         if (deck.length === 0) {
@@ -940,7 +1098,60 @@ export default function App() {
         if (card) {
           const isReversed = Math.random() < 0.25;
           hand.push({ ...card, reversed: isReversed });
+          if (card.type === "major" && card.card === "0") {
+            hasFool = true;
+          }
         }
+      }
+
+      if (hasFool) {
+        setTimeout(() => {
+          alert("🔄 플레이어 손패 보충 중 광대(The Fool)가 드로우되었습니다! 모든 손패를 회수하고 양쪽 덱 전체를 새로 섞습니다.");
+        }, 50);
+
+        const playerMap = new Map<string, Card>();
+        [
+          ...deck,
+          ...discard,
+          ...hand,
+          ...(s.playerInitiativeCard ? [s.playerInitiativeCard] : [])
+        ].forEach(c => {
+          playerMap.set(getCardIdentity(c), { ...c, reversed: false });
+        });
+
+        const refereeMap = new Map<string, Card>();
+        [
+          ...s.refereeDeck,
+          ...s.refereeDiscard,
+          ...s.combatMonsters.map(m => m.initiativeCard).filter((c): c is Card => !!c)
+        ].forEach(c => {
+          refereeMap.set(getCardIdentity(c), { ...c, reversed: false });
+        });
+
+        return {
+          ...s,
+          playerDeck: shuffle(Array.from(playerMap.values())),
+          playerDiscard: [],
+          refereeDeck: shuffle(Array.from(refereeMap.values())),
+          refereeDiscard: [],
+          hand: [],
+          playerInitiativeCard: null,
+          combatMonsters: s.combatMonsters.map(m => ({ ...m, initiativeCard: undefined })),
+          lastDrawnOracleCardValue: null,
+          journals: [
+            {
+              id: generateUniqueId(),
+              text: `[광대의 대가] 드로우 도중 광대(The Fool)가 드로우되어 모든 덱 전체 셔플 및 손패가 초기화되었습니다.`,
+              date: new Date().toLocaleString(),
+              day: s.day,
+              watch: s.watch,
+              pinned: false,
+              isThematic: true,
+              systemLog: `[드로우 중 광대 격발] 모든 손패 회수 및 덱 셔플`
+            },
+            ...s.journals
+          ]
+        };
       }
 
       return {
@@ -971,7 +1182,7 @@ export default function App() {
         playerDiscard: nextDiscard,
         journals: [
           {
-            id: (Date.now() + Math.random()).toString(),
+            id: generateUniqueId(),
             text: thematicText,
             date: new Date().toLocaleString(),
             day: s.day,
@@ -1010,7 +1221,7 @@ export default function App() {
         playerInitiativeCard: card,
         journals: [
           {
-            id: (Date.now() + Math.random()).toString(),
+            id: generateUniqueId(),
             text: thematicText,
             date: new Date().toLocaleString(),
             day: s.day,
@@ -1060,7 +1271,7 @@ export default function App() {
         playerInitiativeCard: cardWithReversed,
         journals: [
           {
-            id: (Date.now() + Math.random()).toString(),
+            id: generateUniqueId(),
             text: thematicText,
             date: new Date().toLocaleString(),
             day: s.day,
@@ -1108,20 +1319,38 @@ export default function App() {
         const thematicText = `[광대의 대가] 광대(The Fool)의 장난이 끝나고 흩어진 힘을 수습합니다. (모든 덱 전체 셔플 및 손패 초기화)`;
         const systemLog = `[전투 라운드 종료] 광대(The Fool) 카드 발동으로 인한 덱 셔플 및 초기화 (라운드 ${s.combatRound} → ${s.combatRound + 1})`;
 
+        const playerMap = new Map<string, Card>();
+        [
+          ...s.playerDeck,
+          ...nextDiscard,
+          ...s.hand
+        ].forEach(c => {
+          playerMap.set(getCardIdentity(c), { ...c, reversed: false });
+        });
+
+        const refereeMap = new Map<string, Card>();
+        [
+          ...s.refereeDeck,
+          ...s.refereeDiscard,
+          ...monsterInitiativeCards
+        ].forEach(c => {
+          refereeMap.set(getCardIdentity(c), { ...c, reversed: false });
+        });
+
         return {
           ...s,
           combatRound: s.combatRound + 1,
           combatMonsters: nextMonsters,
-          playerDeck: createPlayerDeck(),
+          playerDeck: shuffle(Array.from(playerMap.values())),
           playerDiscard: [],
-          refereeDeck: createRefereeDeck(),
+          refereeDeck: shuffle(Array.from(refereeMap.values())),
           refereeDiscard: [],
           hand: [],
           playerInitiativeCard: null,
           lastDrawnOracleCardValue: null,
           journals: [
             {
-              id: (Date.now() + Math.random()).toString(),
+              id: generateUniqueId(),
               text: thematicText,
               date: new Date().toLocaleString(),
               day: s.day,
@@ -1141,6 +1370,7 @@ export default function App() {
       let deck = [...s.playerDeck];
       let discard = nextDiscard;
       let hand = [...s.hand];
+      let hasFool = false;
 
       while (hand.length < 4) {
         if (deck.length === 0) {
@@ -1152,7 +1382,62 @@ export default function App() {
         if (c) {
           const isReversed = Math.random() < 0.25;
           hand.push({ ...c, reversed: isReversed });
+          if (c.type === "major" && c.card === "0") {
+            hasFool = true;
+          }
         }
+      }
+
+      if (hasFool) {
+        setTimeout(() => {
+          alert("🔄 플레이어 손패 보충 중 광대(The Fool)가 드로우되었습니다! 모든 손패를 회수하고 양쪽 덱 전체를 새로 섞습니다.");
+        }, 50);
+
+        const playerMap = new Map<string, Card>();
+        [
+          ...deck,
+          ...discard,
+          ...hand
+        ].forEach(c => {
+          playerMap.set(getCardIdentity(c), { ...c, reversed: false });
+        });
+
+        const refereeMap = new Map<string, Card>();
+        [
+          ...s.refereeDeck,
+          ...s.refereeDiscard,
+          ...monsterInitiativeCards
+        ].forEach(c => {
+          refereeMap.set(getCardIdentity(c), { ...c, reversed: false });
+        });
+
+        return {
+          ...s,
+          combatRound: s.combatRound + 1,
+          combatMonsters: nextMonsters,
+          playerDeck: shuffle(Array.from(playerMap.values())),
+          playerDiscard: [],
+          refereeDeck: shuffle(Array.from(refereeMap.values())),
+          refereeDiscard: [],
+          hand: [],
+          playerInitiativeCard: null,
+          lastDrawnOracleCardValue: null,
+          journals: [
+            {
+              id: generateUniqueId(),
+              text: `[광대의 대가] 손패를 보충하는 도중 광대(The Fool)가 드로우되어 모든 덱 전체 셔플 및 손패가 초기화되었습니다.`,
+              date: new Date().toLocaleString(),
+              day: s.day,
+              watch: s.watch,
+              x,
+              y,
+              pinned: false,
+              isThematic: true,
+              systemLog: `[손패 보충 중 광대 격발] 모든 손패 회수 및 덱 셔플`
+            },
+            ...s.journals
+          ]
+        };
       }
 
       const thematicText = `[라운드 전열 재정비] 전열을 가다듬으며 다음 전술 행동을 구상합니다. (라운드 ${s.combatRound} → ${s.combatRound + 1})`;
@@ -1169,7 +1454,7 @@ export default function App() {
         playerInitiativeCard: null,
         journals: [
           {
-            id: (Date.now() + Math.random()).toString(),
+            id: generateUniqueId(),
             text: thematicText,
             date: new Date().toLocaleString(),
             day: s.day,
@@ -1212,20 +1497,37 @@ export default function App() {
         const thematicText = `[전투 종결 및 소집] 승리의 검을 거두지만, 광대의 마법이 덱을 헤집어 놓아 덱을 소집합니다.`;
         const systemLog = `[전투 종료] 광대(The Fool) 카드 소모로 인한 덱 전체 셔플 초기화`;
 
+        const playerMap = new Map<string, Card>();
+        [
+          ...s.playerDeck,
+          ...nextDiscard,
+          ...s.hand
+        ].forEach(c => {
+          playerMap.set(getCardIdentity(c), { ...c, reversed: false });
+        });
+
+        const refereeMap = new Map<string, Card>();
+        [
+          ...s.refereeDeck,
+          ...nextRefereeDiscard
+        ].forEach(c => {
+          refereeMap.set(getCardIdentity(c), { ...c, reversed: false });
+        });
+
         return {
           ...s,
           combatRound: 1,
           combatMonsters: [],
-          playerDeck: createPlayerDeck(),
+          playerDeck: shuffle(Array.from(playerMap.values())),
           playerDiscard: [],
-          refereeDeck: createRefereeDeck(),
+          refereeDeck: shuffle(Array.from(refereeMap.values())),
           refereeDiscard: [],
           hand: [],
           playerInitiativeCard: null,
           lastDrawnOracleCardValue: null,
           journals: [
             {
-              id: (Date.now() + Math.random()).toString(),
+              id: generateUniqueId(),
               text: thematicText,
               date: new Date().toLocaleString(),
               day: s.day,
@@ -1253,7 +1555,7 @@ export default function App() {
         playerInitiativeCard: null,
         journals: [
           {
-            id: (Date.now() + Math.random()).toString(),
+            id: generateUniqueId(),
             text: thematicText,
             date: new Date().toLocaleString(),
             day: s.day,
@@ -1338,7 +1640,7 @@ export default function App() {
       const c = deck.shift();
       if (c) {
         cardDrawn = { ...c, reversed: Math.random() < 0.25 };
-        discard.push(c);
+        discard.push(cardDrawn);
       }
       return { ...s, playerDeck: deck, playerDiscard: discard };
     });
@@ -1364,7 +1666,7 @@ export default function App() {
           const nextJournals = [...s.journals];
           if (lastVal === currentVal) {
             nextJournals.unshift({
-              id: Date.now().toString(),
+              id: generateUniqueId(),
               text: `[⚠️ 차원 왜곡] 오라클 카드 연속 동일 값 드로우 (${currentVal})! 돌발 사건(Event Deck) 격발이 필요합니다.`,
               date: new Date().toLocaleString()
             });
@@ -1390,19 +1692,38 @@ export default function App() {
 
   const reshuffleAllDecks = () => {
     updateState(s => {
-      const fullPlayerDeck = createPlayerDeck();
-      const fullRefereeDeck = createRefereeDeck();
+      const playerMap = new Map<string, Card>();
+      [
+        ...s.playerDeck,
+        ...s.playerDiscard,
+        ...s.hand,
+        ...(s.playerInitiativeCard ? [s.playerInitiativeCard] : [])
+      ].forEach(c => {
+        playerMap.set(getCardIdentity(c), { ...c, reversed: false });
+      });
+
+      const refereeMap = new Map<string, Card>();
+      [
+        ...s.refereeDeck,
+        ...s.refereeDiscard,
+        ...s.combatMonsters.map(m => m.initiativeCard).filter((c): c is Card => !!c)
+      ].forEach(c => {
+        refereeMap.set(getCardIdentity(c), { ...c, reversed: false });
+      });
+
       return {
         ...s,
-        playerDeck: fullPlayerDeck,
+        playerDeck: shuffle(Array.from(playerMap.values())),
         playerDiscard: [],
-        refereeDeck: fullRefereeDeck,
+        refereeDeck: shuffle(Array.from(refereeMap.values())),
         refereeDiscard: [],
         hand: [],
+        playerInitiativeCard: null,
+        combatMonsters: s.combatMonsters.map(m => ({ ...m, initiativeCard: undefined })),
         lastDrawnOracleCardValue: null
       };
     });
-    alert("🔄 덱 전체가 소집되었습니다! 플레이어 덱과 레프리 덱의 버린 카드 더미를 모두 모아 새로 섞어 손패를 초기화했습니다.");
+    alert("🔄 덱 전체가 소집되었습니다! 플레이어 덱과 레프리 덱의 버린 카드 더미, 손패, 선제권 카드를 모두 모아 새로 섞었습니다.");
   };
 
   // Yes/No oracle logic
@@ -1531,6 +1852,10 @@ export default function App() {
   };
 
   const rollGeneralTest = () => {
+    if (state.combatMonsters.length > 0) {
+      alert("⚔️ 전투가 진행 중일 때는 일반 판정 및 푸시를 진행할 수 없습니다.\n전투 탭에서 전투 주도권 및 액션 판정을 진행해 주십시오.");
+      return;
+    }
     let statVal = 0;
     if (testStat !== "none" && state?.character?.stats) {
       statVal = (state.character.stats as any)[testStat] || 0;
@@ -1577,6 +1902,10 @@ export default function App() {
   };
 
   const pushGeneralTest = () => {
+    if (state.combatMonsters.length > 0) {
+      alert("⚔️ 전투가 진행 중일 때는 일반 판정 및 푸시를 진행할 수 없습니다.\n전투 탭에서 전투 주도권 및 액션 판정을 진행해 주십시오.");
+      return;
+    }
     if (testStatus !== "failed") return;
 
     const card = drawPlayerCard("test");
@@ -1765,7 +2094,7 @@ export default function App() {
         },
         journals: [
           {
-            id: Date.now().toString(),
+            id: generateUniqueId(),
             text: `[야영 휴식] 식사와 함께 편안한 휴식을 취해 ${partNameKo} 부상을 치유했습니다. (시간이 제 ${s.day + 1}일 제 1워치로 전진했습니다.)`,
             date: new Date().toLocaleString()
           },
@@ -1789,7 +2118,7 @@ export default function App() {
         ...s,
         journals: [
           {
-            id: Date.now().toString(),
+            id: generateUniqueId(),
             text,
             date: new Date().toLocaleString()
           },
@@ -1819,7 +2148,7 @@ export default function App() {
       ...s,
       journals: [
         {
-          id: Date.now().toString(),
+          id: generateUniqueId(),
           text,
           date: new Date().toLocaleString()
         },
@@ -1867,7 +2196,7 @@ export default function App() {
       
       const nextJournals = [
         {
-          id: Date.now().toString(),
+          id: generateUniqueId(),
           text: `[연금술 제조] 재료: ${brewingIngredient} -> 완드 판정: ${total}점 (카드: ${getCardDisplayName(card)} + Wands: ${statVal}) -> 결과: ${success ? "성공 및 비약 생산" : "실패 및 재료 소실"} (시간 1 워치 경과: 제 ${nextDay}일 제 ${nextWatch}워치)`,
           date: new Date().toLocaleString()
         },
@@ -1920,8 +2249,9 @@ export default function App() {
       }
       const c = deck.shift();
       if (c) {
-        refereeCard = { ...c, reversed: Math.random() < 0.25 };
-        discard.push(c);
+        const cloned = { ...c, reversed: Math.random() < 0.25 };
+        refereeCard = cloned;
+        discard.push(cloned);
       }
       return { ...s, refereeDeck: deck, refereeDiscard: discard };
     });
@@ -1961,7 +2291,7 @@ export default function App() {
       },
       journals: [
         {
-          id: Date.now().toString(),
+          id: generateUniqueId(),
           text: `[비문 마법 탐구] 카드 단어 조합: ${spellName} 주문 단어를 발견하여 마법 주문을 구성했습니다.`,
           date: new Date().toLocaleString()
         },
@@ -2015,7 +2345,7 @@ export default function App() {
       const c = deck.shift();
       if (c) {
         searchCard = { ...c, reversed: Math.random() < 0.25 };
-        discard.push(c);
+        discard.push(searchCard);
       }
       return { ...s, playerDeck: deck, playerDiscard: discard };
     });
@@ -2034,7 +2364,7 @@ export default function App() {
         ...s,
         journals: [
           {
-            id: Date.now().toString(),
+            id: generateUniqueId(),
             text: `[용병 모집 실패] Cups 판정 결과 ${searchTotal}점으로 용병 후보 탐색에 실패했습니다.`,
             date: new Date().toLocaleString()
           },
@@ -2045,6 +2375,7 @@ export default function App() {
     }
 
     // 2. Generate Candidate NPC using FOLK_ROAD
+    // eslint-disable-next-line react-hooks/purity
     const idx = Math.floor(Math.random() * FOLK_ROAD.occupations.length);
     const candidateFemale = FOLK_ROAD.femaleNames[idx] || "알 수 없음";
     const candidateMale = FOLK_ROAD.maleNames[idx] || "알 수 없음";
@@ -2070,7 +2401,7 @@ export default function App() {
       const c = deck.shift();
       if (c) {
         hireCard = { ...c, reversed: Math.random() < 0.25 };
-        discard.push(c);
+        discard.push(hireCard);
       }
       return { ...s, playerDeck: deck, playerDiscard: discard };
     });
@@ -2095,7 +2426,7 @@ export default function App() {
         },
         journals: [
           {
-            id: Date.now().toString(),
+            id: generateUniqueId(),
             text: `[용병 고용 성공] Cups(${searchTotal}) 및 Coins(${hireTotal}) 판정에 성공하여 용병 ${candidateName}(${candidateOccupation})을 고용했습니다.`,
             date: new Date().toLocaleString()
           },
@@ -2110,7 +2441,7 @@ export default function App() {
         ...s,
         journals: [
           {
-            id: Date.now().toString(),
+            id: generateUniqueId(),
             text: `[용병 계약 실패] Coins 판정 결과 ${hireTotal}점 부족으로 용병 ${candidateName}과의 고용 계약이 무산되었습니다.`,
             date: new Date().toLocaleString()
           },
@@ -2139,7 +2470,7 @@ export default function App() {
       const c = deck.shift();
       if (c) {
         cardDrawn = { ...c, reversed: Math.random() < 0.25 };
-        discard.push(c);
+        discard.push(cardDrawn);
       }
       return { ...s, playerDeck: deck, playerDiscard: discard };
     });
@@ -2158,7 +2489,7 @@ export default function App() {
         ...s,
         journals: [
           {
-            id: Date.now().toString(),
+            id: generateUniqueId(),
             text: `[용병 유지 성공] Coins 판정 ${total}점으로 ${hireling.name}에게 주간 급여를 정상 지급하여 계약을 연장했습니다.`,
             date: new Date().toLocaleString()
           },
@@ -2175,7 +2506,7 @@ export default function App() {
         },
         journals: [
           {
-            id: Date.now().toString(),
+            id: generateUniqueId(),
             text: `[용병 사직] Coins 판정 ${total}점 실패로 용병 ${hireling.name}이(가) 계약을 파기하고 탈퇴했습니다.`,
             date: new Date().toLocaleString()
           },
@@ -2208,7 +2539,7 @@ export default function App() {
       const c = deck.shift();
       if (c) {
         cardDrawn = { ...c, reversed: Math.random() < 0.25 };
-        discard.push(c);
+        discard.push(cardDrawn);
       }
       return { ...s, refereeDeck: deck, refereeDiscard: discard };
     });
@@ -2322,7 +2653,7 @@ export default function App() {
       const c = deck.shift();
       if (c) {
         hireCard = { ...c, reversed: Math.random() < 0.25 };
-        discard.push(c);
+        discard.push(hireCard);
       }
       return { ...s, playerDeck: deck, playerDiscard: discard };
     });
@@ -2347,7 +2678,7 @@ export default function App() {
         },
         journals: [
           {
-            id: Date.now().toString(),
+            id: generateUniqueId(),
             text: `[용병 고용 성공] 길에서 만난 NPC ${name}(${folkNpcResult.occupation})을 Coins 판정(${hireTotal}점) 성공으로 고용했습니다.`,
             date: new Date().toLocaleString()
           },
@@ -2362,7 +2693,7 @@ export default function App() {
         ...s,
         journals: [
           {
-            id: Date.now().toString(),
+            id: generateUniqueId(),
             text: `[용병 고용 실패] 길에서 만난 NPC ${name} 고용 계약 Coins 판정(${hireTotal}점) 실패로 무산되었습니다.`,
             date: new Date().toLocaleString()
           },
@@ -2397,23 +2728,25 @@ export default function App() {
       const x = selectedMapCellIdx !== null ? (selectedMapCellIdx % 4) : null;
       const y = selectedMapCellIdx !== null ? Math.floor(selectedMapCellIdx / 4) : null;
 
+      const nextJournals = [
+        {
+          id: generateUniqueId(),
+          text: thematicText,
+          date: new Date().toLocaleString(),
+          day: s.day,
+          watch: s.watch,
+          x,
+          y,
+          pinned: false,
+          isThematic,
+          systemLog: entryText
+        },
+        ...s.journals
+      ];
+
       return {
         ...s,
-        journals: [
-          {
-            id: (Date.now() + Math.random()).toString(),
-            text: thematicText,
-            date: new Date().toLocaleString(),
-            day: s.day,
-            watch: s.watch,
-            x,
-            y,
-            pinned: false,
-            isThematic,
-            systemLog: entryText
-          },
-          ...s.journals
-        ]
+        journals: pruneJournals(nextJournals)
       };
     });
     if (!textOverride) setNewJournalText("");
@@ -2424,6 +2757,28 @@ export default function App() {
       ...s,
       journals: s.journals.map(j => j.id === id ? { ...j, pinned: !j.pinned } : j)
     }));
+  };
+
+  const handleManualPruneJournals = () => {
+    const totalCount = state.journals.length;
+    const pinnedCount = state.journals.filter(j => j.pinned).length;
+    const unpinnedCount = totalCount - pinnedCount;
+
+    if (unpinnedCount <= 50) {
+      alert(`ℹ️ 정리할 고정되지 않은 기록이 50개 이하입니다.\n(전체 기록: ${totalCount}개, 고정됨: ${pinnedCount}개)`);
+      return;
+    }
+
+    if (window.confirm(`⚠️ 일지 최적화 정리를 진행하시겠습니까?\n고정(Pin)된 일지는 모두 유지되며, 고정되지 않은 일지는 최근 50개만 남기고 삭제됩니다.\n(현재 전체 기록: ${totalCount}개 -> 정리 후 예상: ${pinnedCount + 50}개)`)) {
+      updateState(s => {
+        const nextJournals = pruneJournals(s.journals);
+        return {
+          ...s,
+          journals: nextJournals
+        };
+      });
+      alert("✨ 일지 최적화 정리가 완료되었습니다.");
+    }
   };
 
   // Buy item coin test logic
@@ -2445,8 +2800,8 @@ export default function App() {
       }
       const c = deck.shift();
       if (c) {
-        cardDrawn = c;
-        discard.push(c);
+        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
+        discard.push(cardDrawn);
       }
       return { ...s, playerDeck: deck, playerDiscard: discard };
     });
@@ -2543,7 +2898,7 @@ export default function App() {
                 stats: { ...s.character.stats, [statKey]: prevVal + 1 }
               },
               journals: [{
-                id: (Date.now() + Math.random()).toString(),
+                id: generateUniqueId(),
                 text: getThematicLogText("stat_up", { statName, prevVal }),
                 date: new Date().toLocaleString(),
                 day: nextDay,
@@ -2677,7 +3032,7 @@ export default function App() {
                           ...s,
                           day: nextDay,
                           watch: nextWatch,
-                          journals: [{ id: Date.now().toString(), text: `[시간 경과] 제 ${nextDay}일 제 ${nextWatch}워치가 되었습니다.`, date: new Date().toLocaleString() }, ...s.journals]
+                          journals: [{ id: generateUniqueId(), text: `[시간 경과] 제 ${nextDay}일 제 ${nextWatch}워치가 되었습니다.`, date: new Date().toLocaleString() }, ...s.journals]
                         };
                       });
                     }}>+1 Watch 경과 (8시간)</button>
@@ -2809,7 +3164,17 @@ export default function App() {
                 </div>
 
                 <div style={{ display: "flex", gap: "10px", marginTop: "5px" }}>
-                  <button className="btn-medieval flex-1" onClick={rollGeneralTest}>판정 카드 드로우</button>
+                  <button 
+                    className="btn-medieval flex-1" 
+                    onClick={rollGeneralTest}
+                    disabled={state.combatMonsters.length > 0}
+                    style={{
+                      opacity: state.combatMonsters.length > 0 ? 0.6 : 1,
+                      cursor: state.combatMonsters.length > 0 ? "not-allowed" : "pointer"
+                    }}
+                  >
+                    판정 카드 드로우
+                  </button>
                   <button className="btn-medieval-small danger" onClick={resetTestState}>초기화</button>
                 </div>
 
@@ -2848,7 +3213,17 @@ export default function App() {
                         <p style={{ fontSize: "0.7rem", color: "var(--color-crimson)", margin: "0 0 4px 0" }}>
                           * 실패했습니다. 리스크를 지고 한 장 더 뽑으시겠습니까?
                         </p>
-                        <button className="btn-medieval-small" style={{ width: "100%", padding: "4px" }} onClick={pushGeneralTest}>
+                        <button 
+                          className="btn-medieval-small" 
+                          style={{ 
+                            width: "100%", 
+                            padding: "4px",
+                            opacity: state.combatMonsters.length > 0 ? 0.6 : 1,
+                            cursor: state.combatMonsters.length > 0 ? "not-allowed" : "pointer"
+                          }} 
+                          onClick={pushGeneralTest}
+                          disabled={state.combatMonsters.length > 0}
+                        >
                           🎲 판정 푸시 (카드 1장 추가)
                         </button>
                       </div>
@@ -2897,6 +3272,22 @@ export default function App() {
                         </div>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {state.combatMonsters.length > 0 && (
+                  <div style={{
+                    marginTop: "12px",
+                    padding: "10px",
+                    backgroundColor: "rgba(220, 53, 69, 0.15)",
+                    border: "1px solid var(--color-crimson)",
+                    borderRadius: "4px",
+                    fontSize: "0.78rem",
+                    color: "var(--color-crimson)",
+                    lineHeight: "1.4"
+                  }}>
+                    <strong>⚠️ 판정 제한 (전투 진행 중)</strong><br />
+                    현재 전투가 진행 중이므로 일반 판정 및 푸시가 잠금 처리되었습니다. 전투 탭에서 주도권 드로우 및 전투 액션 판정을 진행해 주십시오.
                   </div>
                 )}
 
@@ -3110,7 +3501,7 @@ export default function App() {
                                 xp: s.character.xp + 1,
                                 resolve: Math.min(10, s.character.resolve + 1)
                               },
-                              journals: [{ id: Date.now().toString(), text: `[목표 완료] '${g}' 목표를 달성하여 1 XP와 결의 1점을 얻었습니다!`, date: new Date().toLocaleString() }, ...s.journals]
+                              journals: [{ id: generateUniqueId(), text: `[목표 완료] '${g}' 목표를 달성하여 1 XP와 결의 1점을 얻었습니다!`, date: new Date().toLocaleString() }, ...s.journals]
                             }));
                           }
                         }}
@@ -3144,7 +3535,7 @@ export default function App() {
                           updateState(s => ({
                             ...s,
                             character: { ...s.character, resolve: Math.min(10, s.character.resolve + 1) },
-                            journals: [{ id: Date.now().toString(), text: `[본능 곤경] 본능 '${inst}'에 이끌려 시련이 가해졌으며, 결의 1점을 획득했습니다.`, date: new Date().toLocaleString() }, ...s.journals]
+                            journals: [{ id: generateUniqueId(), text: `[본능 곤경] 본능 '${inst}'에 이끌려 시련이 가해졌으며, 결의 1점을 획득했습니다.`, date: new Date().toLocaleString() }, ...s.journals]
                           }));
                           alert("본능에 이끌려 서사가 꼬이고 시련을 겪어 결의 1점을 얻습니다!");
                         }}
@@ -4207,7 +4598,7 @@ export default function App() {
                                               unlockedTalents: [...s.character.unlockedTalents, t]
                                             },
                                             journals: [{
-                                              id: (Date.now() + Math.random()).toString(),
+                                              id: generateUniqueId(),
                                               text: getThematicLogText("talent_unlock", { talentName: t }),
                                               date: new Date().toLocaleString(),
                                               day: nextDay,
@@ -4889,7 +5280,7 @@ export default function App() {
                                     ...s,
                                     journals: [
                                       {
-                                        id: (Date.now() + Math.random()).toString(),
+                                        id: generateUniqueId(),
                                         text: newLog,
                                         date: new Date().toLocaleString(),
                                         day: s.day,
@@ -5055,7 +5446,7 @@ export default function App() {
                         combatMonsters: [
                           ...s.combatMonsters,
                           {
-                            id: Date.now().toString(),
+                            id: generateUniqueId(),
                             monsterId: template.id,
                             name: template.nameKo,
                             woundsTaken: 0
@@ -5297,6 +5688,13 @@ export default function App() {
                     onClick={() => setJournalDisplayMode("system")}
                   >
                     시스템 디버그 모드
+                  </button>
+                  <button 
+                    className="btn-medieval-small danger" 
+                    onClick={handleManualPruneJournals}
+                    title="고정(Pin)된 로그는 보존하고, 고정되지 않은 오래된 로그들을 정리하여 최적화합니다."
+                  >
+                    🧹 일지 정리 및 최적화
                   </button>
                 </div>
               </div>
@@ -5600,7 +5998,7 @@ export default function App() {
                       resolve: newResolve
                     },
                     journals: [{
-                      id: Date.now().toString(),
+                      id: generateUniqueId(),
                       text: `[세션 종료 정산] 획득: XP +${addXp}, 결의 +${addResolve} (사유: ${reasonStr})`,
                       date: new Date().toLocaleString()
                     }, ...s.journals]
