@@ -670,6 +670,28 @@ h1, h2, h3, h4, h5, h6, .gothic-title, .gothic-sub {
   min-height: 250px;
 }
 
+.empty-deck-spot {
+  align-items: center;
+  border: 1px solid var(--border-color);
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: center;
+  min-height: 180px;
+  padding: 18px;
+  text-align: center;
+}
+
+.hand-empty-copy {
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  font-style: italic;
+  line-height: 1.45;
+  margin: 0 auto;
+  max-width: 28rem;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
 .tarot-card-container {
   display: flex;
   flex-direction: column;

@@ -5663,7 +5663,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                 ))}
                 {state.hand.length === 0 && (
                   <div className="empty-deck-spot">
-                    <p>손에 든 카드가 없습니다. 상단에서 카드를 뽑아 4장의 손패를 채워주십시오.</p>
+                    <p className="hand-empty-copy">손에 든 카드가 없습니다. 상단에서 카드를 뽑아 4장의 손패를 채워주십시오.</p>
                   </div>
                 )}
               </div>
