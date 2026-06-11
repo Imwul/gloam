@@ -5,6 +5,7 @@ import { signInWithPopup, signOut, onAuthStateChanged, type User } from "firebas
 import { 
   WEAPONS, 
   ARMOR, 
+  TRADE_GOODS,
   BESTIARY, 
   WILDERNESS_EVENTS, 
   DUNGEON_EVENTS, 
@@ -362,6 +363,36 @@ const getCardDisplayName = (card: Card) => {
   return `${suitKo} ${valKo}${orientation}`;
 };
 
+const TALENT_DESCRIPTIONS: { [key: string]: string } = {
+  "Disarming Presence (무장 해제)": "Reaction(반응) 판정 보정 +3 (p.18)",
+  "Academic (학술 지성)": "문화, 제도, 역사에 대한 지식을 떠올립니다 (레프리 재량, p.18)",
+  "Duel of Wits (언쟁 달인)": "청중 앞에서 논쟁에서 승리합니다. 상대가 묵인하도록 강제할 수 있습니다 (p.18)",
+  "Inspire (격려 연설)": "동료가 판정하기 전에 격려의 말로 +3 보너스를 부여합니다 (p.18)",
+  "Parley (평화 교섭)": "언어가 통하는 적대적인 크리처를 진정시키고 협상합니다 (전투 전만 가능, p.18)",
+  "Verity & Guile (진실과 기만)": "상대의 거짓말을 간파하거나, 아군의 거짓말을 믿게 만듭니다 (Cups 판정 vs 14, p.18)",
+
+  "Sally Forth (과감한 돌격)": "전투 라운드당 한 번, 추가 전투 행동(Combat Action)을 수행합니다 (p.19)",
+  "Geas (맹세 명령)": "생명체에게 간단한 과업을 명령합니다 (저항 실패 시 완수까지 단일 목적 몰두, 한 번에 1개 제한, p.19)",
+  "Itinerant Hospitality (기사 환대)": "어느 성채나 저택에서든 자신과 동료들을 위한 공짜 숙식 대접을 받습니다 (p.19)",
+  "Martial Dominance (전투 지배)": "사거리 내로 진입하거나 나가는 모든 크리처를 반응(Response)으로 즉시 공격합니다 (p.19)",
+  "Oath-sworn (피의 맹세)": "서약을 선포합니다. 서약에 부합하는 모든 행동 판정에 +3 보너스. 실패 시 서약 파괴자가 됨 (p.19)",
+  "Trial by Combat (결투 대결)": "갈등 해결을 위한 결투를 신청합니다. 상대가 거절 시 겁을 먹어 1턴간 대상을 향한 사교 판정에 +3 보너스 (p.19)",
+
+  "Magick (비술 각성)": "Minor 1개 + Major 1개 아르카나 단어로 이루어진 주문 1개로 시작하며 주문을 시전합니다 (p.20)",
+  "Augury (징조 읽기)": "앞날을 읽어 특정 행동 방향에 대해 Weal(길), Woe(흉), 또는 둘 다/없음의 계시를 얻습니다 (p.20)",
+  "Sixth Sense (영적 감지)": "인물, 사물, 장소에 깃든 마법적 징조를 감지합니다. 연두-보랏빛 안개로 보임 (p.20)",
+  "Familiar (사역마 소환)": "명령을 따르는 임프나 고양이를 소환합니다 (부상 1개에 소멸, 1마리 제한, p.20)",
+  "Undo Magick (마법 해제)": "다른 주문을 카운터하거나 Dispelling 합니다. 강력한 마법은 Wands 판정 필요 (p.20)",
+  "Bind Magick (마법 부여)": "아이템에 주문을 부여합니다. 결의 1점마다 1충전. 누구나 결의를 써서 발동 가능 (p.20)",
+
+  "Nimble (민첩 대처)": "공격 대상이 되었을 때, 자신의 선제권(Initiative) 카드를 손패의 다른 카드와 교체합니다 (p.21)",
+  "One with the Shadows (그림자 동화)": "어두운 곳에 매우 뛰어나게 숨어 투명화 수준이 됩니다. 냄새는 남음 (p.21)",
+  "Sneak-Attack (급소 암습)": "아머(AP)를 완전히 무시하여 우회하는 기습 근접 공격을 감행합니다 (p.21)",
+  "Poisoner (독약 제조)": "섭취 후 1시간 이내에 삼킨 대상을 즉사시키는 치명적인 독약을 제조합니다 (p.21)",
+  "Impersonate (변장 모사)": "인간의 겉모습, 목소리, 태도를 1 Watch(8시간) 동안 기막히게 복제/가장합니다 (p.21)",
+  "Split (신속 퇴각)": "Coins 판정 없이 자신과 동료들을 즉시 조우 상황에서 탈출시켜 도망칩니다 (p.21)"
+};
+
 // =================================================================
 // 4. MAIN APP COMPONENT
 // =================================================================
@@ -390,6 +421,25 @@ export default function App() {
   const [folkNpcResult, setFolkNpcResult] = useState<{ card: Card; femaleName: string; maleName: string; occupation: string; personality: string } | null>(null);
   const [selectedMagickSuit, setSelectedMagickSuit] = useState<"Swords" | "Coins" | "Cups" | "Wands">("Swords");
   const [magickItemResult, setMagickItemResult] = useState<{ card: Card; suit: string; name: string; text: string } | null>(null);
+
+  // Shop Tab State
+  const [shopTab, setShopTab] = useState<"weapons" | "armor" | "trade">("weapons");
+  const [tradeGoodsSearch, setTradeGoodsSearch] = useState("");
+
+  // Combat Quick Reference toggle
+  const [showCombatRef, setShowCombatRef] = useState(false);
+
+  // General Test Resolve spending state
+  const [testCurrentTotal, setTestCurrentTotal] = useState<number>(0);
+  const [testResolveSpent, setTestResolveSpent] = useState<number>(0);
+
+  // Session End XP Wizard State
+  const [showSessionXpWizard, setShowSessionXpWizard] = useState(false);
+  const [sessionParticipated, setSessionParticipated] = useState(true);
+  const [sessionEndangered, setSessionEndangered] = useState(false);
+  const [sessionGoalFulfilled, setSessionGoalFulfilled] = useState(false);
+
+
 
   // Init Auth State
   useEffect(() => {
@@ -666,7 +716,7 @@ export default function App() {
           alert("🔄 플레이어 덱에서 광대(The Fool)가 드로우되었습니다! 규칙에 따라 모든 손패를 회수하고 양쪽 덱 전체를 새로 섞습니다.");
           reshuffleAllDecks();
         }, 50);
-        if (purpose === "carousing" || purpose === "spell") {
+        if (purpose === "carousing" || purpose === "spell" || purpose === "magick" || purpose === "lifepath") {
           return card;
         }
         return null;
@@ -844,6 +894,8 @@ export default function App() {
     setTestDrawnCards([]);
     setTestPushed(false);
     setTestStatus("idle");
+    setTestCurrentTotal(0);
+    setTestResolveSpent(0);
   };
 
   const rollGeneralTest = () => {
@@ -881,6 +933,8 @@ export default function App() {
 
     setTestDrawnCards([card]);
     setTestPushed(false);
+    setTestCurrentTotal(total);
+    setTestResolveSpent(0);
 
     if (isGreatSuccess) {
       setTestStatus("great_success");
@@ -961,6 +1015,31 @@ export default function App() {
     }
   };
 
+  const getItemSwordsRequirement = (itemName: string): number | null => {
+    if (!itemName) return null;
+    const cleanName = itemName.replace(/\(.*\)/, "").trim().toLowerCase();
+    
+    // Find in weapons
+    const foundWeapon = WEAPONS.find(w => 
+      w.name.toLowerCase() === cleanName || 
+      w.nameKo.toLowerCase() === cleanName ||
+      itemName.toLowerCase().includes(w.name.toLowerCase()) ||
+      itemName.toLowerCase().includes(w.nameKo.toLowerCase())
+    );
+    if (foundWeapon) return foundWeapon.swordsReq;
+    
+    // Find in armor
+    const foundArmor = ARMOR.find(a => 
+      a.name.toLowerCase() === cleanName || 
+      a.nameKo.toLowerCase() === cleanName ||
+      itemName.toLowerCase().includes(a.name.toLowerCase()) ||
+      itemName.toLowerCase().includes(a.nameKo.toLowerCase())
+    );
+    if (foundArmor) return foundArmor.swordsReq;
+    
+    return null;
+  };
+
   // --- Downtime Helper Functions ---
   const getCarousingKey = (card: Card): string => {
     if (card.type === "major" && card.card === "0") return "Fool";
@@ -969,6 +1048,57 @@ export default function App() {
     if (card.card === "Queen") return "Q";
     if (card.card === "King") return "K";
     return card.card;
+  };
+
+  const getLifepathEvent = (suit: string, val: string): string => {
+    const s = suit.toLowerCase();
+    const v = val;
+
+    if (s === "cups") {
+      if (["A", "2"].includes(v)) return "짧고 강렬한 로맨스 관계를 맺음 (Brief romantic relationship)";
+      if (["3", "4"].includes(v)) return "어떤 집단이나 군중으로부터 신뢰를 잃고 눈 밖에 남 (Fell out of favor with a group)";
+      if (["5", "6"].includes(v)) return "매우 매력적이고 유혹적인 일생일대의 기회를 스쳐 보냄 (Passed up an alluring opportunity)";
+      if (["7", "8"].includes(v)) return "오랫동안 굳게 믿어왔던 가치관이나 사상에 환멸을 느낌 (Disillusioned of belief)";
+      if (["9", "10"].includes(v)) return "고향과 완전히 단절된 아주 먼 타국 땅에서 거주함 (Lived in a far-off land)";
+      if (v === "Page") return "가슴 깊이 품은 거대한 야망을 향해 헌신적으로 매진함 (Pursued an ambition)";
+      if (v === "Knight") return "평생에 걸친 장기적이고 진지한 관계를 이어감 (Were in a long-term relationship)";
+      if (v === "Queen") return "아프거나 불우한 누군가를 정성껏 보살피며 지냄 (Took care of someone)";
+      if (v === "King") return "예술이나 기술 분야의 든든한 후원자를 만나 사사받음 (Mentored by a patron)";
+    }
+    if (s === "swords") {
+      if (["A", "2"].includes(v)) return "뼈아프고 받아들이기 힘든 잔혹한 진실을 목격하고 깨달음 (Realized a difficult truth)";
+      if (["3", "4"].includes(v)) return "곁에 있던 매우 소중하고 가까운 사람의 죽음을 애도함 (Mourned the loss of someone close)";
+      if (["5", "6"].includes(v)) return "끔찍한 위험이나 참화가 닥친 구역에서 목숨 걸고 탈출함 (Fled from a dangerous situation)";
+      if (["7", "8"].includes(v)) return "억울하거나 실제 지은 범죄로 인해 감옥에 투옥됨 (Imprisoned for a crime)";
+      if (["9", "10"].includes(v)) return "가장 믿었던 가까운 동료나 친구에게 배신당함 (Betrayed by a friend)";
+      if (v === "Page") return "돌이킬 수 없는 뼈아픈 실수로 막대한 대가를 치름 (Made a terrible mistake)";
+      if (v === "Knight") return "싸움 끝에 누군가의 목숨을 빼앗아 손에 피를 묻힘 (Killed someone)";
+      if (v === "Queen") return "세상과 인연을 끊고 한동안 어두운 곳에 은둔하며 지냄 (Withdrew from life)";
+      if (v === "King") return "지독하게 몰입하는 치열한 학술적/지적 탐구를 완수함 (Embarked on intense intellectual study)";
+    }
+    if (s === "wands") {
+      if (["A", "2"].includes(v)) return "생소한 외국어나 완전히 새로운 이색 기술을 습득함 (Learned a new skill/language)";
+      if (["3", "4"].includes(v)) return "머나먼 미지의 땅으로 모험 가득한 기나긴 여정을 다녀옴 (Journey to a distant land)";
+      if (["5", "6"].includes(v)) return "장인 길드나 비밀 결사 같은 조직에 정식 가입함 (Joined a group/guild)";
+      if (["7", "8"].includes(v)) return "불가능해 보였던 거대한 난관이나 두려움을 극복해냄 (Overcame an obstacle)";
+      if (["9", "10"].includes(v)) return "원치 않는 뜻밖의 무거운 짐이나 임무를 떠맡게 됨 (Received unexpected burden)";
+      if (v === "Page") return "신비로운 모험이나 숭고한 퀘스트를 수행하러 떠남 (Went on adventure/quest)";
+      if (v === "Knight") return "자연재해나 몬스터의 위협으로부터 마을 전체를 구해냄 (Saved a village from disaster)";
+      if (v === "Queen") return "과거의 삶을 청산하고 완전히 새로운 커리어를 개척함 (Started a new career)";
+      if (v === "King") return "집단의 존경을 받아 강력한 권위와 권력의 자리에 오름 (Achieved position of authority)";
+    }
+    if (s === "coins") {
+      if (["A", "2"].includes(v)) return "척박하고 힘겨운 노동 환경에서 기나긴 하루를 묵묵히 버팀 (Worked hard days in a difficult job)";
+      if (["3", "4"].includes(v)) return "일류 기술자 밑에서 도제 계약을 맺고 기술을 사사받음 (Apprenticed under a teacher)";
+      if (["5", "6"].includes(v)) return "전 재산을 유실하고 완전히 빈털터리 방랑자 신세로 전락함 (Lost everything and became vagabond)";
+      if (["7", "8"].includes(v)) return "특정 공예 기술이나 수련 분야를 마스터해 독자 영역을 개척함 (Mastered a craft/skill)";
+      if (["9", "10"].includes(v)) return "큰 재물을 모아 여유롭고 호화로운 삶을 잠시 누림 (Achieved affluent lifestyle)";
+      if (v === "Page") return "명성 높은 명문 아카데미나 학술 기관에 입학해 공부함 (Studied at prestigious academy)";
+      if (v === "Knight") return "상업 거래망이나 핵심 비즈니스를 직접 총괄하여 운영함 (Oversaw business operation)";
+      if (v === "Queen") return "아이를 품에 안고 헌신적으로 길러냄 (Raised a child)";
+      if (v === "King") return "화려하지만 암투가 가득한 귀족 궁정에서 오랜 세월을 지냄 (Spent time in a noble court)";
+    }
+    return "알 수 없는 과거 행적 사건";
   };
 
   const getMajorCardIndex = (card: Card): number => {
@@ -1806,13 +1936,22 @@ export default function App() {
               alert("경험치 10 XP가 소모됩니다. 현재 XP가 부족합니다!");
               return s;
             }
+            const nextDay = s.day + 10;
+            const statName = statKey === "cups" ? "Cups" : statKey === "swords" ? "Swords" : statKey === "coins" ? "Coins" : "Wands";
             return {
               ...s,
+              day: nextDay,
+              watch: 1,
               character: {
                 ...s.character,
                 xp: s.character.xp - 10,
                 stats: { ...s.character.stats, [statKey]: prevVal + 1 }
-              }
+              },
+              journals: [{
+                id: Date.now().toString(),
+                text: `[스탯 증가] XP 10 소모하여 ${statName} 스탯이 ${prevVal}에서 ${prevVal + 1}로 증가했습니다. 10일간의 수련 시간이 경과하여 제 ${nextDay}일 제 1워치가 되었습니다.`,
+                date: new Date().toLocaleString()
+              }, ...s.journals]
             };
           })}>+</button>
         </div>
@@ -2113,8 +2252,53 @@ export default function App() {
                         </button>
                       </div>
                     )}
+
+                    {/* 결의(Resolve) 소비 판정 보정 - 실패 혹은 성공 직후 사용 가능 */}
+                    {(testStatus === "failed" || testStatus === "success") && (
+                      <div style={{ marginTop: "6px", borderTop: "1px dashed #555", paddingTop: "6px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.7rem" }}>
+                          <span style={{ color: "#ccc" }}>
+                            🔥 결의 소비 보정 (현재 결의: <strong style={{ color: "var(--color-gold)" }}>{state.character.resolve}</strong>)
+                          </span>
+                          <span style={{ color: "#999", fontSize: "0.65rem" }}>소비 {testResolveSpent}점 / 총합 {testCurrentTotal + testResolveSpent}</span>
+                        </div>
+                        <p style={{ fontSize: "0.65rem", color: "#888", margin: "3px 0 5px 0" }}>
+                          결의 1점 = 판정 합계 +1 (결과 확인 후 소비 가능, p.34)
+                        </p>
+                        <div style={{ display: "flex", gap: "5px" }}>
+                          <button
+                            className="btn-medieval-small"
+                            style={{ flex: 1, fontSize: "0.7rem" }}
+                            disabled={state.character.resolve <= 0}
+                            onClick={() => {
+                              if (state.character.resolve <= 0) {
+                                alert("결의(Resolve)가 없습니다!");
+                                return;
+                              }
+                              const newTotal = testCurrentTotal + testResolveSpent + 1;
+                              const newResolveSpent = testResolveSpent + 1;
+                              setTestResolveSpent(newResolveSpent);
+                              updateState(s => ({
+                                ...s,
+                                character: { ...s.character, resolve: Math.max(0, s.character.resolve - 1) }
+                              }));
+                              if (newTotal >= 14 && testStatus === "failed") {
+                                setTestStatus("success");
+                                addJournalEntry(`[판정 결의 보정] 결의 ${newResolveSpent}점 소비하여 총합 ${newTotal}점 달성 → 성공으로 전환!`);
+                                alert(`✨ 결의 ${newResolveSpent}점을 소비하여 총합 ${newTotal}점 달성! 판정이 성공으로 전환되었습니다.`);
+                              } else if (newTotal >= 14) {
+                                addJournalEntry(`[판정 결의 추가 소비] 결의 소비 ${newResolveSpent}점, 총합 ${newTotal}점`);
+                              }
+                            }}
+                          >
+                            결의 1점 소비 (+1)
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
+
               </div>
             </div>
           </div>
@@ -2249,6 +2433,20 @@ export default function App() {
                             });
                           }}
                         />
+                        {(() => {
+                          const req = getItemSwordsRequirement(item);
+                          if (req !== null && req > state.character.stats.swords) {
+                            return (
+                              <span 
+                                title={`Swords 요구치 미달: 사용 불가능 (요구: ${req}, 현재: ${state.character.stats.swords})`} 
+                                style={{ color: "#e53e3e", cursor: "help", fontSize: "0.72rem", marginRight: "5px", padding: "1px 4px", background: "rgba(229,62,62,0.1)", borderRadius: "3px", border: "1px solid rgba(229,62,62,0.3)", whiteSpace: "nowrap" }}
+                              >
+                                ⚠️ Swords {req} 필요
+                              </span>
+                            );
+                          }
+                          return null;
+                        })()}
                         {item && (
                           <button 
                             className="delete-btn" 
@@ -2411,6 +2609,18 @@ export default function App() {
                         onClick={() => updateState(s => ({ ...s, character: { ...s.character, xp: s.character.xp + 1 } }))}
                       >+</button>
                     </div>
+                    <button 
+                      className="btn-medieval-small" 
+                      style={{ fontSize: "0.68rem", marginTop: "8px", width: "100%", whiteSpace: "nowrap" }}
+                      onClick={() => {
+                        setSessionParticipated(true);
+                        setSessionEndangered(false);
+                        setSessionGoalFulfilled(false);
+                        setShowSessionXpWizard(true);
+                      }}
+                    >
+                      세션 종료 XP 정산
+                    </button>
                   </div>
                 </div>
 
@@ -2624,45 +2834,71 @@ export default function App() {
                     </h4>
                     <div style={{ display: "flex", gap: "8px" }}>
                       <button className="btn-medieval-small" onClick={() => {
-                        drawRefereeCard((card) => {
+                        const card = drawPlayerCard("lifepath");
+                        if (!card) return;
+
+                        let valNum = 0;
+                        if (card.card === "A") valNum = 1;
+                        else if (card.card === "Page") valNum = 11;
+                        else if (card.card === "Knight") valNum = 12;
+                        else if (card.card === "Queen") valNum = 13;
+                        else if (card.card === "King") valNum = 14;
+                        else if (card.card === "0") valNum = 0;
+                        else valNum = parseInt(card.card) || 0;
+
+                        let bgDesc = "";
+                        if (card.card === "0") {
+                          bgDesc = "광대의 운명: 과거 기억을 전부 잃고 낯선 황혼의 벌판에서 홀로 깨어난 수수께끼의 기원 (Mysterious memoryless origin)";
+                        } else {
                           const suit = card.suit || "cups";
                           const mapping: { [key: string]: string } = {
-                            "wands": "신비하고 기이한 영적 비술 환경 (Wands)",
-                            "swords": "전쟁과 참화, 중소 귀족 가문의 분란 환경 (Swords)",
-                            "cups": "학구적이며 비교적 유복하고 안전한 상업 환경 (Cups)",
-                            "coins": "빈민가와 거리, 뿌리 없는 떠돌이 환경 (Coins)"
+                            "wands": "신비하고 기이한 영적 비술 및 야생 숲림 환경 (Wands)",
+                            "swords": "전쟁และ 참화, 중소 무인/귀족 가문의 투쟁 환경 (Swords)",
+                            "cups": "학구적이며 비교적 유복하고 안전한 상업/사원 환경 (Cups)",
+                            "coins": "영지 빈민가와 차가운 길거리, 근본 없는 유랑민 환경 (Coins)"
                           };
-                          const valNum = card.card === "A" ? 1 : card.card === "Page" ? 11 : card.card === "Knight" ? 12 : card.card === "Queen" ? 13 : card.card === "King" ? 14 : parseInt(card.card) || 0;
-                          const logText = `[출생배경] ${getCardDisplayName(card)}: ${mapping[suit]}. 나이 +${valNum}년`;
-                          
-                          updateState(s => ({
-                            ...s,
-                            character: {
-                              ...s.character,
-                              age: s.character.age + valNum,
-                              lifepathLogs: [...s.character.lifepathLogs, logText]
-                            }
-                          }));
-                        });
+                          bgDesc = mapping[suit] || "평범한 정착민 출생 환경";
+                        }
+
+                        const logText = `[출생배경] ${getCardDisplayName(card)}: ${bgDesc} (나이 +${valNum}년)`;
+                        updateState(s => ({
+                          ...s,
+                          character: {
+                            ...s.character,
+                            age: s.character.age + valNum,
+                            lifepathLogs: [...s.character.lifepathLogs, logText]
+                          }
+                        }));
                       }}>출생 결정</button>
                       <button className="btn-medieval-small" onClick={() => {
-                        drawRefereeCard((card) => {
-                          const suit = card.suit || "cups";
-                          const val = card.card;
-                          const suitFolder = suit === "wands" ? "완드" : suit === "swords" ? "소드" : suit === "coins" ? "코인" : "컵";
-                          const foundEvent = `과거 사건 카드로 ${getCardDisplayName(card)}를 뽑았습니다. 가이드북 p.12-13의 ${suitFolder} 사건을 대조하십시오.`;
-                          const valNum = val === "A" ? 1 : val === "Page" ? 11 : val === "Knight" ? 12 : val === "Queen" ? 13 : val === "King" ? 14 : parseInt(val) || 0;
-                          const logText = `[과거사건] ${getCardDisplayName(card)}: ${foundEvent} 나이 +${valNum}년`;
+                        const card = drawPlayerCard("lifepath");
+                        if (!card) return;
 
-                          updateState(s => ({
-                            ...s,
-                            character: {
-                              ...s.character,
-                              age: s.character.age + valNum,
-                              lifepathLogs: [...s.character.lifepathLogs, logText]
-                            }
-                          }));
-                        });
+                        let valNum = 0;
+                        if (card.card === "A") valNum = 1;
+                        else if (card.card === "Page") valNum = 11;
+                        else if (card.card === "Knight") valNum = 12;
+                        else if (card.card === "Queen") valNum = 13;
+                        else if (card.card === "King") valNum = 14;
+                        else if (card.card === "0") valNum = 0;
+                        else valNum = parseInt(card.card) || 0;
+
+                        let eventDesc = "";
+                        if (card.card === "0") {
+                          eventDesc = "광대의 장난: 내 과거 행적에 대한 온갖 서류와 기록이 돌풍과 함께 날아가 완전히 세탁됨 (Mysterious twist of fate)";
+                        } else {
+                          eventDesc = getLifepathEvent(card.suit || "cups", card.card);
+                        }
+
+                        const logText = `[과거사건] ${getCardDisplayName(card)}: ${eventDesc} (나이 +${valNum}년)`;
+                        updateState(s => ({
+                          ...s,
+                          character: {
+                            ...s.character,
+                            age: s.character.age + valNum,
+                            lifepathLogs: [...s.character.lifepathLogs, logText]
+                          }
+                        }));
                       }}>사건 드로우</button>
                     </div>
                   </div>
@@ -2717,13 +2953,20 @@ export default function App() {
                     </div>
                     <div style={{ maxHeight: "160px", overflowY: "auto", fontSize: "0.85rem" }}>
                       {state.character.unlockedTalents.map((t, idx) => (
-                        <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px dashed rgba(42,37,33,0.15)", padding: "3px 0" }}>
-                          <span style={{ color: "var(--color-gold)", fontWeight: "bold" }}>◆ {t}</span>
-                          <button 
-                            className="delete-btn" 
-                            style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }}
-                            onClick={() => updateState(s => ({ ...s, character: { ...s.character, unlockedTalents: s.character.unlockedTalents.filter((_, i) => i !== idx) } }))}
-                          >&times;</button>
+                        <div key={idx} style={{ display: "flex", flexDirection: "column", borderBottom: "1px dashed rgba(42,37,33,0.15)", padding: "5px 0" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ color: "var(--color-gold)", fontWeight: "bold" }}>◆ {t}</span>
+                            <button 
+                              className="delete-btn" 
+                              style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }}
+                              onClick={() => updateState(s => ({ ...s, character: { ...s.character, unlockedTalents: s.character.unlockedTalents.filter((_, i) => i !== idx) } }))}
+                            >&times;</button>
+                          </div>
+                          {TALENT_DESCRIPTIONS[t] && (
+                            <div style={{ fontSize: "0.75rem", color: "#666", marginTop: "2px", lineHeight: "1.3" }}>
+                              {TALENT_DESCRIPTIONS[t]}
+                            </div>
+                          )}
                         </div>
                       ))}
                       {state.character.unlockedTalents.length === 0 && (
@@ -2883,23 +3126,74 @@ export default function App() {
                       }}>임의 아이템 Coins 판정</button>
                     </div>
 
-                    <div style={{ border: "1px solid var(--border-color)", maxHeight: "150px", overflowY: "auto", padding: "6px", backgroundColor: "var(--bg-panel-light)" }}>
-                      <strong style={{ fontSize: "0.85rem", color: "var(--color-gold)" }}>무기 목록:</strong>
-                      {WEAPONS.map(w => (
-                        <div key={w.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.88rem", padding: "3px 0", borderBottom: "1px dashed rgba(0,0,0,0.05)" }}>
-                          <span>{w.nameKo} (Swords 필요: {w.swordsReq})</span>
-                          <button className="btn-medieval-small" style={{ fontSize: "0.75rem", padding: "2px 6px" }} onClick={() => handleStartBuyTest({ name: w.name, nameKo: w.nameKo, coinsMod: w.coins, swordsReq: w.swordsReq })}>Coins판정</button>
-                        </div>
-                      ))}
-                      <strong style={{ fontSize: "0.85rem", color: "var(--color-gold)", display: "block", marginTop: "8px" }}>방어구 목록:</strong>
-                      {ARMOR.map(a => (
-                        <div key={a.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.88rem", padding: "3px 0", borderBottom: "1px dashed rgba(0,0,0,0.05)" }}>
-                          <span>{a.nameKo} (AP: {a.ap})</span>
-                          <button className="btn-medieval-small" style={{ fontSize: "0.75rem", padding: "2px 6px" }} onClick={() => handleStartBuyTest({ name: a.name, nameKo: a.nameKo, coinsMod: a.coins })}>Coins판정</button>
-                        </div>
+                    {/* Shop Tabs */}
+                    <div style={{ display: "flex", gap: "2px", marginBottom: "6px" }}>
+                      {(["weapons", "armor", "trade"] as const).map(tab => (
+                        <button
+                          key={tab}
+                          className={`btn-medieval-small${shopTab === tab ? "" : " danger"}`}
+                          style={{
+                            flex: 1,
+                            fontSize: "0.72rem",
+                            padding: "3px 2px",
+                            opacity: shopTab === tab ? 1 : 0.55,
+                            background: shopTab === tab ? "var(--bg-btn)" : "transparent"
+                          }}
+                          onClick={() => setShopTab(tab)}
+                        >
+                          {tab === "weapons" ? "⚔️ 무기" : tab === "armor" ? "🛡️ 방어구" : "🎒 교역품"}
+                        </button>
                       ))}
                     </div>
+
+                    <div style={{ border: "1px solid var(--border-color)", maxHeight: "160px", overflowY: "auto", padding: "6px", backgroundColor: "var(--bg-panel-light)" }}>
+                      {shopTab === "weapons" && (
+                        <>
+                          <strong style={{ fontSize: "0.85rem", color: "var(--color-gold)" }}>무기 목록 (p.26):</strong>
+                          {WEAPONS.map(w => (
+                            <div key={w.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", padding: "3px 0", borderBottom: "1px dashed rgba(0,0,0,0.05)" }}>
+                              <span>{w.nameKo} <span style={{ color: "#888", fontSize: "0.7rem" }}>피해:{w.wounds} 사거리:{w.range} Swords필요:{w.swordsReq}</span></span>
+                              <button className="btn-medieval-small" style={{ fontSize: "0.72rem", padding: "2px 5px" }} onClick={() => handleStartBuyTest({ name: w.name, nameKo: w.nameKo, coinsMod: w.coins, swordsReq: w.swordsReq })}>Coins판정</button>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {shopTab === "armor" && (
+                        <>
+                          <strong style={{ fontSize: "0.85rem", color: "var(--color-gold)" }}>방어구 목록 (p.27):</strong>
+                          {ARMOR.map(a => (
+                            <div key={a.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", padding: "3px 0", borderBottom: "1px dashed rgba(0,0,0,0.05)" }}>
+                              <span>{a.nameKo} <span style={{ color: "#888", fontSize: "0.7rem" }}>AP:{a.ap} 부위:{a.bodyPartKo} Swords필요:{a.swordsReq}</span></span>
+                              <button className="btn-medieval-small" style={{ fontSize: "0.72rem", padding: "2px 5px" }} onClick={() => handleStartBuyTest({ name: a.name, nameKo: a.nameKo, coinsMod: a.coins, swordsReq: a.swordsReq })}>Coins판정</button>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {shopTab === "trade" && (
+                        <>
+                          <strong style={{ fontSize: "0.85rem", color: "var(--color-gold)" }}>교역품/모험 도구 (p.28-29):</strong>
+                          <input
+                            type="text"
+                            placeholder="검색..."
+                            value={tradeGoodsSearch}
+                            onChange={e => setTradeGoodsSearch(e.target.value)}
+                            style={{ width: "100%", padding: "3px 5px", fontSize: "0.78rem", margin: "5px 0", background: "rgba(0,0,0,0.2)", border: "1px solid #555", color: "var(--text-bright)", borderRadius: "3px" }}
+                          />
+                          {TRADE_GOODS.filter(g =>
+                            !tradeGoodsSearch || g.nameKo.includes(tradeGoodsSearch) || g.name.toLowerCase().includes(tradeGoodsSearch.toLowerCase())
+                          ).map(g => (
+                            <div key={g.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", padding: "3px 0", borderBottom: "1px dashed rgba(0,0,0,0.05)" }}>
+                              <span>{g.nameKo} <span style={{ color: "#888", fontSize: "0.7rem" }}>Coins:{g.coins}</span></span>
+                              <button className="btn-medieval-small" style={{ fontSize: "0.72rem", padding: "2px 5px" }} onClick={() => handleStartBuyTest({ name: g.name, nameKo: g.nameKo, coinsMod: g.coins })}>Coins판정</button>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </div>
                   </div>
+
 
                   {/* Talents Purchase section */}
                   <div style={{ marginTop: "15px", fontSize: "0.95rem" }}>
@@ -2922,30 +3216,46 @@ export default function App() {
                               const isStarting = index === 0;
                               if (isUnlocked) return null;
                               return (
-                                <div key={t} style={{ display: "flex", justifyContent: "space-between", paddingLeft: "10px", fontSize: "0.88rem", margin: "3px 0" }}>
-                                  <span>{isStarting ? "◆" : "◇"} {t}</span>
-                                  <button 
-                                    className="btn-medieval-small" 
-                                    onClick={() => {
-                                      if (isStarting && !isOwn) {
-                                        alert("타 천직의 시작 재능은 규칙상 배울 수 없습니다.");
-                                        return;
-                                      }
-                                      if (state.character.xp < cost) {
-                                        alert(`${cost} XP가 필요합니다.`);
-                                        return;
-                                      }
-                                      updateState(s => ({
-                                        ...s,
-                                        character: {
-                                          ...s.character,
-                                          xp: s.character.xp - cost,
-                                          unlockedTalents: [...s.character.unlockedTalents, t]
-                                        },
-                                        journals: [{ id: Date.now().toString(), text: `[재능 해금] ${cost} XP 소모, 재능 '${t}' 연마`, date: new Date().toLocaleString() }, ...s.journals]
-                                      }));
-                                    }}
-                                  >연마 ({cost}XP)</button>
+                                <div key={t} style={{ display: "flex", flexDirection: "column", borderBottom: "1px dashed rgba(255,255,255,0.08)", padding: "5px 0", paddingLeft: "10px", fontSize: "0.88rem" }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <span>{isStarting ? "◆" : "◇"} {t}</span>
+                                    <button 
+                                      className="btn-medieval-small" 
+                                      onClick={() => {
+                                        if (isStarting && !isOwn) {
+                                          alert("타 천직의 시작 재능은 규칙상 배울 수 없습니다.");
+                                          return;
+                                        }
+                                        if (state.character.xp < cost) {
+                                          alert(`${cost} XP가 필요합니다.`);
+                                          return;
+                                        }
+                                        updateState(s => {
+                                          const nextDay = s.day + cost;
+                                          return {
+                                            ...s,
+                                            day: nextDay,
+                                            watch: 1,
+                                            character: {
+                                              ...s.character,
+                                              xp: s.character.xp - cost,
+                                              unlockedTalents: [...s.character.unlockedTalents, t]
+                                            },
+                                            journals: [{
+                                              id: Date.now().toString(),
+                                              text: `[재능 해금] XP ${cost} 소모하여 재능 '${t}' 연마. ${cost}일간의 훈련 시간이 경과하여 제 ${nextDay}일 제 1워치가 되었습니다.`,
+                                              date: new Date().toLocaleString()
+                                            }, ...s.journals]
+                                          };
+                                        });
+                                      }}
+                                    >연마 ({cost}XP)</button>
+                                  </div>
+                                  {TALENT_DESCRIPTIONS[t] && (
+                                    <div style={{ fontSize: "0.75rem", color: "#aaa", marginTop: "3px", lineHeight: "1.3" }}>
+                                      {TALENT_DESCRIPTIONS[t]}
+                                    </div>
+                                  )}
                                 </div>
                               );
                             })}
@@ -3400,6 +3710,44 @@ export default function App() {
                   )}
                 </div>
 
+                {/* 6. Folk Magick Guide Column */}
+                <div className="downtime-column">
+                  <div>
+                    <h4 className="gothic-sub" style={{ fontSize: "1.05rem", color: "var(--color-gold)", borderBottom: "1px solid #444", paddingBottom: "5px", marginBottom: "8px" }}>
+                      민속 마법 안내서 (Folk Magick - p.37)
+                    </h4>
+                    <p style={{ fontSize: "0.75rem", color: "#888", margin: "8px 0 10px 0", height: "35px" }}>
+                      캐릭터가 Cups 또는 Wands 스탯을 사용해 소환하는 재래 마법 규칙을 확인합니다.
+                    </p>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {[
+                        { title: "🌿 치유 (Healing)", stat: "Cups", cost: "1 Resolve", effect: "Cups 판정(vs 14). 성공 시 자신 또는 인접 대상의 부상 1개를 제거합니다." },
+                        { title: "🔥 원소 소환 (Elemental)", stat: "Wands", cost: "1 Resolve", effect: "Wands 판정(vs 14). 성공 시 불, 물, 바람, 흙 중 하나의 원소 효과를 발동합니다." },
+                        { title: "👁️ 예지 (Foresight)", stat: "Cups", cost: "1 Resolve", effect: "Cups 판정(vs 14). 성공 시 레프리에게 Yes/No 신탁 1회 무료 사용 또는 다음 테스트에 +2 보너스." },
+                        { title: "🕯️ 퇴마 (Ward Evil)", stat: "Wands", cost: "1 Resolve", effect: "Wands 판정(vs 14). 성공 시 이번 전투에서 언데드/악령 유형 몬스터의 대항 패널티를 -2 감소." },
+                        { title: "🍄 자연 독 (Natural Poison)", stat: "Wands", cost: "재료", effect: "Wands 판정(vs 14) + 독초 재료. 성공 시 독약 1회분(다음 공격 시 추가 피해 1) 제조." },
+                        { title: "🌙 달의 오라클 (Moon Oracle)", stat: "Cups", cost: "1 Resolve + 야간", effect: "Cups 판정(vs 14). 밤에만 사용 가능. 성공 시 행운의 오라클 카드 1장을 뒤로 돌려두고 나중에 사용." },
+                      ].map((spell, idx) => (
+                        <div key={idx} style={{ background: "rgba(107,70,193,0.08)", border: "1px solid rgba(107,70,193,0.3)", borderRadius: "4px", padding: "7px 9px" }}>
+                          <div style={{ fontSize: "0.82rem", fontWeight: "bold", color: "#c4b5fd", marginBottom: "3px" }}>{spell.title}</div>
+                          <div style={{ fontSize: "0.7rem", color: "#888", marginBottom: "3px" }}>
+                            사용 스탯: <strong style={{ color: "var(--color-gold)" }}>{spell.stat}</strong> · 비용: {spell.cost}
+                          </div>
+                          <div style={{ fontSize: "0.7rem", color: "#bbb", lineHeight: "1.3" }}>{spell.effect}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ marginTop: "10px", padding: "8px", background: "rgba(0,0,0,0.3)", borderRadius: "4px", fontSize: "0.7rem", color: "#777", lineHeight: "1.4" }}>
+                      <strong style={{ color: "#999" }}>공통 규칙 (p.37):</strong><br />
+                      • 민속 마법은 판정 후 결의(Resolve)를 1점 소모합니다.<br />
+                      • 대실패(Great Failure) 시 시전자가 마법 반동으로 피해 1점을 받습니다.<br />
+                      • 같은 마법을 같은 날 두 번 사용하면 +3 패널티가 누적됩니다.
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
 
@@ -3616,7 +3964,127 @@ export default function App() {
                     <button className="btn-medieval" onClick={() => updateState(s => ({ ...s, combatRound: 1, combatMonsters: [] }))}>전투 종료</button>
                   </div>
                 )}
+
+                {/* Combat Quick Reference */}
+                <div style={{ marginTop: "1.5rem", borderTop: "1px solid #333", paddingTop: "12px" }}>
+                  <button
+                    className="btn-medieval-small"
+                    style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px" }}
+                    onClick={() => setShowCombatRef(v => !v)}
+                  >
+                    <span>⚔️ 전술 행동 빠른 참조 (Combat Reference - p.31)</span>
+                    <span>{showCombatRef ? "▲ 접기" : "▼ 펼치기"}</span>
+                  </button>
+
+                  {showCombatRef && (
+                    <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {[
+                        {
+                          icon: "⚔️",
+                          name: "공격 (Attack) - 행동",
+                          stat: "Swords",
+                          rule: "Swords 판정 vs 대상의 선제권 수치. 성공 시 무기 Wound 피해 적용.",
+                          note: "첫 드로우 카드와 테스트 스탯(Swords) 슈트가 일치하여 14점 이상이면 극적 성공(Great Success)으로 추가 1 Wound 피해."
+                        },
+                        {
+                          icon: "🔮",
+                          name: "주문 시전 (Cast a Spell) - 행동",
+                          stat: "Wands",
+                          rule: "결의(Resolve)를 1점 이상 소비하여 시전. 적 타격 시 대항 Wands 판정 필요.",
+                          note: "전투 중 주문 시전은 적과의 대항 Wands 판정에서 성공해야 시전 완료됩니다."
+                        },
+                        {
+                          icon: "🛡️",
+                          name: "무기 탈착 (Draw/Sheathe) - 행동",
+                          stat: "Any",
+                          rule: "손패에서 카드 1장을 버리고 무기를 뽑거나 검집에 넣습니다.",
+                          note: "자유 행동(Free Action)이 아니며 카드 소모가 필요합니다."
+                        },
+                        {
+                          icon: "🏃",
+                          name: "도주 (Flee) - 행동",
+                          stat: "Coins",
+                          rule: "대항 Coins 판정 수행. 성공 시 인카운터/전투를 즉시 벗어나 안전하게 도망칩니다.",
+                          note: "도망치기 어려운 험난한 환경에서는 대항 난이도가 올라갈 수 있습니다."
+                        },
+                        {
+                          icon: "🤼",
+                          name: "잡기 (Grapple) - 행동",
+                          stat: "Swords",
+                          rule: "대항 Swords 판정 수행. 성공 시 대상을 붙잡아 고정(immobilize)합니다.",
+                          note: "이후 이동 행동(Move) 시 자신의 이동 속도(Speed)의 절반만큼 대상을 끌고 함께 갈 수 있습니다."
+                        },
+                        {
+                          icon: "👣",
+                          name: "이동 (Move) - 행동",
+                          stat: "Any",
+                          rule: "손패에서 카드 1장을 버리고 자신의 속도(Speed)만큼 직교(orthogonal) 이동하거나 점프합니다.",
+                          note: "대각선 이동은 불가능하며, 부상을 입어 속도가 0이 되면 혼자 이동 불가합니다."
+                        },
+                        {
+                          icon: "🌊",
+                          name: "밀쳐내기 (Shove) - 행동",
+                          stat: "Swords",
+                          rule: "대항 Swords 판정 수행. 성공 시 대상을 자신의 Swords 스탯만큼의 칸 수(squares)로 밀쳐냅니다.",
+                          note: "몬스터가 아군을 밀칠 때도 자신의 Stat만큼 밀어냅니다 (p.31)."
+                        },
+                        {
+                          icon: "☄️",
+                          name: "던지기 (Throw) - 행동",
+                          stat: "Swords",
+                          rule: "카드 1장을 버리고, [버린 카드 값 + Swords 스탯] 칸만큼 물체/투척 무기를 멀리 던집니다.",
+                          note: "무기 투척 피해는 해당 투척품의 Wound 수치를 따릅니다."
+                        },
+                        {
+                          icon: "👟",
+                          name: "회피 (Dodge) - 반응",
+                          stat: "Coins",
+                          rule: "상대 턴에 피격 전 대항 Coins 판정. 성공 시 피해를 완전히 무력화합니다.",
+                          note: "극적 성공(Great Success) 시 즉시 공격자에게 원하는 신체 부위에 1 Wound 피해를 가합니다."
+                        },
+                        {
+                          icon: "⚡",
+                          name: "반격 (Riposte) - 반응",
+                          stat: "Swords",
+                          rule: "적의 근접 공격이 나에게 빗나갔을 때(실패), 카드 1장을 내어 대항 근접 공격을 수행합니다.",
+                          note: "상대의 헛점을 노리는 날카로운 카운터 공격입니다."
+                        },
+                        {
+                          icon: "🎯",
+                          name: "부위 조준 (Called Shot) - 특수",
+                          stat: "Swords",
+                          rule: "공격 시 아머가 얇거나 없는 특정 부위(머리, 몸통 등)를 지정해 대항 Swords 판정 공격을 가합니다.",
+                          note: "일반 공격은 피격자가 피격 부위를 결정(방패 올리기 등)하지만, Called Shot은 공격자가 지정합니다."
+                        }
+                      ].map((action, idx) => (
+                        <div key={idx} style={{ background: "rgba(30,25,20,0.5)", border: "1px solid #444", borderRadius: "4px", padding: "8px 10px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontSize: "0.85rem", fontWeight: "bold", color: "var(--text-bright)" }}>
+                              {action.icon} {action.name}
+                            </span>
+                            <span style={{ fontSize: "0.7rem", padding: "1px 6px", background: "rgba(184,142,80,0.2)", color: "var(--color-gold)", borderRadius: "3px", border: "1px solid rgba(184,142,80,0.4)" }}>
+                              {action.stat}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: "0.72rem", color: "#bbb", margin: "4px 0 2px 0", lineHeight: "1.3" }}>{action.rule}</p>
+                          <p style={{ fontSize: "0.67rem", color: "#777", margin: 0, lineHeight: "1.2", fontStyle: "italic" }}>* {action.note}</p>
+                        </div>
+                      ))}
+
+                      <div style={{ padding: "7px 10px", background: "rgba(184,142,80,0.07)", border: "1px solid rgba(184,142,80,0.25)", borderRadius: "4px", fontSize: "0.7rem", color: "#999", lineHeight: "1.4" }}>
+                        <strong style={{ color: "var(--color-gold)" }}>전투 기본 순서 (p.30):</strong><br />
+                        ① 핸드 보충: 라운드 시작 시 플레이어는 손패가 4장이 될 때까지 카드 보충. 레프리는 몬스터당 3장 드로우.<br />
+                        ② 선제권 결정: 손패 중 1장을 Facedown으로 내고 동시 공개. 선제권 카드 숫자가 낮을수록(0~14) 먼저 행동.<br />
+                        ③ 행동 순서: 선제권 카드 0부터 14까지 오름차순 순서로 턴 수행. (선제권 값은 피격 난이도인 Target Number가 됨)<br />
+                        ④ 행동 및 반응: 손패가 있는 한 횟수 제한 없이 자유롭게 행동 수행. 상대 턴에는 반응(회피, 반격)으로 대응.<br />
+                        ⑤ 광대(The Fool): 선제권 0으로 취급되거나 행동에 +3 보너스 부여. 광대가 사용된 라운드 종료 시 두 덱 모두 셔플.
+                      </div>
+                    </div>
+                  )}
+                </div>
+
               </div>
+
             </div>
 
           </div>
@@ -3713,6 +4181,109 @@ export default function App() {
                 <button className="btn-medieval" onClick={handleResolveBuyTest}>카드 뽑고 판정하기</button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Session End XP Wizard Modal */}
+      {showSessionXpWizard && (
+        <div className="modal-backdrop">
+          <div className="modal-content-panel gold-border" style={{ maxWidth: "450px" }}>
+            <h3 className="gothic-sub" style={{ borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", marginBottom: "15px" }}>
+              ⏳ 세션 종료 및 XP 정산 (End of Session XP)
+            </h3>
+            
+            <p className="desc" style={{ color: "#aaa", fontSize: "0.82rem", marginBottom: "1.2rem", lineHeight: "1.4" }}>
+              룰북 p.35 규칙에 따라 세션 종료 시 다음과 같은 질문에 답하여 경험치(XP) 및 결의(Resolve) 보상을 정산합니다.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", margin: "15px 0" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.88rem", cursor: "pointer", background: "rgba(0,0,0,0.2)", padding: "10px", borderRadius: "4px", border: "1px solid #333" }}>
+                <input 
+                  type="checkbox" 
+                  checked={sessionParticipated} 
+                  onChange={e => setSessionParticipated(e.target.checked)} 
+                />
+                <div>
+                  <strong style={{ color: "var(--color-gold)" }}>세션에 참여했습니까? (+1 XP)</strong>
+                  <div style={{ fontSize: "0.75rem", color: "#888", marginTop: "2px" }}>세션을 진행하고 기여한 경우 획득합니다.</div>
+                </div>
+              </label>
+
+              <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.88rem", cursor: "pointer", background: "rgba(0,0,0,0.2)", padding: "10px", borderRadius: "4px", border: "1px solid #333" }}>
+                <input 
+                  type="checkbox" 
+                  checked={sessionEndangered} 
+                  onChange={e => setSessionEndangered(e.target.checked)} 
+                />
+                <div>
+                  <strong style={{ color: "var(--color-gold)" }}>생명이 위태로운 조우를 겪었습니까? (+1 XP)</strong>
+                  <div style={{ fontSize: "0.75rem", color: "#888", marginTop: "2px" }}>전투나 치명적인 곤경에서 살아남았을 경우 획득합니다.</div>
+                </div>
+              </label>
+
+              <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.88rem", cursor: "pointer", background: "rgba(0,0,0,0.2)", padding: "10px", borderRadius: "4px", border: "1px solid #333" }}>
+                <input 
+                  type="checkbox" 
+                  checked={sessionGoalFulfilled} 
+                  onChange={e => setSessionGoalFulfilled(e.target.checked)} 
+                />
+                <div>
+                  <strong style={{ color: "var(--color-gold)" }}>캐릭터 목표(Goal) 중 최소 하나를 달성했습니까? (+1 XP, +1 결의)</strong>
+                  <div style={{ fontSize: "0.75rem", color: "#888", marginTop: "2px" }}>세션 목표나 캐릭터 전용 목표를 완료했을 경우 획득합니다. (결의는 최대 10점 한도)</div>
+                </div>
+              </label>
+            </div>
+
+            <div style={{ background: "rgba(184,142,80,0.08)", border: "1px solid rgba(184,142,80,0.25)", borderRadius: "4px", padding: "10px", margin: "15px 0", textAlign: "center" }}>
+              <div style={{ fontSize: "0.8rem", color: "#aaa" }}>예상 획득 보상</div>
+              <div style={{ fontSize: "1.4rem", fontWeight: "bold", color: "var(--color-gold)", margin: "4px 0" }}>
+                XP +{(sessionParticipated ? 1 : 0) + (sessionEndangered ? 1 : 0) + (sessionGoalFulfilled ? 1 : 0)} / 
+                결의 +{sessionGoalFulfilled ? 1 : 0}
+              </div>
+            </div>
+
+            <div className="flex-row gap-10" style={{ marginTop: "1.5rem" }}>
+              <button className="btn-medieval flex-1" onClick={() => {
+                const addXp = (sessionParticipated ? 1 : 0) + (sessionEndangered ? 1 : 0) + (sessionGoalFulfilled ? 1 : 0);
+                const addResolve = sessionGoalFulfilled ? 1 : 0;
+                
+                updateState(s => {
+                  const newXp = s.character.xp + addXp;
+                  const newResolve = Math.min(10, s.character.resolve + addResolve);
+                  
+                  // Journal text
+                  const reasons = [];
+                  if (sessionParticipated) reasons.push("세션 참여 (+1 XP)");
+                  if (sessionEndangered) reasons.push("생명 위협 (+1 XP)");
+                  if (sessionGoalFulfilled) reasons.push("목표 달성 (+1 XP, +1 결의)");
+                  
+                  const reasonStr = reasons.length > 0 ? reasons.join(", ") : "기본 정산";
+                  
+                  return {
+                    ...s,
+                    character: {
+                      ...s.character,
+                      xp: newXp,
+                      resolve: newResolve
+                    },
+                    journals: [{
+                      id: Date.now().toString(),
+                      text: `[세션 종료 정산] 획득: XP +${addXp}, 결의 +${addResolve} (사유: ${reasonStr})`,
+                      date: new Date().toLocaleString()
+                    }, ...s.journals]
+                  };
+                });
+                
+                setShowSessionXpWizard(false);
+                alert(`🎉 세션 정산이 완료되었습니다!\n경험치 +${addXp}점과 결의 +${addResolve}점이 적립되었습니다.`);
+              }}>
+                정산 적용
+              </button>
+              <button className="btn-medieval danger" onClick={() => setShowSessionXpWizard(false)}>
+                취소
+              </button>
+            </div>
           </div>
         </div>
       )}
