@@ -131,6 +131,41 @@ export interface JournalEntry {
   systemLog?: string;
 }
 
+export interface Goal {
+  id: string;
+  text: string;
+  status: "active" | "completed" | "abandoned";
+  createdDate: string;
+  completedDate?: string;
+  milestoneNote?: string;
+  linkedJournalId?: string;
+}
+
+export interface InstinctTrigger {
+  id: string;
+  instinctText: string;
+  date: string;
+  narrativeNote: string;
+  linkedJournalId?: string;
+}
+
+export interface InjuryLog {
+  id: string;
+  location: "head" | "torso" | "lArm" | "rArm" | "lLeg" | "rLeg";
+  injuryText: string;
+  dateAcquired: string;
+  healed: boolean;
+  dateHealed?: string;
+  scarsNotes?: string;
+}
+
+export interface ChronicleChapter {
+  id: string;
+  title: string;
+  summary: string;
+  dateRange: string;
+}
+
 export interface Character {
   name: string;
   vocation: string;
@@ -165,13 +200,17 @@ export interface Character {
   };
   inventory: string[];
   instincts: string[];
-  goals: string[];
+  goals: Goal[];
   friends: Friend[];
   foes: Foe[];
   hirelings: Hireling[];
   unlockedTalents: string[];
   lifepathLogs: string[];
   spellbook: string[]; // Arcane spells known by the character
+  instinctTriggers: InstinctTrigger[];
+  injuryLogs: InjuryLog[];
+  chronicleChapters: ChronicleChapter[];
+  epilogue: string;
 }
 
 export interface MapCell {
@@ -289,9 +328,9 @@ const INITIAL_CHARACTER: Character = {
     "밤이 되면 항상 은신처를 찾아 횃불을 끈다."
   ],
   goals: [
-    "어릴 적 고향을 파괴한 도적 두목을 추적해 처단한다.",
-    "잃어버린 가문의 명검 아스칼론을 폐허에서 찾아낸다.",
-    "황혼의 거점 성채에 갇힌 친구를 구출한다."
+    { id: "g1", text: "어릴 적 고향을 파괴한 도적 두목을 추적해 처단한다.", status: "active", createdDate: "초기 설정" },
+    { id: "g2", text: "잃어버린 가문의 명검 아스칼론을 폐허에서 찾아낸다.", status: "active", createdDate: "초기 설정" },
+    { id: "g3", text: "황혼의 거점 성채에 갇힌 친구를 구출한다.", status: "active", createdDate: "초기 설정" }
   ],
   friends: [{ name: "아이리스 (Iris)", info: "마을 약초꾼. 다쳤을 때 안전한 잠자리를 제공해 줍니다." }],
   foes: [{ name: "마옌스 경 (Sir Mayence)", info: "기사 서약을 저버린 배역자 기사. 사사건건 도전을 걸어옵니다." }],
@@ -302,7 +341,11 @@ const INITIAL_CHARACTER: Character = {
     "청년기: 믿었던 가장 가까운 동료 기사에게 배신당해 큰 마음의 상처를 입었습니다. (+9세)",
     "청년기: 고고학적이고 역사적인 고문헌을 밤낮으로 치열하게 탐구하며 지식을 마스터했습니다. (+14세)"
   ],
-  spellbook: []
+  spellbook: [],
+  instinctTriggers: [],
+  injuryLogs: [],
+  chronicleChapters: [],
+  epilogue: ""
 };
 
 const INITIAL_STATE: GameState = {
@@ -505,7 +548,27 @@ const sanitizeGameState = (loaded: any): GameState => {
   
   character.inventory = Array.isArray(loaded.character?.inventory) ? loaded.character.inventory : [...INITIAL_CHARACTER.inventory];
   character.instincts = Array.isArray(loaded.character?.instincts) ? loaded.character.instincts : [...INITIAL_CHARACTER.instincts];
-  character.goals = Array.isArray(loaded.character?.goals) ? loaded.character.goals : [...INITIAL_CHARACTER.goals];
+  
+  const rawGoals = Array.isArray(loaded.character?.goals) ? loaded.character.goals : [...INITIAL_CHARACTER.goals];
+  character.goals = rawGoals.map((g: any) => {
+    if (typeof g === 'string') {
+      return {
+        id: generateUniqueId(),
+        text: g,
+        status: "active",
+        createdDate: "초기 설정"
+      };
+    }
+    return {
+      id: g.id || generateUniqueId(),
+      text: g.text || '',
+      status: g.status || "active",
+      createdDate: g.createdDate || "초기 설정",
+      completedDate: g.completedDate || undefined,
+      milestoneNote: g.milestoneNote || undefined,
+      linkedJournalId: g.linkedJournalId || undefined
+    };
+  });
   
   const rawFriends = Array.isArray(loaded.character?.friends) ? loaded.character.friends : [...INITIAL_CHARACTER.friends];
   character.friends = rawFriends.map((f: any) => {
@@ -546,6 +609,39 @@ const sanitizeGameState = (loaded: any): GameState => {
   character.unlockedTalents = Array.isArray(loaded.character?.unlockedTalents) ? loaded.character.unlockedTalents : [...INITIAL_CHARACTER.unlockedTalents];
   character.lifepathLogs = Array.isArray(loaded.character?.lifepathLogs) ? loaded.character.lifepathLogs : [...INITIAL_CHARACTER.lifepathLogs];
   character.spellbook = Array.isArray(loaded.character?.spellbook) ? loaded.character.spellbook : [...INITIAL_CHARACTER.spellbook];
+
+  character.instinctTriggers = Array.isArray(loaded.character?.instinctTriggers)
+    ? loaded.character.instinctTriggers.map((t: any) => ({
+        id: t.id || generateUniqueId(),
+        instinctText: t.instinctText || '',
+        date: t.date || '',
+        narrativeNote: t.narrativeNote || '',
+        linkedJournalId: t.linkedJournalId || undefined
+      }))
+    : [];
+
+  character.injuryLogs = Array.isArray(loaded.character?.injuryLogs)
+    ? loaded.character.injuryLogs.map((l: any) => ({
+        id: l.id || generateUniqueId(),
+        location: l.location,
+        injuryText: l.injuryText || '',
+        dateAcquired: l.dateAcquired || '',
+        healed: !!l.healed,
+        dateHealed: l.dateHealed || undefined,
+        scarsNotes: l.scarsNotes || undefined
+      }))
+    : [];
+
+  character.chronicleChapters = Array.isArray(loaded.character?.chronicleChapters)
+    ? loaded.character.chronicleChapters.map((c: any) => ({
+        id: c.id || generateUniqueId(),
+        title: c.title || '',
+        summary: c.summary || '',
+        dateRange: c.dateRange || ''
+      }))
+    : [];
+
+  character.epilogue = typeof loaded.character?.epilogue === 'string' ? loaded.character.epilogue : "";
 
   const mapGrid = Array.isArray(loaded.mapGrid) ? loaded.mapGrid : Array.from({ length: 16 }, (_, i) => ({
     x: i % 4,
@@ -819,6 +915,9 @@ export default function App() {
   
   // Modals / Temporary states
   const [newJournalText, setNewJournalText] = useState("");
+  const [newChapterTitle, setNewChapterTitle] = useState("");
+  const [newChapterSummary, setNewChapterSummary] = useState("");
+  const [newChapterDateRange, setNewChapterDateRange] = useState("");
   const [buyCatalogItem, setBuyCatalogItem] = useState<{ name: string; nameKo: string; coinsMod: string; swordsReq?: number } | null>(null);
   const [buyTestResult, setBuyTestResult] = useState<{ success: boolean; total: number; card: Card; statUsed: number } | null>(null);
 
@@ -936,13 +1035,136 @@ export default function App() {
     updateState(s => ({ ...s, selectedMapCellIdx: typeof val === "function" ? val(s.selectedMapCellIdx) : val }));
   };
   const [journalDisplayMode, setJournalDisplayMode] = useState<"thematic" | "system">("thematic");
+  const [journalSubView, setJournalSubView] = useState<"field" | "chronicle" | "retirement">("field");
   const [showRuleModal, setShowRuleModal] = useState<boolean>(false);
+  const [showExportModal, setShowExportModal] = useState<boolean>(false);
+  const [markdownContent, setMarkdownContent] = useState<string>("");
   const [activeRuleTitle, setActiveRuleTitle] = useState<string>("");
   const [activeRuleText, setActiveRuleText] = useState<string>("");
   const [activeRulePage, setActiveRulePage] = useState<string>("");
   const [expandedFriendIdx, setExpandedFriendIdx] = useState<number | null>(null);
   const [expandedFoeIdx, setExpandedFoeIdx] = useState<number | null>(null);
   const [expandedHirelingIdx, setExpandedHirelingIdx] = useState<number | null>(null);
+
+  const generateMarkdownChronicle = (gameState: GameState): string => {
+    const char = gameState.character;
+    const daysCount = gameState.day;
+    const statBlock = `- Cups (성배): ${char.stats.cups}
+- Wands (지팡이): ${char.stats.wands}
+- Swords (검): ${char.stats.swords}
+- Coins (동전): ${char.stats.coins}`;
+
+    const completed = (char.goals || [])
+      .filter((g): g is Goal => typeof g !== 'string' && g.status === 'completed')
+      .map(cg => `- **[${cg.completedDate || '날짜 미상'}]** ${cg.text}\n  *달성기록: ${cg.milestoneNote || '기록 없음'}*`)
+      .join('\n');
+
+    const friendsList = (char.friends || [])
+      .map(f => {
+        const relMap: Record<string, string> = { Devoted: "헌신적", Friendly: "우호적", Neutral: "중립적", Wary: "경계함", Hostile: "적대적" };
+        const rel = relMap[f.relationship || 'Neutral'] || f.relationship || '중립적';
+        const logs = (f.memoryLogs || []).map(m => `  * ${m}`).join('\n');
+        return `- **${f.name}** (${f.info || '소개 없음'}) [관계: ${rel}]\n${logs || '  * 기억된 사건 없음'}`;
+      })
+      .join('\n\n');
+
+    const foesList = (char.foes || [])
+      .map(f => {
+        const relMap: Record<string, string> = { Devoted: "헌신적", Friendly: "우호적", Neutral: "중립적", Wary: "경계함", Hostile: "적대적" };
+        const rel = relMap[f.relationship || 'Neutral'] || f.relationship || '중립적';
+        const logs = (f.memoryLogs || []).map(m => `  * ${m}`).join('\n');
+        return `- **${f.name}** (${f.info || '소개 없음'}) [관계: ${rel}]\n${logs || '  * 기억된 사건 없음'}`;
+      })
+      .join('\n\n');
+
+    const hirelingsList = (char.hirelings || [])
+      .map(h => {
+        const logs = (h.memoryLogs || []).map(m => `  * ${m}`).join('\n');
+        return `- **${h.name}** (${h.info || '소개 없음'}) [충성도: ${h.loyalty || 5}, 부상: ${h.woundsTaken || 0}/${h.maxWounds || 2}]\n${logs || '  * 활동 기록 없음'}`;
+      })
+      .join('\n\n');
+
+    const scarsList = (char.injuryLogs || [])
+      .map(log => {
+        const locMap: Record<string, string> = { head: "머리", torso: "몸통", lArm: "왼팔", rArm: "오른팔", lLeg: "왼다리", rLeg: "오른다리" };
+        const loc = locMap[log.location] || log.location;
+        const healedStatus = log.healed
+          ? `완치 (완치일: ${log.dateHealed || '미상'})\n  *남겨진 흔적: ${log.scarsNotes || '치유됨'}*`
+          : `부상 중 (부상 획득일: ${log.dateAcquired})`;
+        return `- **[${loc}]** ${log.injuryText}\n  *상태: ${healedStatus}*`;
+      })
+      .join('\n');
+
+    const instinctsList = (char.instinctTriggers || [])
+      .map(t => `- **[${t.date}]** 본능 '${t.instinctText}' 격발\n  *시련 내용: ${t.narrativeNote}*`)
+      .join('\n');
+
+    const chaptersList = (char.chronicleChapters || [])
+      .map((c, idx) => `### Chapter ${idx + 1}. ${c.title} (기간: ${c.dateRange})\n${c.summary}`)
+      .join('\n\n');
+
+    const journalTimeline = (gameState.journals || [])
+      .slice()
+      .sort((a, b) => (a.day || 1) - (b.day || 1) || (a.watch || 1) - (b.watch || 1))
+      .map(j => `- **Day ${j.day || 1}, Watch ${j.watch || 1}**${j.x !== null && j.y !== null && j.x !== undefined && j.y !== undefined ? ` @ (${j.x}, ${j.y})` : ""}: ${j.text}`)
+      .join('\n');
+
+    return `# 📜 GLOAM - 캐릭터 연대기 & 서사 기록 (Character Chronicle)
+
+## 👤 모험가 프로필 (Adventurer Profile)
+- **이름**: ${char.name}
+- **직업**: ${char.vocation}
+- **나이**: ${char.age}세
+- **경험치**: ${char.xp} XP / **결의**: ${char.resolve} / 10
+- **생존 기간**: 총 ${daysCount}일 동안 모험 진행
+
+### 📊 능력치 (Stats)
+${statBlock}
+
+---
+
+## 🏆 달성한 업적 연대기 (Completed Milestones)
+${completed || "*달성한 업적이 아직 없습니다.*"}
+
+---
+
+## 🤝 인연 및 인간 관계 (Bonds & Relationships)
+
+### 🟢 Friends (인연)
+${friendsList || "*맺어진 인연이 없습니다.*"}
+
+### 🔴 Foes (원수)
+${foesList || "*등록된 원수가 없습니다.*"}
+
+### 🟡 Hirelings (고용된 용병)
+${hirelingsList || "*고용한 용병이 없습니다.*"}
+
+---
+
+## 🩹 신체 부상 및 흉터 연대기 (Anatomy & Scar Chronicle)
+${scarsList || "*신체가 깨끗하며 남겨진 흉터가 없습니다.*"}
+
+---
+
+## ⚡ 본능 격발 역사 (Instinct Triggers)
+${instinctsList || "*본능으로 인한 곤경 격발 기록이 없습니다.*"}
+
+---
+
+## 📜 캠페인 챕터 기록 (Campaign Chapters)
+${chaptersList || "*기록된 캠페인 챕터가 없습니다.*"}
+
+---
+
+## 🗺️ 현장 일지 타임라인 (Field Journal Timeline)
+${journalTimeline || "*기록된 현장 일지가 없습니다.*"}
+
+---
+
+## 🪵 은퇴 기록 및 에필로그 (Retirement / Epilogue)
+${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에필로그가 없습니다.*"}
+`;
+  };
 
   const showRule = (key: string) => {
     const rule = GLOAM_RULES[key];
@@ -2090,27 +2312,126 @@ export default function App() {
 
   const healWound = (partKey: "head" | "torso" | "lArm" | "rArm" | "lLeg" | "rLeg", partNameKo: string) => {
     if (confirm(`식사와 함께 하룻밤 야영 및 휴식(Rest & Recovery)을 진행하여 ${partNameKo}의 부상을 치유하시겠습니까?\n(시간이 다음 날 아침 제 1워치로 전진합니다.)`)) {
+      const scar = prompt(
+        `🩹 [부상 완치] 야영 휴식으로 ${partNameKo} 부위가 치유되었습니다.\n남겨진 흉터나 흔적을 기록하십시오 (취소 시 치유 취소, 입력 없이 확인 시 '휴식으로 치유됨'으로 저장):`
+      );
+      if (scar === null) return; // Cancel healing
+
+      const dateStr = `제 ${state.day}일 제 ${state.watch}워치`;
+      updateState(s => {
+        const nextLogs = (s.character.injuryLogs || []).map(log => {
+          if (log.location === partKey && !log.healed) {
+            return {
+              ...log,
+              healed: true,
+              dateHealed: dateStr,
+              scarsNotes: scar.trim() || "휴식으로 완치됨"
+            };
+          }
+          return log;
+        });
+
+        return {
+          ...s,
+          day: s.day + 1,
+          watch: 1,
+          character: {
+            ...s.character,
+            wounds: {
+              ...s.character.wounds,
+              [partKey]: false
+            },
+            injuryLogs: nextLogs
+          },
+          journals: [
+            {
+              id: generateUniqueId(),
+              text: `[야영 휴식 - ${partNameKo} 완치] 식사와 함께 편안한 휴식을 취해 부상을 치유했습니다. (흔적: ${scar.trim() || "치유됨"})`,
+              date: new Date().toLocaleString()
+            },
+            ...s.journals
+          ]
+        };
+      });
+      alert(`${partNameKo}의 상처가 깨끗하게 치유되었습니다!`);
+    }
+  };
+
+  const toggleWoundState = (partKey: "head" | "torso" | "lArm" | "rArm" | "lLeg" | "rLeg", currentVal: boolean, partNameKo: string) => {
+    const nextVal = !currentVal;
+    const dateStr = `제 ${state.day}일 제 ${state.watch}워치`;
+
+    if (nextVal) {
+      const desc = prompt(
+        `🚨 [부상 기록] ${partNameKo} 부위에 어떤 부상을 입었습니까?\n원인이나 사건을 간략히 적어주십시오 (취소 시 부상 취소, 입력 없이 확인 시 '원인 불명 부상'으로 저장):`
+      );
+      if (desc === null) return; // Cancel
+
       updateState(s => ({
         ...s,
-        day: s.day + 1,
-        watch: 1,
         character: {
           ...s.character,
-          wounds: {
-            ...s.character.wounds,
-            [partKey]: false
-          }
+          wounds: { ...s.character.wounds, [partKey]: true },
+          injuryLogs: [
+            ...(s.character.injuryLogs || []),
+            {
+              id: generateUniqueId(),
+              location: partKey,
+              injuryText: desc.trim() || "원인 불명의 부상",
+              dateAcquired: dateStr,
+              healed: false
+            }
+          ]
         },
         journals: [
           {
             id: generateUniqueId(),
-            text: `[야영 휴식] 식사와 함께 편안한 휴식을 취해 ${partNameKo} 부상을 치유했습니다. (시간이 제 ${s.day + 1}일 제 1워치로 전진했습니다.)`,
-            date: new Date().toLocaleString()
+            text: `[부상 획득 - ${partNameKo}] ${desc.trim() || "부상을 입었습니다."}`,
+            date: new Date().toLocaleString(),
+            day: s.day,
+            watch: s.watch
           },
           ...s.journals
         ]
       }));
-      alert(`${partNameKo}의 상처가 깨끗하게 치유되었습니다!`);
+    } else {
+      const scar = prompt(
+        `🩹 [부상 완치] ${partNameKo} 부위가 어떻게 치유되었습니까?\n남겨진 흉터나 치유 과정을 기록해 주십시오 (취소 시 완치 취소, 입력 없이 확인 시 '치유됨'으로 저장):`
+      );
+      if (scar === null) return; // Cancel
+
+      updateState(s => {
+        const nextLogs = (s.character.injuryLogs || []).map(log => {
+          if (log.location === partKey && !log.healed) {
+            return {
+              ...log,
+              healed: true,
+              dateHealed: dateStr,
+              scarsNotes: scar.trim() || "치유됨"
+            };
+          }
+          return log;
+        });
+
+        return {
+          ...s,
+          character: {
+            ...s.character,
+            wounds: { ...s.character.wounds, [partKey]: false },
+            injuryLogs: nextLogs
+          },
+          journals: [
+            {
+              id: generateUniqueId(),
+              text: `[부상 치료 - ${partNameKo}] ${scar.trim() || "치유되었습니다."}`,
+              date: new Date().toLocaleString(),
+              day: s.day,
+              watch: s.watch
+            },
+            ...s.journals
+          ]
+        };
+      });
     }
   };
 
@@ -3480,20 +3801,37 @@ export default function App() {
               {/* Right Page: Goals & Instincts */}
               <div className="book-page right-page">
                 {/* Goals Section */}
-                <div className="book-page-header">
+                <div className="book-page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span>Goals</span>
+                  <button 
+                    className="btn-medieval-small" 
+                    onClick={() => {
+                      const text = prompt("새로운 목표를 입력하세요:\n(취소 시 취소, 입력 없이 확인 시 '새 목표'로 저장)");
+                      if (text === null) return;
+                      const dateStr = `제 ${state.day}일 제 ${state.watch}워치`;
+                      updateState(s => ({
+                        ...s,
+                        character: {
+                          ...s.character,
+                          goals: [
+                            ...s.character.goals,
+                            { id: generateUniqueId(), text: text.trim() || "새 목표", status: "active", createdDate: dateStr }
+                          ]
+                        }
+                      }));
+                    }}
+                  >+</button>
                 </div>
-                <div className="ruled-book-lines" style={{ marginBottom: "30px" }}>
-                  {state.character.goals.map((g, i) => (
-                    <div key={i} className="ruled-line-item">
+                <div className="ruled-book-lines" style={{ marginBottom: "20px" }}>
+                  {state.character.goals.filter(g => g.status === "active").map((g, i) => (
+                    <div key={g.id || i} className="ruled-line-item">
                       <input 
                         type="text" 
-                        value={g} 
+                        value={g.text} 
                         onChange={e => {
                           const val = e.target.value;
                           updateState(s => {
-                            const nextGoals = [...s.character.goals];
-                            nextGoals[i] = val;
+                            const nextGoals = s.character.goals.map(item => item.id === g.id ? { ...item, text: val } : item);
                             return { ...s, character: { ...s.character, goals: nextGoals } };
                           });
                         }} 
@@ -3501,28 +3839,121 @@ export default function App() {
                       <button 
                         style={{ background: "transparent", border: "1px solid var(--border-color)", padding: "1px 6px", fontSize: "0.75rem", cursor: "pointer", fontFamily: "var(--gothic)" }}
                         onClick={() => {
-                          if (confirm(`'${g}' 목표를 성공적으로 이행 완료하였습니까?\n경험치 1 XP와 결의 1점을 획득합니다.`)) {
-                            updateState(s => ({
+                          const note = prompt(
+                            "🏆 [목표 달성] 이 목표가 어떻게 달성되었는지 기록해 주십시오:\n(취소 시 달성 취소, 입력 없이 확인(Skip) 시 '달성함'으로 저장)"
+                          );
+                          if (note === null) return;
+                          const finalNote = note.trim() || "달성함";
+                          const dateStr = `제 ${state.day}일 제 ${state.watch}워치`;
+                          updateState(s => {
+                            const journalId = generateUniqueId();
+                            const nextGoals = s.character.goals.map(item =>
+                              item.id === g.id
+                                ? { ...item, status: "completed" as const, completedDate: dateStr, milestoneNote: finalNote, linkedJournalId: journalId }
+                                : item
+                            );
+                            return {
                               ...s,
                               character: {
                                 ...s.character,
-                                xp: s.character.xp + 1,
-                                resolve: Math.min(10, s.character.resolve + 1)
+                                goals: nextGoals
                               },
-                              journals: [{ id: generateUniqueId(), text: `[목표 완료] '${g}' 목표를 달성하여 1 XP와 결의 1점을 얻었습니다!`, date: new Date().toLocaleString() }, ...s.journals]
-                            }));
-                          }
+                              journals: [
+                                {
+                                  id: journalId,
+                                  text: `[목표 달성] ${g.text} (기록: ${finalNote})`,
+                                  date: new Date().toLocaleString(),
+                                  day: s.day,
+                                  watch: s.watch
+                                },
+                                ...s.journals
+                              ]
+                            };
+                          });
                         }}
                       >달성</button>
+                      <button
+                        style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "1.1rem", padding: "0 2px" }}
+                        onClick={() => {
+                          if (confirm("이 목표를 삭제하시겠습니까?")) {
+                            updateState(s => {
+                              const nextGoals = s.character.goals.filter(item => item.id !== g.id);
+                              return { ...s, character: { ...s.character, goals: nextGoals } };
+                            });
+                          }
+                        }}
+                      >
+                        &times;
+                      </button>
                     </div>
                   ))}
+                  {state.character.goals.filter(g => g.status === "active").length === 0 && (
+                    <p style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: "0.75rem", margin: "10px 0", textAlign: "center" }}>진행 중인 목표가 없습니다.</p>
+                  )}
                 </div>
 
+                {/* Completed Milestones List */}
+                {state.character.goals.filter(g => g.status === "completed").length > 0 && (
+                  <div style={{ marginTop: "10px", borderTop: "1px dashed rgba(187, 153, 93, 0.4)", paddingTop: "8px", marginBottom: "20px" }}>
+                    <h6 className="gothic-sub" style={{ color: "var(--color-gold)", margin: "0 0 6px 0", fontSize: "0.78rem", borderBottom: "none" }}>
+                      🏆 달성한 업적 연대기 (Completed Milestones)
+                    </h6>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "5px", maxHeight: "110px", overflowY: "auto", paddingRight: "3px" }}>
+                      {state.character.goals.filter(g => g.status === "completed").map((cg) => (
+                        <div key={cg.id} style={{ border: "1px solid rgba(187, 153, 93, 0.25)", background: "rgba(187, 153, 93, 0.03)", padding: "5px 6px", borderRadius: "4px", fontSize: "0.72rem" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1px" }}>
+                            <strong style={{ color: "var(--color-gold)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>{cg.text}</strong>
+                            <span style={{ fontSize: "0.62rem", color: "#888" }}>{cg.completedDate}</span>
+                          </div>
+                          <p style={{ margin: "2px 0 3px 0", color: "#ccc", fontSize: "0.68rem" }}>
+                            <strong>달성 경위:</strong> {cg.milestoneNote}
+                          </p>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px dashed rgba(255,255,255,0.05)", paddingTop: "3px", marginTop: "3px" }}>
+                            <span style={{ fontSize: "0.58rem", color: "#85bb65" }}>기록 전용 · 보상 수동 처리</span>
+                            <select
+                              value={cg.linkedJournalId || ""}
+                              onChange={(e) => {
+                                const jId = e.target.value;
+                                updateState(s => {
+                                  const nextGoals = s.character.goals.map(item => item.id === cg.id ? { ...item, linkedJournalId: jId || undefined } : item);
+                                  return { ...s, character: { ...s.character, goals: nextGoals } };
+                                });
+                              }}
+                              style={{ fontSize: "0.58rem", background: "rgba(0,0,0,0.4)", color: "var(--color-gold)", border: "1px solid var(--color-gold)", borderRadius: "3px", height: "16px", padding: "0 2px" }}
+                            >
+                              <option value="">일지 연결 안 함</option>
+                              {state.journals.slice(0, 10).map(j => (
+                                <option key={j.id} value={j.id} style={{ background: "#222", color: "#fff" }}>
+                                  [Day {j.day || 1}] {j.text.slice(0, 12)}...
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Instincts Section */}
-                <div className="book-page-header">
+                <div className="book-page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span>Instincts</span>
+                  <button 
+                    className="btn-medieval-small" 
+                    onClick={() => {
+                      const text = prompt("새로운 본능을 입력하세요:\n(취소 시 취소, 입력 없이 확인 시 '새 본능'으로 저장)");
+                      if (text === null) return;
+                      updateState(s => ({
+                        ...s,
+                        character: {
+                          ...s.character,
+                          instincts: [...s.character.instincts, text.trim() || "새 본능"]
+                        }
+                      }));
+                    }}
+                  >+</button>
                 </div>
-                <div className="ruled-book-lines">
+                <div className="ruled-book-lines" style={{ marginBottom: "20px" }}>
                   {state.character.instincts.map((inst, i) => (
                     <div key={i} className="ruled-line-item">
                       <input 
@@ -3540,21 +3971,104 @@ export default function App() {
                       <button 
                         style={{ background: "transparent", border: "1px solid var(--color-crimson)", color: "var(--color-crimson)", padding: "1px 6px", fontSize: "0.75rem", cursor: "pointer", fontFamily: "var(--gothic)" }}
                         onClick={() => {
-                          updateState(s => ({
-                            ...s,
-                            character: { ...s.character, resolve: Math.min(10, s.character.resolve + 1) },
-                            journals: [{ id: generateUniqueId(), text: `[본능 곤경] 본능 '${inst}'에 이끌려 시련이 가해졌으며, 결의 1점을 획득했습니다.`, date: new Date().toLocaleString() }, ...s.journals]
-                          }));
-                          alert("본능에 이끌려 서사가 꼬이고 시련을 겪어 결의 1점을 얻습니다!");
+                          const note = prompt(
+                            "⚡ [본능 격발] 본능으로 인해 어떤 위기나 시련이 생겼는지 기록해 주십시오:\n(취소 시 격발 취소, 입력 없이 확인(Skip) 시 '시련이 일어남'으로 저장)"
+                          );
+                          if (note === null) return;
+                          const finalNote = note.trim() || "시련이 일어남";
+                          const dateStr = `제 ${state.day}일 제 ${state.watch}워치`;
+                          
+                          updateState(s => {
+                            const journalId = generateUniqueId();
+                            const newTrigger = {
+                              id: generateUniqueId(),
+                              instinctText: inst,
+                              date: dateStr,
+                              narrativeNote: finalNote,
+                              linkedJournalId: journalId
+                            };
+                            return {
+                              ...s,
+                              character: {
+                                ...s.character,
+                                instinctTriggers: [...(s.character.instinctTriggers || []), newTrigger]
+                              },
+                              journals: [
+                                {
+                                  id: journalId,
+                                  text: `[본능 격발] 본능 '${inst}' (기록: ${finalNote})`,
+                                  date: new Date().toLocaleString(),
+                                  day: s.day,
+                                  watch: s.watch
+                                },
+                                ...s.journals
+                              ]
+                            };
+                          });
                         }}
                       >유발</button>
+                      <button
+                        style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "1.1rem", padding: "0 2px" }}
+                        onClick={() => {
+                          if (confirm("이 본능을 삭제하시겠습니까?")) {
+                            updateState(s => {
+                              const nextInsts = s.character.instincts.filter((_, idx) => idx !== i);
+                              return { ...s, character: { ...s.character, instincts: nextInsts } };
+                            });
+                          }
+                        }}
+                      >
+                        &times;
+                      </button>
                     </div>
                   ))}
+                  {state.character.instincts.length === 0 && (
+                    <p style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: "0.75rem", margin: "10px 0", textAlign: "center" }}>등록된 본능이 없습니다.</p>
+                  )}
                 </div>
-                <p style={{ marginTop: "auto", fontSize: "0.78rem", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center", lineHeight: "1.4" }}>
-                  * 목표 달성 시 결의 +1 / XP +1 <br />
-                  * 본능 곤경 격발 시 결의 +1
-                </p>
+
+                {/* Instinct Trigger History */}
+                {state.character.instinctTriggers && state.character.instinctTriggers.length > 0 && (
+                  <div style={{ marginTop: "10px", borderTop: "1px dashed rgba(220, 53, 69, 0.4)", paddingTop: "8px" }}>
+                    <h6 className="gothic-sub" style={{ color: "var(--color-crimson)", margin: "0 0 6px 0", fontSize: "0.78rem", borderBottom: "none" }}>
+                      ⚡ 본능 격발 역사 (Instinct Trigger History)
+                    </h6>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "5px", maxHeight: "110px", overflowY: "auto", paddingRight: "3px" }}>
+                      {[...state.character.instinctTriggers].reverse().map((t) => (
+                        <div key={t.id} style={{ border: "1px solid rgba(220, 53, 69, 0.25)", background: "rgba(220, 53, 69, 0.03)", padding: "5px 6px", borderRadius: "4px", fontSize: "0.72rem" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1px" }}>
+                            <strong style={{ color: "var(--color-crimson)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>{t.instinctText}</strong>
+                            <span style={{ fontSize: "0.62rem", color: "#888" }}>{t.date}</span>
+                          </div>
+                          <p style={{ margin: "2px 0 3px 0", color: "#ccc", fontSize: "0.68rem" }}>
+                            <strong>시련 경위:</strong> {t.narrativeNote}
+                          </p>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px dashed rgba(255,255,255,0.05)", paddingTop: "3px", marginTop: "3px" }}>
+                            <span style={{ fontSize: "0.58rem", color: "#85bb65" }}>기록 전용 · 보상 수동 처리</span>
+                            <select
+                              value={t.linkedJournalId || ""}
+                              onChange={(e) => {
+                                const jId = e.target.value;
+                                updateState(s => {
+                                  const nextTriggers = (s.character.instinctTriggers || []).map(item => item.id === t.id ? { ...item, linkedJournalId: jId || undefined } : item);
+                                  return { ...s, character: { ...s.character, instinctTriggers: nextTriggers } };
+                                });
+                              }}
+                              style={{ fontSize: "0.58rem", background: "rgba(0,0,0,0.4)", color: "var(--color-gold)", border: "1px solid var(--color-gold)", borderRadius: "3px", height: "16px", padding: "0 2px" }}
+                            >
+                              <option value="">일지 연결 안 함</option>
+                              {state.journals.slice(0, 10).map(j => (
+                                <option key={j.id} value={j.id} style={{ background: "#222", color: "#fff" }}>
+                                  [Day {j.day || 1}] {j.text.slice(0, 12)}...
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -3637,7 +4151,7 @@ export default function App() {
                         <input 
                           type="checkbox" 
                           checked={state.character.wounds.head} 
-                          onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, head: e.target.checked } } }))} 
+                          onChange={() => toggleWoundState("head", state.character.wounds.head, "머리")} 
                         />
                         <span style={{ color: state.character.wounds.head ? "var(--color-crimson)" : "inherit" }}>머리 (Head) [기절]</span>
                         {state.character.wounds.head && (
@@ -3668,7 +4182,7 @@ export default function App() {
                         <input 
                           type="checkbox" 
                           checked={state.character.wounds.torso} 
-                          onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, torso: e.target.checked } } }))} 
+                          onChange={() => toggleWoundState("torso", state.character.wounds.torso, "몸통")} 
                         />
                         <span style={{ color: state.character.wounds.torso ? "var(--color-crimson)" : "inherit" }}>몸통 (Torso) [-3 판정]</span>
                         {state.character.wounds.torso && (
@@ -3699,7 +4213,7 @@ export default function App() {
                         <input 
                           type="checkbox" 
                           checked={state.character.wounds.lArm} 
-                          onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lArm: e.target.checked } } }))} 
+                          onChange={() => toggleWoundState("lArm", state.character.wounds.lArm, "왼팔")} 
                         />
                         <span style={{ color: state.character.wounds.lArm ? "var(--color-crimson)" : "inherit" }}>왼팔 (L.Arm) [떨어뜨림]</span>
                         {state.character.wounds.lArm && (
@@ -3722,7 +4236,7 @@ export default function App() {
                         <input 
                           type="checkbox" 
                           checked={state.character.wounds.rArm} 
-                          onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rArm: e.target.checked } } }))} 
+                          onChange={() => toggleWoundState("rArm", state.character.wounds.rArm, "오른팔")} 
                         />
                         <span style={{ color: state.character.wounds.rArm ? "var(--color-crimson)" : "inherit" }}>오른팔 (R.Arm) [떨어뜨림]</span>
                         {state.character.wounds.rArm && (
@@ -3745,7 +4259,7 @@ export default function App() {
                         <input 
                           type="checkbox" 
                           checked={state.character.wounds.lLeg} 
-                          onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, lLeg: e.target.checked } } }))} 
+                          onChange={() => toggleWoundState("lLeg", state.character.wounds.lLeg, "왼다리")} 
                         />
                         <span style={{ color: state.character.wounds.lLeg ? "var(--color-crimson)" : "inherit" }}>왼다리 (L.Leg) [-2 이동]</span>
                         {state.character.wounds.lLeg && (
@@ -3776,7 +4290,7 @@ export default function App() {
                         <input 
                           type="checkbox" 
                           checked={state.character.wounds.rLeg} 
-                          onChange={e => updateState(s => ({ ...s, character: { ...s.character, wounds: { ...s.character.wounds, rLeg: e.target.checked } } }))} 
+                          onChange={() => toggleWoundState("rLeg", state.character.wounds.rLeg, "오른다리")} 
                         />
                         <span style={{ color: state.character.wounds.rLeg ? "var(--color-crimson)" : "inherit" }}>오른다리 (R.Leg) [-2 이동]</span>
                         {state.character.wounds.rLeg && (
@@ -3822,6 +4336,61 @@ export default function App() {
                       </div>
                     </div>
 
+                  </div>
+
+                  {/* 부상 및 흉터 연대기 */}
+                  <div style={{ marginTop: "20px", borderTop: "1px dashed #ccc", paddingTop: "15px" }}>
+                    <h5 className="gothic-sub" style={{ borderBottom: "none", color: "var(--color-crimson)", margin: "0 0 5px 0", fontSize: "0.92rem" }}>
+                      🩸 신체 부상 &amp; 흉터 연대기 (Anatomy &amp; Scar Chronicle)
+                    </h5>
+                    <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", margin: "0 0 10px 0", fontStyle: "italic" }}>
+                      체크 박스 선택/해제 및 휴식 치료 시 상처의 경위나 남겨진 흔적(흉터)을 이야기로써 보존합니다.
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "200px", overflowY: "auto", paddingRight: "5px" }}>
+                      {(!state.character.injuryLogs || state.character.injuryLogs.length === 0) ? (
+                        <p style={{ fontStyle: "italic", fontSize: "0.72rem", color: "#888", textAlign: "center", margin: "10px 0" }}>
+                          아직 기록된 부상 내역이 없습니다. 신체 부위는 깨끗하고 흉터가 없습니다.
+                        </p>
+                      ) : (
+                        [...state.character.injuryLogs].reverse().map((log) => {
+                          const locMap: Record<string, string> = {
+                            head: "머리 (Head)",
+                            torso: "몸통 (Torso)",
+                            lArm: "왼팔 (L.Arm)",
+                            rArm: "오른팔 (R.Arm)",
+                            lLeg: "왼다리 (L.Leg)",
+                            rLeg: "오른다리 (R.Leg)"
+                          };
+                          return (
+                            <div key={log.id} style={{
+                              border: "1px solid",
+                              borderColor: log.healed ? "rgba(187, 153, 93, 0.4)" : "var(--color-crimson)",
+                              backgroundColor: log.healed ? "rgba(187, 153, 93, 0.04)" : "rgba(220, 53, 69, 0.03)",
+                              padding: "8px 10px",
+                              borderRadius: "4px",
+                              fontSize: "0.78rem"
+                            }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
+                                <span style={{ fontWeight: "bold", color: log.healed ? "var(--color-ink)" : "var(--color-crimson)" }}>
+                                  {locMap[log.location] || log.location} - {log.healed ? "🩹 완치됨 (흉터)" : "🚨 부상 중"}
+                                </span>
+                                <span style={{ color: "#777", fontSize: "0.7rem" }}>
+                                  획득: {log.dateAcquired} {log.healed && `| 완치: ${log.dateHealed}`}
+                                </span>
+                              </div>
+                              <p style={{ margin: "3px 0 0 0", color: "var(--text-bright)", lineHeight: "1.4" }}>
+                                <strong>부상 경위:</strong> {log.injuryText}
+                              </p>
+                              {log.healed && log.scarsNotes && (
+                                <p style={{ margin: "4px 0 0 0", color: "var(--text-muted)", fontSize: "0.75rem", fontStyle: "italic", borderTop: "1px dashed rgba(0,0,0,0.1)", paddingTop: "4px" }}>
+                                  <strong>흉터 및 흔적:</strong> &ldquo;{log.scarsNotes}&rdquo;
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
 
                 </div>
@@ -4070,23 +4639,53 @@ export default function App() {
                       <button 
                         className="btn-medieval-small" 
                         onClick={() => {
-                          const name = prompt("친구 이름을 적으세요:");
-                          const info = prompt("설명을 적으세요:");
-                          if (name && info) {
-                            updateState(s => ({ ...s, character: { ...s.character, friends: [...s.character.friends, { name, info, relationship: 'Neutral', memoryLogs: [] }] } }));
-                          }
+                          const name = prompt("친구 이름을 적으세요:\n(취소 시 취소, 입력 없이 확인 시 '새로운 친구'로 저장)");
+                          if (name === null) return;
+                          const info = prompt("설명을 적으세요:\n(취소 시 취소, 입력 없이 확인 시 '소개 없음'으로 저장)");
+                          if (info === null) return;
+                          updateState(s => {
+                            const friendName = name.trim() || "새로운 친구";
+                            const friendInfo = info.trim() || "소개 없음";
+                            const memoryText = `[제 ${s.day}일 제 ${s.watch}워치] 새로운 인연으로 맺어짐`;
+                            return {
+                              ...s,
+                              character: {
+                                ...s.character,
+                                friends: [
+                                  ...s.character.friends,
+                                  {
+                                    name: friendName,
+                                    info: friendInfo,
+                                    relationship: 'Neutral',
+                                    memoryLogs: [memoryText]
+                                  }
+                                ]
+                              },
+                              journals: [
+                                {
+                                  id: generateUniqueId(),
+                                  text: `[인연 등록] ${friendName}: ${friendInfo}`,
+                                  date: new Date().toLocaleString(),
+                                  day: s.day,
+                                  watch: s.watch
+                                },
+                                ...s.journals
+                              ]
+                            };
+                          });
                         }}
                       >+</button>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "260px", overflowY: "auto", fontSize: "0.8rem" }}>
                       {state.character.friends.map((f, i) => {
                         const isExpanded = expandedFriendIdx === i;
+                        const recentJournals = state.journals.slice(0, 10);
                         return (
                           <div key={i} style={{ borderBottom: "1px dashed rgba(0,0,0,0.15)", paddingBottom: "6px", paddingTop: "4px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <div style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "3px" }} onClick={() => setExpandedFriendIdx(isExpanded ? null : i)}>
                                 <span style={{ fontSize: "0.65rem", color: "var(--color-gold)" }}>{isExpanded ? "▼" : "▶"}</span>
-                                <strong>{f.name}</strong>
+                                <strong>{f.name || "이름 없는 친구"}</strong>
                               </div>
                               <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
                                 <select
@@ -4095,8 +4694,36 @@ export default function App() {
                                     const newRel = e.target.value as any;
                                     updateState(s => {
                                       const newFriends = [...s.character.friends];
-                                      newFriends[i] = { ...newFriends[i], relationship: newRel };
-                                      return { ...s, character: { ...s.character, friends: newFriends } };
+                                      const prevRel = newFriends[i].relationship || "Neutral";
+                                      const relMap: Record<string, string> = {
+                                        Devoted: "헌신적",
+                                        Friendly: "우호적",
+                                        Neutral: "중립적",
+                                        Wary: "경계함",
+                                        Hostile: "적대적"
+                                      };
+                                      const dateStr = `제 ${s.day}일 제 ${s.watch}워치`;
+                                      const logMsg = `[${dateStr}] 관계 변경: ${relMap[prevRel]} ➔ ${relMap[newRel]}`;
+                                      
+                                      newFriends[i] = {
+                                        ...newFriends[i],
+                                        relationship: newRel,
+                                        memoryLogs: [...(newFriends[i].memoryLogs || []), logMsg]
+                                      };
+                                      return {
+                                        ...s,
+                                        character: { ...s.character, friends: newFriends },
+                                        journals: [
+                                          {
+                                            id: generateUniqueId(),
+                                            text: `[인연 관계 변화] ${newFriends[i].name}: ${logMsg}`,
+                                            date: new Date().toLocaleString(),
+                                            day: s.day,
+                                            watch: s.watch
+                                          },
+                                          ...s.journals
+                                        ]
+                                      };
                                     });
                                   }}
                                   style={{
@@ -4116,32 +4743,135 @@ export default function App() {
                                   <option value="Wary" style={{ background: "#222", color: "#ff9800" }}>경계함</option>
                                   <option value="Hostile" style={{ background: "#222", color: "#f44336" }}>적대적</option>
                                 </select>
-                                <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, friends: s.character.friends.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                                <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => {
+                                  if (confirm(`${f.name} 친구를 삭제하시겠습니까?`)) {
+                                    updateState(s => ({ ...s, character: { ...s.character, friends: s.character.friends.filter((_, idx) => idx !== i) } }));
+                                  }
+                                }}>&times;</button>
                               </div>
                             </div>
-                            <div style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem", paddingLeft: "10px", marginTop: "2px" }}>{f.info}</div>
+                            <div style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem", paddingLeft: "10px", marginTop: "2px" }}>{f.info || "설명 없음"}</div>
                             
                             {isExpanded && (
-                              <div style={{ marginLeft: "10px", marginTop: "6px", borderLeft: "1px solid rgba(255, 215, 0, 0.2)", background: "rgba(0,0,0,0.15)", padding: "5px 8px", borderRadius: "3px" }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                              <div style={{ marginLeft: "10px", marginTop: "6px", borderLeft: "1px solid rgba(255, 215, 0, 0.2)", background: "rgba(0,0,0,0.15)", padding: "8px", borderRadius: "3px" }}>
+                                {/* Inline editable fields */}
+                                <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginBottom: "8px" }}>
+                                  <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                                    <span style={{ fontSize: "0.68rem", color: "#888", width: "40px" }}>이름:</span>
+                                    <input
+                                      type="text"
+                                      value={f.name}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        updateState(s => {
+                                          const newFriends = [...s.character.friends];
+                                          newFriends[i] = { ...newFriends[i], name: val };
+                                          return { ...s, character: { ...s.character, friends: newFriends } };
+                                        });
+                                      }}
+                                      style={{ fontSize: "0.72rem", background: "rgba(0,0,0,0.4)", border: "1px solid #444", color: "#fff", borderRadius: "3px", padding: "1px 4px", flex: 1 }}
+                                    />
+                                  </div>
+                                  <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                                    <span style={{ fontSize: "0.68rem", color: "#888", width: "40px" }}>설명:</span>
+                                    <input
+                                      type="text"
+                                      value={f.info}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        updateState(s => {
+                                          const newFriends = [...s.character.friends];
+                                          newFriends[i] = { ...newFriends[i], info: val };
+                                          return { ...s, character: { ...s.character, friends: newFriends } };
+                                        });
+                                      }}
+                                      style={{ fontSize: "0.72rem", background: "rgba(0,0,0,0.4)", border: "1px solid #444", color: "#fff", borderRadius: "3px", padding: "1px 4px", flex: 1 }}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "6px" }}>
                                   <span style={{ fontSize: "0.7rem", color: "var(--color-gold)", fontWeight: "bold" }}>기억의 단편 (Memory Logs)</span>
-                                  <button
-                                    className="btn-medieval-small"
-                                    style={{ fontSize: "0.6rem", padding: "0 3px", height: "16px" }}
-                                    onClick={() => {
-                                      const log = prompt("기록할 기억/사건을 작성하세요:");
-                                      if (log) {
+                                  <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+                                    <select
+                                      value=""
+                                      onChange={(e) => {
+                                        const selectedVal = e.target.value;
+                                        if (!selectedVal) return;
                                         updateState(s => {
                                           const newFriends = [...s.character.friends];
                                           const logs = Array.isArray(newFriends[i].memoryLogs) ? [...newFriends[i].memoryLogs!] : [];
-                                          newFriends[i] = { ...newFriends[i], memoryLogs: [...logs, log] };
-                                          return { ...s, character: { ...s.character, friends: newFriends } };
+                                          newFriends[i] = { ...newFriends[i], memoryLogs: [...logs, selectedVal] };
+                                          return {
+                                            ...s,
+                                            character: { ...s.character, friends: newFriends },
+                                            journals: [
+                                              {
+                                                id: generateUniqueId(),
+                                                text: `[인연 기억 연결] ${newFriends[i].name}: ${selectedVal}`,
+                                                date: new Date().toLocaleString(),
+                                                day: s.day,
+                                                watch: s.watch
+                                              },
+                                              ...s.journals
+                                            ]
+                                          };
                                         });
-                                      }
-                                    }}
-                                  >
-                                    + 추가
-                                  </button>
+                                      }}
+                                      style={{
+                                        fontSize: "0.65rem",
+                                        background: "rgba(0,0,0,0.4)",
+                                        color: "var(--color-gold)",
+                                        border: "1px solid var(--color-gold)",
+                                        borderRadius: "3px",
+                                        padding: "1px 3px",
+                                        maxWidth: "110px",
+                                        height: "18px"
+                                      }}
+                                    >
+                                      <option value="" style={{ color: "#888" }}>일지 연결...</option>
+                                      {recentJournals.map(j => {
+                                        const displayDate = `Day ${j.day || 1} W${j.watch || 1}`;
+                                        const snippet = j.text.length > 15 ? j.text.slice(0, 15) + "..." : j.text;
+                                        const optionVal = `[일지 - ${displayDate}] ${j.text}`;
+                                        return (
+                                          <option key={j.id} value={optionVal} style={{ background: "#222", color: "#fff" }}>
+                                            [{displayDate}] {snippet}
+                                          </option>
+                                        );
+                                      })}
+                                    </select>
+                                    <button
+                                      className="btn-medieval-small"
+                                      style={{ fontSize: "0.6rem", padding: "0 3px", height: "18px" }}
+                                      onClick={() => {
+                                        const log = prompt("기록할 기억/사건을 작성하세요:\n(취소 시 취소, 입력 없이 확인 시 '새로운 기억'으로 저장)");
+                                        if (log === null) return;
+                                        const finalLog = log.trim() || "새로운 기억";
+                                        updateState(s => {
+                                          const newFriends = [...s.character.friends];
+                                          const logs = Array.isArray(newFriends[i].memoryLogs) ? [...newFriends[i].memoryLogs!] : [];
+                                          newFriends[i] = { ...newFriends[i], memoryLogs: [...logs, finalLog] };
+                                          return {
+                                            ...s,
+                                            character: { ...s.character, friends: newFriends },
+                                            journals: [
+                                              {
+                                                id: generateUniqueId(),
+                                                text: `[인연 기억] ${newFriends[i].name}: ${finalLog}`,
+                                                date: new Date().toLocaleString(),
+                                                day: s.day,
+                                                watch: s.watch
+                                              },
+                                              ...s.journals
+                                            ]
+                                          };
+                                        });
+                                      }}
+                                    >
+                                      + 추가
+                                    </button>
+                                  </div>
                                 </div>
                                 {(!f.memoryLogs || f.memoryLogs.length === 0) ? (
                                   <div style={{ fontSize: "0.68rem", color: "#666", fontStyle: "italic" }}>기록이 없습니다.</div>
@@ -4149,9 +4879,9 @@ export default function App() {
                                   <div style={{ display: "flex", flexDirection: "column", gap: "2px", maxHeight: "80px", overflowY: "auto" }}>
                                     {f.memoryLogs.map((log, lIdx) => (
                                       <div key={lIdx} style={{ fontSize: "0.7rem", color: "#ccc", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <span>&bull; {log}</span>
+                                        <span style={{ wordBreak: "break-all", paddingRight: "5px" }}>&bull; {log}</span>
                                         <button
-                                          style={{ background: "transparent", border: "none", color: "#555", cursor: "pointer", fontSize: "0.7rem" }}
+                                          style={{ background: "transparent", border: "none", color: "#999", cursor: "pointer", fontSize: "0.7rem", padding: "0 2px" }}
                                           onClick={() => {
                                             if (confirm("기록을 삭제할까요?")) {
                                               updateState(s => {
@@ -4189,23 +4919,53 @@ export default function App() {
                       <button 
                         className="btn-medieval-small danger" 
                         onClick={() => {
-                          const name = prompt("원수 이름을 적으세요:");
-                          const info = prompt("설명을 적으세요:");
-                          if (name && info) {
-                            updateState(s => ({ ...s, character: { ...s.character, foes: [...s.character.foes, { name, info, relationship: 'Neutral', memoryLogs: [] }] } }));
-                          }
+                          const name = prompt("원수 이름을 적으세요:\n(취소 시 취소, 입력 없이 확인 시 '새로운 원수'로 저장)");
+                          if (name === null) return;
+                          const info = prompt("설명을 적으세요:\n(취소 시 취소, 입력 없이 확인 시 '소개 없음'으로 저장)");
+                          if (info === null) return;
+                          updateState(s => {
+                            const foeName = name.trim() || "새로운 원수";
+                            const foeInfo = info.trim() || "소개 없음";
+                            const memoryText = `[제 ${s.day}일 제 ${s.watch}워치] 원수로 기록됨`;
+                            return {
+                              ...s,
+                              character: {
+                                ...s.character,
+                                foes: [
+                                  ...s.character.foes,
+                                  {
+                                    name: foeName,
+                                    info: foeInfo,
+                                    relationship: 'Neutral',
+                                    memoryLogs: [memoryText]
+                                  }
+                                ]
+                              },
+                              journals: [
+                                {
+                                  id: generateUniqueId(),
+                                  text: `[원수 등록] ${foeName}: ${foeInfo}`,
+                                  date: new Date().toLocaleString(),
+                                  day: s.day,
+                                  watch: s.watch
+                                },
+                                ...s.journals
+                              ]
+                            };
+                          });
                         }}
                       >+</button>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "260px", overflowY: "auto", fontSize: "0.8rem" }}>
                       {state.character.foes.map((f, i) => {
                         const isExpanded = expandedFoeIdx === i;
+                        const recentJournals = state.journals.slice(0, 10);
                         return (
                           <div key={i} style={{ borderBottom: "1px dashed rgba(220,53,69,0.15)", paddingBottom: "6px", paddingTop: "4px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <div style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "3px" }} onClick={() => setExpandedFoeIdx(isExpanded ? null : i)}>
                                 <span style={{ fontSize: "0.65rem", color: "var(--color-crimson)" }}>{isExpanded ? "▼" : "▶"}</span>
-                                <strong style={{ color: "var(--color-crimson)" }}>{f.name}</strong>
+                                <strong style={{ color: "var(--color-crimson)" }}>{f.name || "이름 없는 원수"}</strong>
                               </div>
                               <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
                                 <select
@@ -4214,8 +4974,36 @@ export default function App() {
                                     const newRel = e.target.value as any;
                                     updateState(s => {
                                       const newFoes = [...s.character.foes];
-                                      newFoes[i] = { ...newFoes[i], relationship: newRel };
-                                      return { ...s, character: { ...s.character, foes: newFoes } };
+                                      const prevRel = newFoes[i].relationship || "Neutral";
+                                      const relMap: Record<string, string> = {
+                                        Devoted: "헌신적",
+                                        Friendly: "우호적",
+                                        Neutral: "중립적",
+                                        Wary: "경계함",
+                                        Hostile: "적대적"
+                                      };
+                                      const dateStr = `제 ${s.day}일 제 ${s.watch}워치`;
+                                      const logMsg = `[${dateStr}] 관계 변경: ${relMap[prevRel]} ➔ ${relMap[newRel]}`;
+                                      
+                                      newFoes[i] = {
+                                        ...newFoes[i],
+                                        relationship: newRel,
+                                        memoryLogs: [...(newFoes[i].memoryLogs || []), logMsg]
+                                      };
+                                      return {
+                                        ...s,
+                                        character: { ...s.character, foes: newFoes },
+                                        journals: [
+                                          {
+                                            id: generateUniqueId(),
+                                            text: `[원수 관계 변화] ${newFoes[i].name}: ${logMsg}`,
+                                            date: new Date().toLocaleString(),
+                                            day: s.day,
+                                            watch: s.watch
+                                          },
+                                          ...s.journals
+                                        ]
+                                      };
                                     });
                                   }}
                                   style={{
@@ -4235,32 +5023,135 @@ export default function App() {
                                   <option value="Wary" style={{ background: "#222", color: "#ff9800" }}>경계함</option>
                                   <option value="Hostile" style={{ background: "#222", color: "#f44336" }}>적대적</option>
                                 </select>
-                                <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, foes: s.character.foes.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                                <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => {
+                                  if (confirm(`${f.name} 원수를 목록에서 삭제하시겠습니까?`)) {
+                                    updateState(s => ({ ...s, character: { ...s.character, foes: s.character.foes.filter((_, idx) => idx !== i) } }));
+                                  }
+                                }}>&times;</button>
                               </div>
                             </div>
-                            <div style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem", paddingLeft: "10px", marginTop: "2px" }}>{f.info}</div>
+                            <div style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem", paddingLeft: "10px", marginTop: "2px" }}>{f.info || "설명 없음"}</div>
                             
                             {isExpanded && (
-                              <div style={{ marginLeft: "10px", marginTop: "6px", borderLeft: "1px solid rgba(220, 53, 69, 0.2)", background: "rgba(0,0,0,0.15)", padding: "5px 8px", borderRadius: "3px" }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                              <div style={{ marginLeft: "10px", marginTop: "6px", borderLeft: "1px solid rgba(220, 53, 69, 0.2)", background: "rgba(0,0,0,0.15)", padding: "8px", borderRadius: "3px" }}>
+                                {/* Inline editable fields */}
+                                <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginBottom: "8px" }}>
+                                  <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                                    <span style={{ fontSize: "0.68rem", color: "#888", width: "40px" }}>이름:</span>
+                                    <input
+                                      type="text"
+                                      value={f.name}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        updateState(s => {
+                                          const newFoes = [...s.character.foes];
+                                          newFoes[i] = { ...newFoes[i], name: val };
+                                          return { ...s, character: { ...s.character, foes: newFoes } };
+                                        });
+                                      }}
+                                      style={{ fontSize: "0.72rem", background: "rgba(0,0,0,0.4)", border: "1px solid #444", color: "#fff", borderRadius: "3px", padding: "1px 4px", flex: 1 }}
+                                    />
+                                  </div>
+                                  <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                                    <span style={{ fontSize: "0.68rem", color: "#888", width: "40px" }}>설명:</span>
+                                    <input
+                                      type="text"
+                                      value={f.info}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        updateState(s => {
+                                          const newFoes = [...s.character.foes];
+                                          newFoes[i] = { ...newFoes[i], info: val };
+                                          return { ...s, character: { ...s.character, foes: newFoes } };
+                                        });
+                                      }}
+                                      style={{ fontSize: "0.72rem", background: "rgba(0,0,0,0.4)", border: "1px solid #444", color: "#fff", borderRadius: "3px", padding: "1px 4px", flex: 1 }}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "6px" }}>
                                   <span style={{ fontSize: "0.7rem", color: "var(--color-crimson)", fontWeight: "bold" }}>악연의 역사 (Memory Logs)</span>
-                                  <button
-                                    className="btn-medieval-small danger"
-                                    style={{ fontSize: "0.6rem", padding: "0 3px", height: "16px" }}
-                                    onClick={() => {
-                                      const log = prompt("기록할 원수와의 사건을 작성하세요:");
-                                      if (log) {
+                                  <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+                                    <select
+                                      value=""
+                                      onChange={(e) => {
+                                        const selectedVal = e.target.value;
+                                        if (!selectedVal) return;
                                         updateState(s => {
                                           const newFoes = [...s.character.foes];
                                           const logs = Array.isArray(newFoes[i].memoryLogs) ? [...newFoes[i].memoryLogs!] : [];
-                                          newFoes[i] = { ...newFoes[i], memoryLogs: [...logs, log] };
-                                          return { ...s, character: { ...s.character, foes: newFoes } };
+                                          newFoes[i] = { ...newFoes[i], memoryLogs: [...logs, selectedVal] };
+                                          return {
+                                            ...s,
+                                            character: { ...s.character, foes: newFoes },
+                                            journals: [
+                                              {
+                                                id: generateUniqueId(),
+                                                text: `[원수 기억 연결] ${newFoes[i].name}: ${selectedVal}`,
+                                                date: new Date().toLocaleString(),
+                                                day: s.day,
+                                                watch: s.watch
+                                              },
+                                              ...s.journals
+                                            ]
+                                          };
                                         });
-                                      }
-                                    }}
-                                  >
-                                    + 추가
-                                  </button>
+                                      }}
+                                      style={{
+                                        fontSize: "0.65rem",
+                                        background: "rgba(0,0,0,0.4)",
+                                        color: "var(--color-gold)",
+                                        border: "1px solid var(--color-gold)",
+                                        borderRadius: "3px",
+                                        padding: "1px 3px",
+                                        maxWidth: "110px",
+                                        height: "18px"
+                                      }}
+                                    >
+                                      <option value="" style={{ color: "#888" }}>일지 연결...</option>
+                                      {recentJournals.map(j => {
+                                        const displayDate = `Day ${j.day || 1} W${j.watch || 1}`;
+                                        const snippet = j.text.length > 15 ? j.text.slice(0, 15) + "..." : j.text;
+                                        const optionVal = `[일지 - ${displayDate}] ${j.text}`;
+                                        return (
+                                          <option key={j.id} value={optionVal} style={{ background: "#222", color: "#fff" }}>
+                                            [{displayDate}] {snippet}
+                                          </option>
+                                        );
+                                      })}
+                                    </select>
+                                    <button
+                                      className="btn-medieval-small danger"
+                                      style={{ fontSize: "0.6rem", padding: "0 3px", height: "18px" }}
+                                      onClick={() => {
+                                        const log = prompt("기록할 원수와의 사건을 작성하세요:\n(취소 시 취소, 입력 없이 확인 시 '새로운 악연'으로 저장)");
+                                        if (log === null) return;
+                                        const finalLog = log.trim() || "새로운 악연";
+                                        updateState(s => {
+                                          const newFoes = [...s.character.foes];
+                                          const logs = Array.isArray(newFoes[i].memoryLogs) ? [...newFoes[i].memoryLogs!] : [];
+                                          newFoes[i] = { ...newFoes[i], memoryLogs: [...logs, finalLog] };
+                                          return {
+                                            ...s,
+                                            character: { ...s.character, foes: newFoes },
+                                            journals: [
+                                              {
+                                                id: generateUniqueId(),
+                                                text: `[원수 기억] ${newFoes[i].name}: ${finalLog}`,
+                                                date: new Date().toLocaleString(),
+                                                day: s.day,
+                                                watch: s.watch
+                                              },
+                                              ...s.journals
+                                            ]
+                                          };
+                                        });
+                                      }}
+                                    >
+                                      + 추가
+                                    </button>
+                                  </div>
                                 </div>
                                 {(!f.memoryLogs || f.memoryLogs.length === 0) ? (
                                   <div style={{ fontSize: "0.68rem", color: "#666", fontStyle: "italic" }}>기록이 없습니다.</div>
@@ -4268,9 +5159,9 @@ export default function App() {
                                   <div style={{ display: "flex", flexDirection: "column", gap: "2px", maxHeight: "80px", overflowY: "auto" }}>
                                     {f.memoryLogs.map((log, lIdx) => (
                                       <div key={lIdx} style={{ fontSize: "0.7rem", color: "#ccc", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <span>&bull; {log}</span>
+                                        <span style={{ wordBreak: "break-all", paddingRight: "5px" }}>&bull; {log}</span>
                                         <button
-                                          style={{ background: "transparent", border: "none", color: "#555", cursor: "pointer", fontSize: "0.7rem" }}
+                                          style={{ background: "transparent", border: "none", color: "#999", cursor: "pointer", fontSize: "0.7rem", padding: "0 2px" }}
                                           onClick={() => {
                                             if (confirm("기록을 삭제할까요?")) {
                                               updateState(s => {
@@ -4327,13 +5218,14 @@ export default function App() {
                         const loyaltyVal = typeof h.loyalty === 'number' ? h.loyalty : 5;
                         const maxW = typeof h.maxWounds === 'number' ? h.maxWounds : 2;
                         const wTaken = typeof h.woundsTaken === 'number' ? h.woundsTaken : 0;
+                        const recentJournals = state.journals.slice(0, 10);
                         
                         return (
                           <div key={i} style={{ borderBottom: "1px dashed rgba(212,175,55,0.2)", paddingBottom: "6px", paddingTop: "4px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <div style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "3px" }} onClick={() => setExpandedHirelingIdx(isExpanded ? null : i)}>
                                 <span style={{ fontSize: "0.65rem", color: "var(--color-gold)" }}>{isExpanded ? "▼" : "▶"}</span>
-                                <strong style={{ color: "var(--color-gold)" }}>{h.name}</strong>
+                                <strong style={{ color: "var(--color-gold)" }}>{h.name || "이름 없는 용병"}</strong>
                               </div>
                               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                                 <label style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "0.7rem", color: h.paidThisWeek ? "#85bb65" : "#ff9800", cursor: "pointer", userSelect: "none" }}>
@@ -4358,12 +5250,16 @@ export default function App() {
                                   onClick={() => payWeeklyHireling(i)}
                                   title="주간 급여 Coins 판정"
                                 >급여판정</button>
-                                <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => updateState(s => ({ ...s, character: { ...s.character, hirelings: s.character.hirelings.filter((_, idx) => idx !== i) } }))}>&times;</button>
+                                <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => {
+                                  if (confirm(`${h.name} 용병을 해고/목록 삭제하시겠습니까?`)) {
+                                    updateState(s => ({ ...s, character: { ...s.character, hirelings: s.character.hirelings.filter((_, idx) => idx !== i) } }));
+                                  }
+                                }}>&times;</button>
                               </div>
                             </div>
                             
                             <div style={{ display: "flex", gap: "10px", fontSize: "0.72rem", color: "#bbb", paddingLeft: "10px", marginTop: "2px", alignItems: "center" }}>
-                              <span style={{ fontStyle: "italic", color: "var(--text-muted)", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{h.info}</span>
+                              <span style={{ fontStyle: "italic", color: "var(--text-muted)", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{h.info || "설명 없음"}</span>
                               <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
                                 <span style={{ color: "#888", fontSize: "0.65rem" }}>부상:</span>
                                 {Array.from({ length: maxW }).map((_, wIdx) => {
@@ -4394,8 +5290,44 @@ export default function App() {
                             </div>
 
                             {isExpanded && (
-                              <div style={{ marginLeft: "10px", marginTop: "6px", borderLeft: "1px solid rgba(255, 215, 0, 0.2)", background: "rgba(0,0,0,0.15)", padding: "5px 8px", borderRadius: "3px" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                              <div style={{ marginLeft: "10px", marginTop: "6px", borderLeft: "1px solid rgba(255, 215, 0, 0.2)", background: "rgba(0,0,0,0.15)", padding: "8px", borderRadius: "3px" }}>
+                                {/* Inline editable fields */}
+                                <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginBottom: "8px" }}>
+                                  <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                                    <span style={{ fontSize: "0.68rem", color: "#888", width: "40px" }}>이름:</span>
+                                    <input
+                                      type="text"
+                                      value={h.name}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        updateState(s => {
+                                          const newH = [...s.character.hirelings];
+                                          newH[i] = { ...newH[i], name: val };
+                                          return { ...s, character: { ...s.character, hirelings: newH } };
+                                        });
+                                      }}
+                                      style={{ fontSize: "0.72rem", background: "rgba(0,0,0,0.4)", border: "1px solid #444", color: "#fff", borderRadius: "3px", padding: "1px 4px", flex: 1 }}
+                                    />
+                                  </div>
+                                  <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                                    <span style={{ fontSize: "0.68rem", color: "#888", width: "40px" }}>설명:</span>
+                                    <input
+                                      type="text"
+                                      value={h.info}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        updateState(s => {
+                                          const newH = [...s.character.hirelings];
+                                          newH[i] = { ...newH[i], info: val };
+                                          return { ...s, character: { ...s.character, hirelings: newH } };
+                                        });
+                                      }}
+                                      style={{ fontSize: "0.72rem", background: "rgba(0,0,0,0.4)", border: "1px solid #444", color: "#fff", borderRadius: "3px", padding: "1px 4px", flex: 1 }}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "6px" }}>
                                   <span style={{ fontSize: "0.68rem", color: "#888", whiteSpace: "nowrap" }}>충성도 조정:</span>
                                   <input 
                                     type="range"
@@ -4417,23 +5349,60 @@ export default function App() {
 
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "5px", marginBottom: "4px" }}>
                                   <span style={{ fontSize: "0.7rem", color: "var(--color-gold)", fontWeight: "bold" }}>용병 활동 및 계약 (Memory Logs)</span>
-                                  <button
-                                    className="btn-medieval-small"
-                                    style={{ fontSize: "0.6rem", padding: "0 3px", height: "16px" }}
-                                    onClick={() => {
-                                      const log = prompt("기록할 용병의 계약/전투 실적 등을 입력하세요:");
-                                      if (log) {
+                                  <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+                                    <select
+                                      value=""
+                                      onChange={(e) => {
+                                        const selectedVal = e.target.value;
+                                        if (!selectedVal) return;
                                         updateState(s => {
                                           const newH = [...s.character.hirelings];
                                           const logs = Array.isArray(newH[i].memoryLogs) ? [...newH[i].memoryLogs!] : [];
-                                          newH[i] = { ...newH[i], memoryLogs: [...logs, log] };
+                                          newH[i] = { ...newH[i], memoryLogs: [...logs, selectedVal] };
                                           return { ...s, character: { ...s.character, hirelings: newH } };
                                         });
-                                      }
-                                    }}
-                                  >
-                                    + 추가
-                                  </button>
+                                      }}
+                                      style={{
+                                        fontSize: "0.65rem",
+                                        background: "rgba(0,0,0,0.4)",
+                                        color: "var(--color-gold)",
+                                        border: "1px solid var(--color-gold)",
+                                        borderRadius: "3px",
+                                        padding: "1px 3px",
+                                        maxWidth: "110px",
+                                        height: "18px"
+                                      }}
+                                    >
+                                      <option value="" style={{ color: "#888" }}>일지 연결...</option>
+                                      {recentJournals.map(j => {
+                                        const displayDate = `Day ${j.day || 1} W${j.watch || 1}`;
+                                        const snippet = j.text.length > 15 ? j.text.slice(0, 15) + "..." : j.text;
+                                        const optionVal = `[일지 - ${displayDate}] ${j.text}`;
+                                        return (
+                                          <option key={j.id} value={optionVal} style={{ background: "#222", color: "#fff" }}>
+                                            [{displayDate}] {snippet}
+                                          </option>
+                                        );
+                                      })}
+                                    </select>
+                                    <button
+                                      className="btn-medieval-small"
+                                      style={{ fontSize: "0.6rem", padding: "0 3px", height: "18px" }}
+                                      onClick={() => {
+                                        const log = prompt("기록할 용병의 계약/전투 실적 등을 입력하세요:\n(취소 시 취소, 입력 없이 확인 시 '새로운 계약'으로 저장)");
+                                        if (log === null) return;
+                                        const finalLog = log.trim() || "새로운 계약";
+                                        updateState(s => {
+                                          const newH = [...s.character.hirelings];
+                                          const logs = Array.isArray(newH[i].memoryLogs) ? [...newH[i].memoryLogs!] : [];
+                                          newH[i] = { ...newH[i], memoryLogs: [...logs, finalLog] };
+                                          return { ...s, character: { ...s.character, hirelings: newH } };
+                                        });
+                                      }}
+                                    >
+                                      + 추가
+                                    </button>
+                                  </div>
                                 </div>
                                 {(!h.memoryLogs || h.memoryLogs.length === 0) ? (
                                   <div style={{ fontSize: "0.68rem", color: "#666", fontStyle: "italic" }}>기록된 활동이 없습니다.</div>
@@ -4441,9 +5410,9 @@ export default function App() {
                                   <div style={{ display: "flex", flexDirection: "column", gap: "2px", maxHeight: "80px", overflowY: "auto" }}>
                                     {h.memoryLogs.map((log, lIdx) => (
                                       <div key={lIdx} style={{ fontSize: "0.7rem", color: "#ccc", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <span>&bull; {log}</span>
+                                        <span style={{ wordBreak: "break-all", paddingRight: "5px" }}>&bull; {log}</span>
                                         <button
-                                          style={{ background: "transparent", border: "none", color: "#555", cursor: "pointer", fontSize: "0.7rem" }}
+                                          style={{ background: "transparent", border: "none", color: "#999", cursor: "pointer", fontSize: "0.7rem", padding: "0 2px" }}
                                           onClick={() => {
                                             if (confirm("기록을 삭제할까요?")) {
                                               updateState(s => {
@@ -5678,194 +6647,508 @@ export default function App() {
 
         {/* TAB 5: JOURNAL */}
         {activeTab === "journal" && (
-          <div className="journal-layout" style={{ display: "flex", gap: "20px", width: "100%", alignItems: "flex-start" }}>
+          <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
             
-            {/* Left Column: Chronicle Editor & Daily Feed */}
-            <div className="card-panel gold-border" style={{ flex: 2, padding: "20px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "10px", marginBottom: "15px", flexWrap: "wrap", gap: "10px" }}>
-                <h3 className="gothic-sub" style={{ margin: 0 }}>📜 모험 연대기 &amp; 서사 일지</h3>
-                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                  <button 
-                    className={`btn-medieval-small ${journalDisplayMode === "thematic" ? "gold-btn" : ""}`} 
-                    onClick={() => setJournalDisplayMode("thematic")}
-                  >
-                    여행 기록 모드
-                  </button>
-                  <button 
-                    className={`btn-medieval-small ${journalDisplayMode === "system" ? "gold-btn" : ""}`} 
-                    onClick={() => setJournalDisplayMode("system")}
-                  >
-                    시스템 디버그 모드
-                  </button>
-                  <button 
-                    className="btn-medieval-small danger" 
-                    onClick={handleManualPruneJournals}
-                    title="고정(Pin)된 로그는 보존하고, 고정되지 않은 오래된 로그들을 정리하여 최적화합니다."
-                  >
-                    🧹 일지 정리 및 최적화
-                  </button>
-                </div>
-              </div>
+            {/* Sub-tab selection bar */}
+            <div style={{ display: "flex", gap: "10px", marginBottom: "20px", borderBottom: "2px solid rgba(187, 153, 93, 0.3)", paddingBottom: "8px" }}>
+              <button
+                className={`btn-medieval-small ${journalSubView === "field" ? "gold-btn" : ""}`}
+                style={{ padding: "6px 14px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "5px" }}
+                onClick={() => setJournalSubView("field")}
+              >
+                🗺️ 현장 일지 (Field Journal)
+              </button>
+              <button
+                className={`btn-medieval-small ${journalSubView === "chronicle" ? "gold-btn" : ""}`}
+                style={{ padding: "6px 14px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "5px" }}
+                onClick={() => setJournalSubView("chronicle")}
+              >
+                📜 캐릭터 대서사 (Character Chronicle)
+              </button>
+              <button
+                className={`btn-medieval-small ${journalSubView === "retirement" ? "gold-btn" : ""}`}
+                style={{ padding: "6px 14px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "5px" }}
+                onClick={() => setJournalSubView("retirement")}
+              >
+                🪵 은퇴 기록장 (Retirement / Epilogue)
+              </button>
+            </div>
 
-              <p className="rules-helper-text">
-                오늘의 사건, 계시, 검투 기록을 적어두어 나만의 이야기 연대기를 만들어가는 필드입니다. (룰북의 페이지 번호는 클릭 시 빠른 규칙 카드를 표시합니다.)
-              </p>
+            {/* Sub-View 1: Field Journal */}
+            {journalSubView === "field" && (
+              <div className="journal-layout" style={{ display: "flex", gap: "20px", width: "100%", alignItems: "flex-start" }}>
+                {/* Left Column: Chronicle Editor & Daily Feed */}
+                <div className="card-panel gold-border" style={{ flex: 2, padding: "20px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "10px", marginBottom: "15px", flexWrap: "wrap", gap: "10px" }}>
+                    <h3 className="gothic-sub" style={{ margin: 0 }}>📜 모험 연대기 &amp; 서사 일지</h3>
+                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                      <button 
+                        className={`btn-medieval-small ${journalDisplayMode === "thematic" ? "gold-btn" : ""}`} 
+                        onClick={() => setJournalDisplayMode("thematic")}
+                      >
+                        여행 기록 모드
+                      </button>
+                      <button 
+                        className={`btn-medieval-small ${journalDisplayMode === "system" ? "gold-btn" : ""}`} 
+                        onClick={() => setJournalDisplayMode("system")}
+                      >
+                        시스템 디버그 모드
+                      </button>
+                      <button 
+                        className="btn-medieval-small danger" 
+                        onClick={handleManualPruneJournals}
+                        title="고정(Pin)된 로그는 보존하고, 고정되지 않은 오래된 로그들을 정리하여 최적화합니다."
+                      >
+                        🧹 일지 정리 및 최적화
+                      </button>
+                    </div>
+                  </div>
 
-              {/* Tag current coordinate if available */}
-              <div className="journal-input-section" style={{ marginTop: "1rem", position: "relative" }}>
-                <textarea 
-                  className="journal-textarea" 
-                  style={{ width: "100%", height: "90px", padding: "10px", background: "rgba(0,0,0,0.3)", color: "#eee", border: "1px solid var(--border-color)", borderRadius: "4px", fontSize: "0.9rem" }}
-                  placeholder={selectedMapCellIdx !== null 
-                    ? `[위치: (${selectedMapCellIdx % 4}, ${Math.floor(selectedMapCellIdx / 4)})] 오늘의 황혼 속 모험 일지를 기록하십시오...`
-                    : "오늘의 황혼 속 모험 일지를 기록하십시오..."} 
-                  value={newJournalText}
-                  onChange={e => setNewJournalText(e.target.value)}
-                />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
-                  <span style={{ fontSize: "0.8rem", color: "var(--color-gold)" }}>
-                    {selectedMapCellIdx !== null ? (
-                      <span>📍 격자 좌표 <strong>({selectedMapCellIdx % 4}, {Math.floor(selectedMapCellIdx / 4)})</strong> 위치 연동 중</span>
-                    ) : (
-                      <span style={{ color: "#777" }}>📍 지도 탭에서 셀을 클릭하면 일지가 해당 좌표와 자동 연동됩니다.</span>
-                    )}
-                  </span>
-                  <button className="btn-medieval" onClick={() => addJournalEntry()}>일지에 기록 추가</button>
-                </div>
-              </div>
+                  <p className="rules-helper-text">
+                    오늘의 사건, 계시, 검투 기록을 적어두어 나만의 이야기 연대기를 만들어가는 필드입니다. (룰북의 페이지 번호는 클릭 시 빠른 규칙 카드를 표시합니다.)
+                  </p>
 
-              {/* Grouped Chronicle Feed */}
-              <div className="journal-history-list" style={{ marginTop: "2rem" }}>
-                <h4 className="gothic-sub" style={{ fontSize: "1.1rem", borderBottom: "1px solid #333", paddingBottom: "5px" }}>연대기 기록 (Chronicle History)</h4>
-                
-                {state.journals.length === 0 ? (
-                  <p className="empty-text" style={{ fontStyle: "italic", textAlign: "center", color: "#666", marginTop: "20px" }}>기록된 모험 일지가 아직 존재하지 않습니다.</p>
-                ) : (() => {
-                  const groupJournalsByDayAndWatch = (entries: JournalEntry[]) => {
-                    const groups: Record<number, Record<number, JournalEntry[]>> = {};
-                    entries.forEach(j => {
-                      const d = j.day || 1;
-                      const w = j.watch || 1;
-                      if (!groups[d]) groups[d] = {};
-                      if (!groups[d][w]) groups[d][w] = [];
-                      groups[d][w].push(j);
-                    });
-                    return groups;
-                  };
-                  
-                  const grouped = groupJournalsByDayAndWatch(state.journals);
-                  const sortedDays = Object.keys(grouped).map(Number).sort((a, b) => b - a);
-                  
-                  return sortedDays.map(dayNum => {
-                    const dayGroup = grouped[dayNum];
-                    return (
-                      <div key={dayNum} className="chronicle-day-group" style={{ marginBottom: "20px", borderLeft: "2px solid var(--color-gold)", paddingLeft: "12px" }}>
-                        <h4 style={{ color: "var(--color-gold)", margin: "0 0 10px 0", fontSize: "1.15rem", fontFamily: "Cinzel, serif" }}>
-                          ⚔️ 제 {dayNum}일 (Day {dayNum})
-                        </h4>
-                        
-                        {Object.keys(dayGroup)
-                          .map(Number)
-                          .sort((a, b) => b - a)
-                          .map(watchNum => {
-                            const watchEntries = dayGroup[watchNum];
-                            const watchName = watchNum === 1 ? "제 1워치 (새벽 - Watch 1)" :
-                                              watchNum === 2 ? "제 2워치 (황혼 - Watch 2)" :
-                                              "제 3워치 (심야 - Watch 3)";
+                  {/* Tag current coordinate if available */}
+                  <div className="journal-input-section" style={{ marginTop: "1rem", position: "relative" }}>
+                    <textarea 
+                      className="journal-textarea" 
+                      style={{ width: "100%", height: "90px", padding: "10px", background: "rgba(0,0,0,0.3)", color: "#eee", border: "1px solid var(--border-color)", borderRadius: "4px", fontSize: "0.9rem" }}
+                      placeholder={selectedMapCellIdx !== null 
+                        ? `[위치: (${selectedMapCellIdx % 4}, ${Math.floor(selectedMapCellIdx / 4)})] 오늘의 황혼 속 모험 일지를 기록하십시오...`
+                        : "오늘의 황혼 속 모험 일지를 기록하십시오..."} 
+                      value={newJournalText}
+                      onChange={e => setNewJournalText(e.target.value)}
+                    />
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
+                      <span style={{ fontSize: "0.8rem", color: "var(--color-gold)" }}>
+                        {selectedMapCellIdx !== null ? (
+                          <span>📍 격자 좌표 <strong>({selectedMapCellIdx % 4}, {Math.floor(selectedMapCellIdx / 4)})</strong> 위치 연동 중</span>
+                        ) : (
+                          <span style={{ color: "#777" }}>📍 지도 탭에서 셀을 클릭하면 일지가 해당 좌표와 자동 연동됩니다.</span>
+                        )}
+                      </span>
+                      <button className="btn-medieval" onClick={() => addJournalEntry()}>일지에 기록 추가</button>
+                    </div>
+                  </div>
+
+                  {/* Grouped Chronicle Feed */}
+                  <div className="journal-history-list" style={{ marginTop: "2rem" }}>
+                    <h4 className="gothic-sub" style={{ fontSize: "1.1rem", borderBottom: "1px solid #333", paddingBottom: "5px" }}>연대기 기록 (Chronicle History)</h4>
+                    
+                    {state.journals.length === 0 ? (
+                      <p className="empty-text" style={{ fontStyle: "italic", textAlign: "center", color: "#666", marginTop: "20px" }}>기록된 모험 일지가 아직 존재하지 않습니다.</p>
+                    ) : (() => {
+                      const groupJournalsByDayAndWatch = (entries: JournalEntry[]) => {
+                        const groups: Record<number, Record<number, JournalEntry[]>> = {};
+                        entries.forEach(j => {
+                          const d = j.day || 1;
+                          const w = j.watch || 1;
+                          if (!groups[d]) groups[d] = {};
+                          if (!groups[d][w]) groups[d][w] = [];
+                          groups[d][w].push(j);
+                        });
+                        return groups;
+                      };
+                      
+                      const grouped = groupJournalsByDayAndWatch(state.journals);
+                      const sortedDays = Object.keys(grouped).map(Number).sort((a, b) => b - a);
+                      
+                      return sortedDays.map(dayNum => {
+                        const dayGroup = grouped[dayNum];
+                        return (
+                          <div key={dayNum} className="chronicle-day-group" style={{ marginBottom: "20px", borderLeft: "2px solid var(--color-gold)", paddingLeft: "12px" }}>
+                            <h4 style={{ color: "var(--color-gold)", margin: "0 0 10px 0", fontSize: "1.15rem", fontFamily: "Cinzel, serif" }}>
+                              ⚔️ 제 {dayNum}일 (Day {dayNum})
+                            </h4>
                             
-                            return (
-                              <div key={watchNum} className="chronicle-watch-group" style={{ marginBottom: "10px" }}>
-                                <div style={{ fontSize: "0.8rem", color: "#888", fontWeight: "bold", borderBottom: "1px dashed rgba(255,255,255,0.08)", paddingBottom: "2px", marginBottom: "6px" }}>
-                                  ⏳ {watchName}
-                                </div>
+                            {Object.keys(dayGroup)
+                              .map(Number)
+                              .sort((a, b) => b - a)
+                              .map(watchNum => {
+                                const watchEntries = dayGroup[watchNum];
+                                const watchName = watchNum === 1 ? "제 1워치 (새벽 - Watch 1)" :
+                                                  watchNum === 2 ? "제 2워치 (황혼 - Watch 2)" :
+                                                  "제 3워치 (심야 - Watch 3)";
                                 
-                                {watchEntries.map(j => (
-                                  <div key={j.id} className="journal-history-card" style={{ background: "rgba(0,0,0,0.15)", border: "1px solid rgba(255,255,255,0.03)", padding: "10px", borderRadius: "4px", marginBottom: "8px" }}>
-                                    <div className="flex-row justify-between align-center" style={{ borderBottom: "1px dashed rgba(255,255,255,0.06)", paddingBottom: "4px", marginBottom: "6px" }}>
-                                      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                                        <span className="date" style={{ fontSize: "0.75rem", color: "#666" }}>{j.date}</span>
-                                        {j.x !== null && j.y !== null && (
-                                          <span style={{ fontSize: "0.72rem", color: "var(--color-gold)", background: "rgba(255, 215, 0, 0.08)", padding: "1px 4px", borderRadius: "3px" }}>
-                                            📍 좌표 ({j.x}, {j.y})
-                                          </span>
-                                        )}
-                                      </div>
-                                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                                        <button 
-                                          style={{ background: "transparent", border: "none", cursor: "pointer", color: j.pinned ? "var(--color-gold)" : "#555", fontSize: "0.95rem", padding: 0 }}
-                                          onClick={() => togglePinJournalEntry(j.id)}
-                                          title="연대기 박제 고정 (Pin to Chronicle)"
-                                        >
-                                          {j.pinned ? "★" : "☆"}
-                                        </button>
-                                        <button 
-                                          className="delete-btn" 
-                                          style={{ background: "transparent", border: "none", cursor: "pointer", color: "#888", padding: 0, fontSize: "1.1rem", lineHeight: "1" }} 
-                                          onClick={() => {
-                                            if (confirm("정말 이 일지 기록을 삭제하겠습니까?")) {
-                                              updateState(s => ({
-                                                ...s,
-                                                journals: s.journals.filter(x => x.id !== j.id)
-                                              }));
-                                            }
-                                          }}
-                                        >
-                                          &times;
-                                        </button>
-                                      </div>
+                                return (
+                                  <div key={watchNum} className="chronicle-watch-group" style={{ marginBottom: "10px" }}>
+                                    <div style={{ fontSize: "0.8rem", color: "#888", fontWeight: "bold", borderBottom: "1px dashed rgba(255,255,255,0.08)", paddingBottom: "2px", marginBottom: "6px" }}>
+                                      ⏳ {watchName}
                                     </div>
                                     
-                                    <p style={{ whiteSpace: "pre-wrap", lineHeight: "1.6", margin: 0, fontSize: "0.88rem", color: "#ddd" }}>
-                                      {journalDisplayMode === "thematic" 
-                                        ? renderTextWithRules(j.text, showRule) 
-                                        : renderTextWithRules(j.systemLog || j.text, showRule)}
-                                    </p>
+                                    {watchEntries.map(j => (
+                                      <div key={j.id} className="journal-history-card" style={{ background: "rgba(0,0,0,0.15)", border: "1px solid rgba(255,255,255,0.03)", padding: "10px", borderRadius: "4px", marginBottom: "8px" }}>
+                                        <div className="flex-row justify-between align-center" style={{ borderBottom: "1px dashed rgba(255,255,255,0.06)", paddingBottom: "4px", marginBottom: "6px" }}>
+                                          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                                            <span className="date" style={{ fontSize: "0.75rem", color: "#666" }}>{j.date}</span>
+                                            {j.x !== null && j.y !== null && (
+                                              <span style={{ fontSize: "0.72rem", color: "var(--color-gold)", background: "rgba(255, 215, 0, 0.08)", padding: "1px 4px", borderRadius: "3px" }}>
+                                                📍 좌표 ({j.x}, {j.y})
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                            <button 
+                                              style={{ background: "transparent", border: "none", cursor: "pointer", color: j.pinned ? "var(--color-gold)" : "#555", fontSize: "0.95rem", padding: 0 }}
+                                              onClick={() => togglePinJournalEntry(j.id)}
+                                              title="연대기 박제 고정 (Pin to Chronicle)"
+                                            >
+                                              {j.pinned ? "★" : "☆"}
+                                            </button>
+                                            <button 
+                                              className="delete-btn" 
+                                              style={{ background: "transparent", border: "none", cursor: "pointer", color: "#888", padding: 0, fontSize: "1.1rem", lineHeight: "1" }} 
+                                              onClick={() => {
+                                                if (confirm("정말 이 일지 기록을 삭제하겠습니까?")) {
+                                                  updateState(s => ({
+                                                    ...s,
+                                                    journals: s.journals.filter(x => x.id !== j.id)
+                                                  }));
+                                                }
+                                              }}
+                                            >
+                                              &times;
+                                            </button>
+                                          </div>
+                                        </div>
+                                        
+                                        <p style={{ whiteSpace: "pre-wrap", lineHeight: "1.6", margin: 0, fontSize: "0.88rem", color: "#ddd" }}>
+                                          {journalDisplayMode === "thematic" 
+                                            ? renderTextWithRules(j.text, showRule) 
+                                            : renderTextWithRules(j.systemLog || j.text, showRule)}
+                                        </p>
+                                      </div>
+                                    ))}
                                   </div>
-                                ))}
-                              </div>
-                            );
-                          })}
-                      </div>
-                    );
-                  });
-                })()}
-              </div>
-            </div>
+                                );
+                              })}
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
 
-            {/* Right Column: Pinned Chronicle Summary Sidebar */}
-            <div className="card-panel gold-border" style={{ flex: 1, padding: "20px", background: "var(--color-card-bg)", borderColor: "var(--color-gold)", position: "sticky", top: "20px" }}>
-              <h4 className="gothic-sub" style={{ borderBottom: "2px solid var(--color-gold)", paddingBottom: "5px", color: "var(--color-gold)", marginTop: 0 }}>
-                📜 황혼의 대서사 (Chronicle)
-              </h4>
-              <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic", margin: "5px 0 15px 0" }}>
-                일지에서 고정(★)한 역사적 사건들이 서사 요약집을 형성하여 남습니다.
-              </p>
-
-              <div style={{ maxHeight: "450px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "5px" }}>
-                {state.journals.filter(j => j.pinned).length === 0 ? (
-                  <p style={{ fontStyle: "italic", fontSize: "0.75rem", color: "#555", textAlign: "center", margin: "20px 0" }}>
-                    아직 고정된 서사가 없습니다. 일지의 [☆]를 클릭해 박제하십시오.
+                {/* Right Column: Pinned Chronicle Summary Sidebar */}
+                <div className="card-panel gold-border" style={{ flex: 1, padding: "20px", background: "var(--color-card-bg)", borderColor: "var(--color-gold)", position: "sticky", top: "20px" }}>
+                  <h4 className="gothic-sub" style={{ borderBottom: "2px solid var(--color-gold)", paddingBottom: "5px", color: "var(--color-gold)", marginTop: 0 }}>
+                    📜 황혼의 대서사 (Chronicle)
+                  </h4>
+                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic", margin: "5px 0 15px 0" }}>
+                    일지에서 고정(★)한 역사적 사건들이 서사 요약집을 형성하여 남습니다.
                   </p>
-                ) : (
-                  state.journals
-                    .filter(j => j.pinned)
-                    .sort((a, b) => (a.day || 1) - (b.day || 1) || (a.watch || 1) - (b.watch || 1)) // chronological order for story reading
-                    .map(j => (
-                      <div key={j.id} style={{ borderBottom: "1px dashed rgba(255, 215, 0, 0.15)", paddingBottom: "8px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--color-gold)", fontWeight: "bold", marginBottom: "3px" }}>
-                          <span>Day {j.day || 1} - Watch {j.watch || 1}</span>
-                          {j.x !== null && j.y !== null && (
-                            <span>📍 ({j.x}, {j.y})</span>
-                          )}
-                        </div>
-                        <p style={{ margin: 0, fontSize: "0.82rem", color: "#ccc", lineHeight: "1.5", fontStyle: "italic" }}>
-                          &ldquo;{j.text}&rdquo;
-                        </p>
-                      </div>
-                    ))
-                )}
+
+                  <div style={{ maxHeight: "450px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "5px" }}>
+                    {state.journals.filter(j => j.pinned).length === 0 ? (
+                      <p style={{ fontStyle: "italic", fontSize: "0.75rem", color: "#555", textAlign: "center", margin: "20px 0" }}>
+                        아직 고정된 서사가 없습니다. 일지의 [☆]를 클릭해 박제하십시오.
+                      </p>
+                    ) : (
+                      state.journals
+                        .filter(j => j.pinned)
+                        .sort((a, b) => (a.day || 1) - (b.day || 1) || (a.watch || 1) - (b.watch || 1)) // chronological order for story reading
+                        .map(j => (
+                          <div key={j.id} style={{ borderBottom: "1px dashed rgba(255, 215, 0, 0.15)", paddingBottom: "8px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--color-gold)", fontWeight: "bold", marginBottom: "3px" }}>
+                              <span>Day {j.day || 1} - Watch {j.watch || 1}</span>
+                              {j.x !== null && j.y !== null && (
+                                <span>📍 ({j.x}, {j.y})</span>
+                              )}
+                            </div>
+                            <p style={{ margin: 0, fontSize: "0.82rem", color: "#ccc", lineHeight: "1.5", fontStyle: "italic" }}>
+                              &ldquo;{j.text}&rdquo;
+                            </p>
+                          </div>
+                        ))
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Sub-View 2: Character Chronicle */}
+            {journalSubView === "chronicle" && (
+              <div className="journal-layout" style={{ display: "flex", gap: "20px", width: "100%", alignItems: "flex-start" }}>
+                {/* Left Column: Chapters editor & listing */}
+                <div className="card-panel gold-border" style={{ flex: 1.1, padding: "20px" }}>
+                  <h3 className="gothic-sub" style={{ margin: "0 0 10px 0", borderBottom: "2px solid var(--color-gold)", paddingBottom: "5px" }}>
+                    📚 챕터 관리자 (Campaign Chapters)
+                  </h3>
+                  <p className="rules-helper-text" style={{ fontSize: "0.74rem", margin: "0 0 15px 0", lineHeight: "1.4" }}>
+                    여정의 주요 분기점이나 장소 이동에 맞춰 커스텀 챕터를 생성해 보세요. 모험의 전체 윤곽을 구성하는 데 도움이 됩니다.
+                  </p>
+
+                  {/* Chapter Creator Form */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", background: "rgba(0,0,0,0.25)", padding: "12px", borderRadius: "6px", border: "1px solid rgba(187, 153, 93, 0.2)" }}>
+                    <h5 className="gothic-sub" style={{ margin: 0, fontSize: "0.82rem", color: "var(--color-gold)", borderBottom: "none" }}>
+                      📖 새 챕터 추가
+                    </h5>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <span style={{ fontSize: "0.68rem", color: "#888" }}>챕터 제목 (예: 제1장: 황혼의 시작):</span>
+                      <input 
+                        type="text" 
+                        value={newChapterTitle} 
+                        onChange={e => setNewChapterTitle(e.target.value)} 
+                        style={{ fontSize: "0.8rem", padding: "4px 8px", background: "rgba(0,0,0,0.4)", color: "#fff", border: "1px solid #444", borderRadius: "3px" }}
+                        placeholder="예: 황혼의 시작"
+                      />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <span style={{ fontSize: "0.68rem", color: "#888" }}>기간 (예: Day 1 - 5):</span>
+                      <input 
+                        type="text" 
+                        value={newChapterDateRange} 
+                        onChange={e => setNewChapterDateRange(e.target.value)} 
+                        style={{ fontSize: "0.8rem", padding: "4px 8px", background: "rgba(0,0,0,0.4)", color: "#fff", border: "1px solid #444", borderRadius: "3px" }}
+                        placeholder="예: Day 1 ~ 5"
+                      />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <span style={{ fontSize: "0.68rem", color: "#888" }}>챕터 요약 및 소회:</span>
+                      <textarea 
+                        value={newChapterSummary} 
+                        onChange={e => setNewChapterSummary(e.target.value)} 
+                        style={{ fontSize: "0.8rem", padding: "6px 8px", background: "rgba(0,0,0,0.4)", color: "#fff", border: "1px solid #444", borderRadius: "3px", height: "70px", resize: "none" }}
+                        placeholder="이 시기 동안 겪은 중요 사건을 간략히 요약합니다..."
+                      />
+                    </div>
+                    <button 
+                      className="btn-medieval" 
+                      style={{ fontSize: "0.8rem", padding: "4px 10px", marginTop: "5px" }}
+                      onClick={() => {
+                        if (!newChapterTitle.trim() && !newChapterSummary.trim() && !newChapterDateRange.trim()) {
+                          alert("챕터 제목, 기간, 요약 중 하나는 작성해야 합니다.");
+                          return;
+                        }
+                        updateState(s => ({
+                          ...s,
+                          character: {
+                            ...s.character,
+                            chronicleChapters: [
+                              ...(s.character.chronicleChapters || []),
+                              {
+                                id: generateUniqueId(),
+                                title: newChapterTitle.trim() || `Day ${s.day}의 장`,
+                                summary: newChapterSummary.trim() || "요약 없음",
+                                dateRange: newChapterDateRange.trim() || `Day ${s.day}`
+                              }
+                            ]
+                          }
+                        }));
+                        setNewChapterTitle("");
+                        setNewChapterSummary("");
+                        setNewChapterDateRange("");
+                        alert("새로운 챕터가 연대기에 추가되었습니다!");
+                      }}
+                    >
+                      챕터 등록
+                    </button>
+                  </div>
+
+                  {/* Chapters List */}
+                  <div style={{ marginTop: "20px" }}>
+                    <h5 className="gothic-sub" style={{ fontSize: "0.88rem", color: "var(--color-gold)", margin: "0 0 10px 0", borderBottom: "none" }}>
+                      📖 작성된 챕터 목록
+                    </h5>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "250px", overflowY: "auto" }}>
+                      {(!state.character.chronicleChapters || state.character.chronicleChapters.length === 0) ? (
+                        <p style={{ fontStyle: "italic", fontSize: "0.75rem", color: "#555", textAlign: "center", margin: "10px 0" }}>
+                          등록된 챕터가 없습니다. 여정의 매듭을 지어 챕터를 추가해 보세요.
+                        </p>
+                      ) : (
+                        state.character.chronicleChapters.map((c, idx) => (
+                          <div key={c.id} style={{ border: "1px solid rgba(187, 153, 93, 0.3)", background: "rgba(187, 153, 93, 0.04)", padding: "10px", borderRadius: "5px", fontSize: "0.78rem" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(187, 153, 93, 0.15)", paddingBottom: "3px", marginBottom: "5px" }}>
+                              <strong style={{ color: "var(--color-gold)" }}>Chapter {idx + 1}. {c.title}</strong>
+                              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                <span style={{ fontSize: "0.68rem", color: "#888" }}>({c.dateRange})</span>
+                                <button
+                                  style={{ background: "transparent", border: "none", color: "#f44336", cursor: "pointer", fontSize: "0.85rem" }}
+                                  onClick={() => {
+                                    if (confirm("이 챕터를 삭제하시겠습니까?")) {
+                                      updateState(s => ({
+                                        ...s,
+                                        character: {
+                                          ...s.character,
+                                          chronicleChapters: (s.character.chronicleChapters || []).filter(item => item.id !== c.id)
+                                        }
+                                      }));
+                                    }
+                                  }}
+                                >
+                                  &times;
+                                </button>
+                              </div>
+                            </div>
+                            <p style={{ margin: 0, color: "#ccc", lineHeight: "1.4", whiteSpace: "pre-wrap" }}>
+                              {c.summary}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Narrative progression preview */}
+                <div className="card-panel gold-border" style={{ flex: 1.1, padding: "20px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid var(--color-gold)", paddingBottom: "5px", marginBottom: "15px" }}>
+                    <h3 className="gothic-sub" style={{ margin: 0, border: "none" }}>
+                      📝 연대기 요약 &amp; 내보내기
+                    </h3>
+                    <button
+                      className="btn-medieval"
+                      style={{ fontSize: "0.8rem", padding: "4px 10px" }}
+                      onClick={() => {
+                        const md = generateMarkdownChronicle(state);
+                        setMarkdownContent(md);
+                        setShowExportModal(true);
+                      }}
+                    >
+                      📤 Markdown 내보내기
+                    </button>
+                  </div>
+
+                  <p className="rules-helper-text" style={{ fontSize: "0.74rem", lineHeight: "1.4", marginBottom: "15px" }}>
+                    지금까지 캐릭터가 얻은 흉터, 달성한 과업, 챕터 요약을 하나의 기록물로 엮어 미리 봅니다.
+                  </p>
+
+                  <div style={{ background: "rgba(0,0,0,0.2)", padding: "12px", borderRadius: "6px", border: "1px solid #333", maxHeight: "400px", overflowY: "auto", fontSize: "0.78rem", display: "flex", flexDirection: "column", gap: "15px" }}>
+                    {/* Character Base info */}
+                    <div>
+                      <h5 style={{ color: "var(--color-gold)", margin: "0 0 5px 0", fontSize: "0.82rem", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "2px" }}>🛡️ 모험가 프로필</h5>
+                      <div>이름: {state.character.name} | 직업: {state.character.vocation} | {state.character.age}세</div>
+                      <div>XP: {state.character.xp} | 결의: {state.character.resolve} | 생존: 총 {state.day}일</div>
+                    </div>
+
+                    {/* Milestones */}
+                    <div>
+                      <h5 style={{ color: "var(--color-gold)", margin: "0 0 5px 0", fontSize: "0.82rem", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "2px" }}>🏆 달성한 업적</h5>
+                      {state.character.goals.filter(g => g.status === "completed").length === 0 ? (
+                        <span style={{ color: "#666", fontStyle: "italic" }}>달성한 목표가 없습니다.</span>
+                      ) : (
+                        state.character.goals.filter(g => g.status === "completed").map(cg => (
+                          <div key={cg.id} style={{ margin: "3px 0 0 5px", color: "#ccc" }}>
+                            • <strong>[{cg.completedDate}]</strong> {cg.text} (경위: {cg.milestoneNote})
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Scars */}
+                    <div>
+                      <h5 style={{ color: "var(--color-gold)", margin: "0 0 5px 0", fontSize: "0.82rem", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "2px" }}>🩹 부상 및 흉터</h5>
+                      {(!state.character.injuryLogs || state.character.injuryLogs.length === 0) ? (
+                        <span style={{ color: "#666", fontStyle: "italic" }}>기록된 신체 흉터가 없습니다.</span>
+                      ) : (
+                        state.character.injuryLogs.map(l => (
+                          <div key={l.id} style={{ margin: "3px 0 0 5px", color: "#ccc" }}>
+                            • [{l.location === "head" ? "머리" : l.location === "torso" ? "몸통" : l.location === "lArm" ? "왼팔" : l.location === "rArm" ? "오른팔" : l.location === "lLeg" ? "왼다리" : "오른다리"}] {l.injuryText} {l.healed && `(흔적: ${l.scarsNotes})`}
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Relationships */}
+                    <div>
+                      <h5 style={{ color: "var(--color-gold)", margin: "0 0 5px 0", fontSize: "0.82rem", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "2px" }}>🤝 인연 &amp; 원수</h5>
+                      <div style={{ paddingLeft: "5px" }}>
+                        <strong>인연:</strong> {state.character.friends.map(f => `${f.name}(${f.relationship || "중립"})`).join(", ") || "없음"}
+                      </div>
+                      <div style={{ paddingLeft: "5px", marginTop: "3px" }}>
+                        <strong>원수:</strong> {state.character.foes.map(f => `${f.name}(${f.relationship || "중립"})`).join(", ") || "없음"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sub-View 3: Retirement / Epilogue */}
+            {journalSubView === "retirement" && (
+              <div className="journal-layout" style={{ display: "flex", gap: "20px", width: "100%", justifyContent: "center" }}>
+                <div className="card-panel gold-border" style={{ maxWidth: "600px", width: "100%", padding: "25px", background: "rgba(30, 25, 20, 0.75)" }}>
+                  <h3 className="gothic-sub" style={{ margin: "0 0 10px 0", borderBottom: "2px solid var(--color-gold)", paddingBottom: "5px", textAlign: "center" }}>
+                    🪵 모험가의 은퇴 및 에필로그 (Retirement &amp; Epilogue)
+                  </h3>
+                  
+                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center", lineHeight: "1.5", margin: "0 0 20px 0" }}>
+                    &ldquo;황혼(Gloaming) 속에서 당신이 남긴 맹세는 완수되었습니까, 아니면 야생의 침묵 속에 묻혔습니까?&rdquo;<br />
+                    방랑의 끝자락, 캐릭터의 마지막 운명이나 은퇴의 순간을 에필로그 서사로 엄숙히 장식해 주십시오.
+                  </p>
+
+                  <div className="export-monologue-frame" style={{ border: "1px solid rgba(187,153,93,0.3)", padding: "15px", borderRadius: "6px", background: "rgba(0,0,0,0.3)", marginBottom: "20px" }}>
+                    <h5 style={{ margin: "0 0 8px 0", fontSize: "0.82rem", color: "var(--color-gold)", fontFamily: "Cinzel, serif" }}>
+                      ✒️ 마지막 독백 / 캐릭터의 종장 (The Epilogue)
+                    </h5>
+                    <textarea
+                      value={state.character.epilogue || ""}
+                      onChange={e => {
+                        const val = e.target.value;
+                        updateState(s => ({
+                          ...s,
+                          character: {
+                            ...s.character,
+                            epilogue: val
+                          }
+                        }));
+                      }}
+                      style={{
+                        width: "100%",
+                        height: "180px",
+                        background: "transparent",
+                        border: "none",
+                        color: "#eee",
+                        fontSize: "0.88rem",
+                        lineHeight: "1.6",
+                        fontStyle: "italic",
+                        resize: "none",
+                        outline: "none",
+                        padding: "5px"
+                      }}
+                      placeholder="이 방랑자는 마침내 황혼 아래에서 안식을 찾았다..."
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+                    <button
+                      className="btn-medieval"
+                      onClick={() => {
+                        const epilogueText = state.character.epilogue.trim() || "에필로그가 빈 기록으로 보존되었습니다.";
+                        updateState(s => ({
+                          ...s,
+                          journals: [
+                            {
+                              id: generateUniqueId(),
+                              text: `[에필로그] ${epilogueText}`,
+                              date: new Date().toLocaleString(),
+                              day: s.day,
+                              watch: s.watch,
+                              pinned: true
+                            },
+                            ...s.journals
+                          ]
+                        }));
+                        alert("에필로그가 캐릭터 시트와 Journal에 보존되었습니다.");
+                      }}
+                    >
+                      💾 에필로그를 Journal에 봉인
+                    </button>
+                    <button
+                      className="btn-medieval"
+                      onClick={() => {
+                        const md = generateMarkdownChronicle(state);
+                        setMarkdownContent(md);
+                        setShowExportModal(true);
+                      }}
+                    >
+                      📤 전체 연대기 내보내기 (Markdown)
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         )}
 
@@ -6043,6 +7326,78 @@ export default function App() {
             </p>
             <div style={{ textAlign: "right", marginTop: "20px" }}>
               <button className="btn-medieval" onClick={() => setShowRuleModal(false)}>닫기</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Markdown Export Modal */}
+      {showExportModal && (
+        <div className="modal-backdrop">
+          <div className="modal-content-panel gold-border" style={{ maxWidth: "650px", width: "95%" }}>
+            <h3 className="gothic-sub" style={{ borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", marginBottom: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span>📤 캐릭터 연대기 내보내기 (Markdown Export)</span>
+              <button 
+                className="delete-btn" 
+                style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "1.2rem" }}
+                onClick={() => setShowExportModal(false)}
+              >&times;</button>
+            </h3>
+            <p style={{ color: "#aaa", fontSize: "0.8rem", marginBottom: "12px", lineHeight: "1.4" }}>
+              전체 캠페인의 발자취가 정돈된 마크다운 문서로 변환되었습니다. 복사하여 개인 일지나 블로그, 커뮤니티에 자유롭게 활용해 보세요.
+            </p>
+            <textarea
+              readOnly
+              value={markdownContent}
+              style={{
+                width: "100%",
+                height: "280px",
+                background: "rgba(0,0,0,0.5)",
+                color: "#ddd",
+                border: "1px solid #444",
+                borderRadius: "4px",
+                padding: "10px",
+                fontSize: "0.8rem",
+                fontFamily: "monospace",
+                lineHeight: "1.5",
+                resize: "none",
+                marginBottom: "15px"
+              }}
+              onClick={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.select();
+              }}
+            />
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button
+                className="btn-medieval"
+                onClick={() => {
+                  navigator.clipboard.writeText(markdownContent);
+                  alert("마크다운 문서가 클립보드에 복사되었습니다!");
+                }}
+              >
+                📋 클립보드 복사
+              </button>
+              <button
+                className="btn-medieval"
+                onClick={() => {
+                  const blob = new Blob([markdownContent], { type: "text/markdown;charset=utf-8" });
+                  const url = URL.createObjectURL(blob);
+                  const anchor = document.createElement("a");
+                  anchor.href = url;
+                  anchor.download = `${state.character.name.replace(/[^\w가-힣-]+/g, "_") || "gloam"}_chronicle.md`;
+                  anchor.click();
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                ⬇️ .md 다운로드
+              </button>
+              <button
+                className="btn-medieval danger"
+                onClick={() => setShowExportModal(false)}
+              >
+                닫기
+              </button>
             </div>
           </div>
         </div>
