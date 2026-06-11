@@ -3167,6 +3167,18 @@ textarea,
   color: var(--text-normal);
 }
 
+.character-stats-portrait-grid,
+.character-anatomy-memory-grid {
+  min-width: 0;
+}
+
+.character-stats-portrait-grid > *,
+.character-anatomy-memory-grid > *,
+.stat-wreaths-row > *,
+.vertical-banners-col > * {
+  min-width: 0;
+}
+
 @media(max-width: 900px) {
   .oracles-layout,
   .map-combat-layout,
@@ -3226,5 +3238,112 @@ textarea,
   .journal-subtab-note {
     overflow-wrap: normal;
     word-break: keep-all;
+  }
+}
+
+@media(max-width: 760px) {
+  .medieval-banner-inputs {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+  }
+
+  .banner-field {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+  }
+
+  .banner-input,
+  .ruled-line-item input {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+    width: 100% !important;
+  }
+
+  .open-book-container,
+  .book-page,
+  .inventory-grid,
+  .goals-list,
+  .instincts-list {
+    min-width: 0 !important;
+    overflow: hidden;
+  }
+
+  .character-stats-portrait-grid,
+  .character-anatomy-memory-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .stat-wreaths-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .wreath-card {
+    padding: 8px 6px !important;
+    overflow: hidden;
+  }
+
+  .wreath-svg-container {
+    height: 78px !important;
+    width: 78px !important;
+  }
+
+  .wreath-value-overlay {
+    font-size: 1.45rem !important;
+  }
+
+  .wreath-label {
+    font-size: 0.78rem !important;
+    line-height: 1.1 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .wreath-desc {
+    font-size: 0.68rem !important;
+    line-height: 1.25 !important;
+    word-break: keep-all;
+  }
+
+  .vertical-banners-col {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px !important;
+  }
+
+  .hanging-banner-box {
+    padding: 10px 8px !important;
+  }
+
+  .hanging-banner-box:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .hanging-banner-box h5 {
+    font-size: 0.76rem !important;
+    line-height: 1.15 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .hanging-banner-value {
+    font-size: 1.35rem !important;
+  }
+}
+
+@media(max-width: 420px) {
+  .stat-wreaths-row,
+  .vertical-banners-col {
+    grid-template-columns: 1fr !important;
+  }
+
+  .wreath-svg-container {
+    height: 86px !important;
+    width: 86px !important;
   }
 }

@@ -3674,7 +3674,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
             </div>
 
             {/* Stats Block (Wreaths) & Portrait Flag */}
-            <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "20px", marginBottom: "25px" }}>
+            <div className="character-stats-portrait-grid" style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "20px", marginBottom: "25px" }}>
               {/* Stat Wreaths */}
               <div className="stat-wreaths-row" style={{ gridTemplateColumns: "repeat(4, 1fr)", marginBottom: 0 }}>
                 {[
@@ -4073,7 +4073,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
             </div>
 
             {/* Bottom Section: Anatomy Wounds & Sidebar */}
-            <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "25px" }}>
+            <div className="character-anatomy-memory-grid" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "25px" }}>
               
               {/* Anatomy (Left Column) */}
               <div>
