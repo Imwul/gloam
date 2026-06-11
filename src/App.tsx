@@ -5674,9 +5674,9 @@ export default function App() {
             
             {/* Left Column: Chronicle Editor & Daily Feed */}
             <div className="card-panel gold-border" style={{ flex: 2, padding: "20px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "10px", marginBottom: "15px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "10px", marginBottom: "15px", flexWrap: "wrap", gap: "10px" }}>
                 <h3 className="gothic-sub" style={{ margin: 0 }}>📜 모험 연대기 &amp; 서사 일지</h3>
-                <div style={{ display: "flex", gap: "8px" }}>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                   <button 
                     className={`btn-medieval-small ${journalDisplayMode === "thematic" ? "gold-btn" : ""}`} 
                     onClick={() => setJournalDisplayMode("thematic")}

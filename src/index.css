@@ -893,7 +893,7 @@ h1, h2, h3, h4, h5, h6, .gothic-title, .gothic-sub {
    JOURNAL VIEW
    ================================================================= */
 .journal-layout {
-  max-width: 900px;
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -2192,5 +2192,17 @@ textarea {
 
   .folio-index-grid {
     grid-template-columns: 1fr;
+  }
+
+  .journal-layout {
+    flex-direction: column !important;
+  }
+
+  .journal-layout > div {
+    width: 100% !important;
+  }
+
+  .journal-layout > .scroll-card {
+    position: static !important;
   }
 }
