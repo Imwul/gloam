@@ -4120,7 +4120,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
             {/* 세 번째 열: 범용 운명 판정판 (General Test Roller) */}
             <div className="card-panel gold-border">
-              <h3 className="gothic-sub">운명의 판정판 (General Test)</h3>
+              <h3 className="gothic-sub">운명의 판정 (Destiny Test)</h3>
               <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "5px 0 12px 0", lineHeight: "1.3" }}>
                 캐릭터 스탯, 보정치, 대항 페널티(Opposed)를 결합하여 운명의 판정을 드로우합니다. (성공 기준: 14점 이상)
               </p>
@@ -5439,7 +5439,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                   {/* Friends Scroll */}
                   <div className="hanging-scroll-box scroll-card">
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "3px", marginBottom: "10px" }}>
-                      <h5 style={{ border: "none", margin: 0, fontSize: "0.9rem" }}>FRIENDS (인연)</h5>
+                      <h5 style={{ border: "none", margin: 0, fontSize: "0.9rem" }}>🤝 손 잡은 인연 (Bonds)</h5>
                       <button 
                         className="btn-medieval-small" 
                         onClick={() => {
@@ -5724,7 +5724,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                   {/* Foes Scroll */}
                   <div className="hanging-scroll-box scroll-card" style={{ borderColor: "var(--color-crimson)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--color-crimson)", paddingBottom: "3px", marginBottom: "10px" }}>
-                      <h5 style={{ border: "none", margin: 0, fontSize: "0.9rem", color: "var(--color-crimson)" }}>FOES (원수)</h5>
+                      <h5 style={{ border: "none", margin: 0, fontSize: "0.9rem", color: "var(--color-crimson)" }}>👿 등 돌린 자들 (Foes)</h5>
                       <button 
                         className="btn-medieval-small danger" 
                         onClick={() => {
@@ -6010,7 +6010,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                   <div className="hanging-scroll-box scroll-card" style={{ borderColor: "var(--color-gold)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--color-gold)", paddingBottom: "3px", marginBottom: "10px" }}>
                       <h5 style={{ border: "none", margin: 0, fontSize: "0.9rem", color: "var(--color-gold)" }}>
-                        HIRELINGS (용병 {state.character.hirelings?.length || 0}/{state.character.stats.cups})
+                        👥 함께 걷는 이들 (Companions: {(state.character.hirelings || []).filter(h => !h.deceased).length}/{state.character.stats.cups})
                       </h5>
                       <div style={{ display: "flex", gap: "5px" }}>
                         <button 
@@ -6303,27 +6303,26 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
                             {/* Deceased Memorial Sub-section */}
                             {deceasedHirelings.length > 0 && (
-                              <div style={{ marginTop: "12px", borderTop: "1px dashed rgba(212,175,55,0.3)", paddingTop: "8px" }}>
-                                <span style={{ color: "#777", fontSize: "0.72rem", fontWeight: "bold", display: "block", marginBottom: "4px" }}>
-                                  🕯️ Memorial
+                              <div style={{ marginTop: "20px", borderTop: "1px solid rgba(0, 0, 0, 0.1)", paddingTop: "12px" }}>
+                                <span style={{ color: "var(--color-gold)", fontSize: "0.78rem", fontWeight: "bold", display: "block", marginBottom: "8px", fontFamily: "var(--gothic)", letterSpacing: "0.05em" }}>
+                                  🕯️ 위령비 (The Remembrance)
                                 </span>
                                 {deceasedHirelings.map((item) => {
                                   const h = item.h;
                                   const deathCellText = h.deathCell ? `(${h.deathCell.x + 1}, ${h.deathCell.y + 1})` : "";
                                   return (
                                     <div key={item.originalIdx} style={{
-                                      background: "rgba(10, 10, 10, 0.4)",
-                                      border: "1px dashed rgba(255, 255, 255, 0.12)",
-                                      borderRadius: "3px",
-                                      padding: "6px 10px",
-                                      marginBottom: "4px",
-                                      fontSize: "0.75rem",
-                                      color: "#888",
-                                      filter: "sepia(15%) brightness(80%)"
+                                      padding: "8px 0",
+                                      borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+                                      fontSize: "0.78rem",
+                                      color: "var(--text-muted)",
+                                      lineHeight: "1.4"
                                     }}>
                                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <strong>{h.name || "이름 없는 용병"}</strong>
-                                        <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#444" }} onClick={() => {
+                                        <strong style={{ fontFamily: "Cinzel, serif", fontSize: "0.95rem", color: "var(--text-bright)", fontWeight: "normal" }}>
+                                          {h.name || "이름 없는 동료"}
+                                        </strong>
+                                        <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: "0 2px" }} onClick={() => {
                                           if (confirm(`${h.name} 용병의 기록을 완전히 제거하시겠습니까?`)) {
                                             updateState(s => ({
                                               ...s,
@@ -6335,10 +6334,10 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                                           }
                                         }}>&times;</button>
                                       </div>
-                                      <div style={{ fontSize: "0.68rem", color: "#666", marginTop: "2px", fontStyle: "italic" }}>
-                                        제 {h.deathDay || "?"}일 {deathCellText}
+                                      <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontStyle: "italic", marginTop: "2px" }}>
+                                        제 {h.deathDay || "?"}일 · {deathCellText ? `어느 구역${deathCellText}에서 안식에 들다` : "지평선 너머로 사라지다"}
                                       </div>
-                                      {h.info && <div style={{ fontSize: "0.68rem", color: "#556", marginTop: "2px" }}>{h.info}</div>}
+                                      {h.info && <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "2px" }}>{h.info}</div>}
                                     </div>
                                   );
                                 })}
@@ -7012,7 +7011,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
             {/* Visual Tarot Grid Map */}
             <div className="card-panel gold-border flex-2">
               <div className="flex-row justify-between align-center" style={{ borderBottom: "1px solid #333", paddingBottom: "10px", flexWrap: "wrap", gap: "10px" }}>
-                <h3 className="gothic-sub">모험 유적 격자 지도 (4x4 Tarot Map)</h3>
+                <h3 className="gothic-sub">원정 지도 (Landscape)</h3>
                 <div style={{ display: "flex", gap: "10px" }}>
                   <select className="inline-select" value={state.mapType} onChange={e => updateState(s => ({ ...s, mapType: e.target.value as any }))}>
                     <option value="wilderness">야외 야생 (Wilderness)</option>
@@ -7034,7 +7033,6 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
               <div className="grid-map-board" style={{ marginTop: "1rem" }}>
                 {state.mapGrid.map((cell, idx) => {
                   const cellJournals = state.journals.filter(j => j.x === cell.x && j.y === cell.y);
-                  const chronicleJournals = cellJournals.filter(j => j.chronicle === true);
 
                   // Calculate Place Scar Index
                   let scarIndex = cellJournals.reduce((acc, j) => {
@@ -7132,13 +7130,6 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                   if (presentFoeNames.length > 0) {
                     tooltipTitle += `\n⚔️ 원수: ${presentFoeNames.join(", ")}`;
                   }
-                  if (chronicleJournals.length > 0) {
-                    tooltipTitle += `\n\n📜 역사 기록:`;
-                    chronicleJournals.forEach(j => {
-                      const icon = j.chronicleIcon ? `[${j.chronicleIcon}] ` : "";
-                      tooltipTitle += `\n- Day ${j.day} Watch ${j.watch}: ${icon}${j.text}`;
-                    });
-                  }
 
                   return (
                     <div 
@@ -7158,6 +7149,21 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                             className={`map-card-thumbnail ${cell.card.reversed ? "reversed-image" : ""}`}
                             style={{ filter: cardFilter }}
                           />
+                          {hasCampsite && (
+                            <div className="cell-badge campsite-badge" title="안식처 (Campsite)">
+                              🔥
+                            </div>
+                          )}
+                          {scarIndex >= 1.5 && (
+                            <div className="cell-badge death-badge" title="사망의 흔적 (Grave)">
+                              🕯️
+                            </div>
+                          )}
+                          {scarIndex > 0 && scarIndex < 1.5 && (
+                            <div className="cell-badge battle-badge" title="전투/상흔 (Battlefield)">
+                              ⚔️
+                            </div>
+                          )}
                           <div className="cell-overlay">
                             <span>{cell.description}</span>
                           </div>
@@ -7196,16 +7202,17 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                 });
 
                 return (
-                  <div style={{ marginTop: "20px", borderTop: "2px solid var(--color-gold)", paddingTop: "15px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                      <h4 className="gothic-sub" style={{ margin: 0, fontSize: "1.05rem", display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span>📍 구역 세부 정보: ({cell.x + 1}, {cell.y + 1})</span>
-                        {cell.card && (
-                          <span style={{ fontSize: "0.8rem", color: "var(--color-gold)" }}>
-                            [{getCardDisplayName(cell.card)}]
-                          </span>
-                        )}
-                      </h4>
+                  <div style={{ marginTop: "25px", borderTop: "1px solid var(--border-color)", paddingTop: "20px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "15px", flexWrap: "wrap", gap: "10px" }}>
+                      <div>
+                        <h3 style={{ fontFamily: "Cinzel, serif", fontSize: "1.4rem", color: "var(--text-bright)", margin: "0 0 4px 0", borderBottom: "none" }}>
+                          {cell.description || (cell.card ? "이름 없는 장소" : "미개척 구역")}
+                        </h3>
+                        <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+                          ({cell.x + 1}, {cell.y + 1})
+                          {cell.card && ` · ${getCardDisplayName(cell.card)}`}
+                        </div>
+                      </div>
                       <div style={{ display: "flex", gap: "5px" }}>
                         {!cell.card && (
                           <button
@@ -7300,95 +7307,95 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                       </div>
                     </div>
 
-                    <div style={{ background: "rgba(0,0,0,0.25)", border: "1px solid #333", borderRadius: "4px", padding: "12px", fontSize: "0.85rem", lineHeight: "1.5" }}>
-                      <div style={{ marginBottom: "8px" }}>
-                        <span style={{ color: "#aaa" }}>지형 묘사:</span>{" "}
-                        <strong style={{ color: "var(--text-bright)" }}>
-                          {cell.description || (cell.card ? "묘사 없음" : "아직 탐색되지 않은 지역입니다.")}
-                        </strong>
-                      </div>
-
+                    <div style={{ padding: "0", fontSize: "0.85rem", lineHeight: "1.6" }}>
                       {cell.type === "settlement" && (
-                        <div style={{ margin: "10px 0", borderTop: "1px dashed rgba(255, 215, 0, 0.15)", paddingTop: "8px", display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
-                          <span style={{ fontSize: "0.75rem", color: "#aaa" }}>🏰 정착지 상태:</span>
-                          <span style={{ fontSize: "0.75rem", color: "var(--color-gold)", fontWeight: "bold" }}>
-                            참상: {cell.settlementTragedies || 0} / 복구: {cell.settlementRecoveries || 0}
+                        <div style={{ margin: "12px 0", borderTop: "1px solid rgba(0, 0, 0, 0.1)", paddingTop: "8px", display: "flex", gap: "15px", alignItems: "center", flexWrap: "wrap" }}>
+                          <span style={{ fontSize: "0.78rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+                            {(!cell.settlementTragedies && !cell.settlementRecoveries) ? (
+                              "🏰 고요하고 평온한 정착지입니다."
+                            ) : (
+                              `🏰 정착지의 숨결: 참상의 흔적 ${cell.settlementTragedies || 0}회 · 복구의 불씨 ${cell.settlementRecoveries || 0}회`
+                            )}
                           </span>
-                          <button
-                            className="btn-medieval-small"
-                            style={{ fontSize: "0.68rem", padding: "1px 4px", height: "18px" }}
-                            onClick={() => {
-                              updateState(s => {
-                                const nextGrid = [...s.mapGrid];
-                                const idx = selectedMapCellIdx!;
-                                nextGrid[idx] = {
-                                  ...nextGrid[idx],
-                                  settlementTragedies: (nextGrid[idx].settlementTragedies || 0) + 1
-                                };
-                                return {
-                                  ...s,
-                                  mapGrid: nextGrid,
-                                  journals: [
-                                    {
-                                      id: generateUniqueId(),
-                                      text: `[정착지 참상] (${cell.x + 1}, ${cell.y + 1}) 정착지에 비극적인 참상이 기록되었습니다.`,
-                                      date: new Date().toLocaleString(),
-                                      day: s.day,
-                                      watch: s.watch,
-                                      x: cell.x,
-                                      y: cell.y,
-                                      systemGenerated: true,
-                                      chronicle: false
-                                    },
-                                    ...s.journals
-                                  ]
-                                };
-                              });
-                            }}
-                          >
-                            참상 기록
-                          </button>
-                          <button
-                            className="btn-medieval-small"
-                            style={{ fontSize: "0.68rem", padding: "1px 4px", height: "18px" }}
-                            onClick={() => {
-                              updateState(s => {
-                                const nextGrid = [...s.mapGrid];
-                                const idx = selectedMapCellIdx!;
-                                nextGrid[idx] = {
-                                  ...nextGrid[idx],
-                                  settlementRecoveries: (nextGrid[idx].settlementRecoveries || 0) + 1
-                                };
-                                return {
-                                  ...s,
-                                  mapGrid: nextGrid,
-                                  journals: [
-                                    {
-                                      id: generateUniqueId(),
-                                      text: `[정착지 복구] (${cell.x + 1}, ${cell.y + 1}) 정착지에 희망적인 복구 노력이 시작되었습니다.`,
-                                      date: new Date().toLocaleString(),
-                                      day: s.day,
-                                      watch: s.watch,
-                                      x: cell.x,
-                                      y: cell.y,
-                                      systemGenerated: true,
-                                      chronicle: false
-                                    },
-                                    ...s.journals
-                                  ]
-                                };
-                              });
-                            }}
-                          >
-                            복구 기록
-                          </button>
+                          <div style={{ display: "flex", gap: "5px" }}>
+                            <button
+                              className="btn-medieval-small"
+                              style={{ fontSize: "0.68rem", padding: "1px 6px", height: "20px" }}
+                              onClick={() => {
+                                updateState(s => {
+                                  const nextGrid = [...s.mapGrid];
+                                  const idx = selectedMapCellIdx!;
+                                  nextGrid[idx] = {
+                                    ...nextGrid[idx],
+                                    settlementTragedies: (nextGrid[idx].settlementTragedies || 0) + 1
+                                  };
+                                  return {
+                                    ...s,
+                                    mapGrid: nextGrid,
+                                    journals: [
+                                      {
+                                        id: generateUniqueId(),
+                                        text: `[정착지 참상] (${cell.x + 1}, ${cell.y + 1}) 정착지에 비극적인 참상이 새겨졌습니다.`,
+                                        date: new Date().toLocaleString(),
+                                        day: s.day,
+                                        watch: s.watch,
+                                        x: cell.x,
+                                        y: cell.y,
+                                        systemGenerated: true,
+                                        chronicle: false
+                                      },
+                                      ...s.journals
+                                    ]
+                                  };
+                                });
+                              }}
+                            >
+                              참상 기록
+                            </button>
+                            <button
+                              className="btn-medieval-small"
+                              style={{ fontSize: "0.68rem", padding: "1px 6px", height: "20px" }}
+                              onClick={() => {
+                                updateState(s => {
+                                  const nextGrid = [...s.mapGrid];
+                                  const idx = selectedMapCellIdx!;
+                                  nextGrid[idx] = {
+                                    ...nextGrid[idx],
+                                    settlementRecoveries: (nextGrid[idx].settlementRecoveries || 0) + 1
+                                  };
+                                  return {
+                                    ...s,
+                                    mapGrid: nextGrid,
+                                    journals: [
+                                      {
+                                        id: generateUniqueId(),
+                                        text: `[정착지 복구] (${cell.x + 1}, ${cell.y + 1}) 정착지에 작은 복구의 온기가 피어났습니다.`,
+                                        date: new Date().toLocaleString(),
+                                        day: s.day,
+                                        watch: s.watch,
+                                        x: cell.x,
+                                        y: cell.y,
+                                        systemGenerated: true,
+                                        chronicle: false
+                                      },
+                                      ...s.journals
+                                    ]
+                                  };
+                                });
+                              }}
+                            >
+                              복구 기록
+                            </button>
+                          </div>
                         </div>
                       )}
 
                       {/* Synced Journals */}
-                      <div style={{ marginTop: "12px", borderTop: "1px dashed #444", paddingTop: "8px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                          <span style={{ color: "var(--color-gold)", fontWeight: "bold", fontSize: "0.8rem" }}>📖 이 구역의 탐험 일지 ({cellJournals.length})</span>
+                      <div style={{ marginTop: "15px", borderTop: "1px solid rgba(0, 0, 0, 0.1)", paddingTop: "12px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                          <span style={{ color: "var(--color-gold)", fontWeight: "bold", fontSize: "0.8rem", fontFamily: "var(--gothic)", letterSpacing: "0.05em" }}>
+                            이곳에 머문 기억들 ({cellJournals.length})
+                          </span>
                           <button
                             className="btn-medieval-small"
                             style={{ fontSize: "0.68rem", padding: "2px 5px", height: "22px" }}
@@ -7422,34 +7429,28 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                           </button>
                         </div>
                         {cellJournals.length === 0 ? (
-                          <div style={{ fontSize: "0.75rem", color: "#666", fontStyle: "italic" }}>기록된 일지가 없습니다.</div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic" }}>기록된 일지가 없습니다.</div>
                         ) : (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "150px", overflowY: "auto" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "150px", overflowY: "auto" }}>
                             {cellJournals.map(j => {
                               const isChronicle = j.chronicle === true;
                               return (
                                 <div 
                                   key={j.id} 
-                                  style={isChronicle ? {
-                                    border: "1px solid var(--color-gold)",
-                                    backgroundColor: "rgba(187, 153, 93, 0.08)",
-                                    borderRadius: "4px",
-                                    padding: "6px 10px",
+                                  style={{
+                                    borderLeft: isChronicle ? "2px solid var(--color-gold)" : "2px solid rgba(0, 0, 0, 0.15)",
+                                    paddingLeft: "10px",
                                     marginBottom: "4px",
-                                    boxShadow: "0 0 5px rgba(187, 153, 93, 0.15)"
-                                  } : {
-                                    borderBottom: "1px dashed rgba(255,255,255,0.05)",
-                                    paddingBottom: "4px",
-                                    marginBottom: "4px"
+                                    paddingBottom: "2px"
                                   }}
                                 >
-                                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: isChronicle ? "var(--color-gold)" : "#888" }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: isChronicle ? "var(--color-gold)" : "var(--text-muted)" }}>
                                     <span>
                                       {isChronicle && <span style={{ marginRight: "4px" }}>📜 연대기 ·</span>}
                                       제 {j.day || 1}일 {j.watch || 1}워치 ({j.date})
                                     </span>
                                     <button
-                                      style={{ background: "transparent", border: "none", color: "#666", cursor: "pointer", padding: "0 3px" }}
+                                      style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: "0 3px" }}
                                       onClick={() => {
                                         if (confirm("이 일지를 삭제하시겠습니까?")) {
                                           updateState(s => ({
@@ -7462,7 +7463,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                                       &times;
                                     </button>
                                   </div>
-                                  <div style={{ fontSize: "0.8rem", color: isChronicle ? "var(--text-bright)" : "#ddd", marginTop: "2px", fontWeight: isChronicle ? "bold" : "normal" }}>
+                                  <div style={{ fontSize: "0.8rem", color: "var(--text-normal)", marginTop: "2px", fontWeight: isChronicle ? "bold" : "normal" }}>
                                     {j.chronicleIcon && <span style={{ marginRight: "6px", fontSize: "0.9rem" }}>{j.chronicleIcon}</span>}
                                     {j.text}
                                   </div>
@@ -7474,66 +7475,62 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                       </div>
 
                       {/* Synced NPCs */}
-                      <div style={{ marginTop: "12px", borderTop: "1px dashed #444", paddingTop: "8px" }}>
-                        <span style={{ color: "var(--color-gold)", fontWeight: "bold", fontSize: "0.8rem", display: "block", marginBottom: "6px" }}>
-                          👥 이 구역에서 조우한 인물 ({npcNamesInCell.size})
+                      <div style={{ marginTop: "15px", borderTop: "1px solid rgba(0, 0, 0, 0.1)", paddingTop: "12px" }}>
+                        <span style={{ color: "var(--color-gold)", fontWeight: "bold", fontSize: "0.8rem", display: "block", marginBottom: "8px", fontFamily: "var(--gothic)", letterSpacing: "0.05em" }}>
+                          거쳐간 인연들 ({npcNamesInCell.size})
                         </span>
                         {npcNamesInCell.size === 0 ? (
-                          <div style={{ fontSize: "0.75rem", color: "#666", fontStyle: "italic" }}>기록에 언급된 NPC가 없습니다.</div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic" }}>기록에 언급된 인물이 없습니다.</div>
                         ) : (
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
                             {[...npcNamesInCell].map(name => {
                               const isFriend = state.character.friends.some(f => f.name === name);
                               const isFoe = state.character.foes.some(f => f.name === name);
                               const isHireling = state.character.hirelings.some(h => h.name === name);
                               
-                              let typeKo = "NPC";
-                              let color = "#bbb";
-                              if (isFriend) { typeKo = "친구"; color = "#4caf50"; }
+                              let typeKo = "인연";
+                              let color = "var(--text-muted)";
+                              if (isFriend) { typeKo = "친구"; color = "var(--color-gold)"; }
                               else if (isFoe) { typeKo = "원수"; color = "var(--color-crimson)"; }
-                              else if (isHireling) { typeKo = "용병"; color = "var(--color-gold)"; }
+                              else if (isHireling) { typeKo = "동행"; color = "var(--color-gold)"; }
 
                               const lastUsedDay = state.usedFriendAids?.[name];
                               const isAidedToday = lastUsedDay === state.day;
 
                               return (
-                                <div
+                                <span
                                   key={name}
                                   style={{
-                                    display: "flex",
+                                    fontSize: "0.8rem",
+                                    color: color,
+                                    marginRight: "15px",
+                                    display: "inline-flex",
                                     alignItems: "center",
-                                    gap: "5px",
-                                    fontSize: "0.75rem",
-                                    background: "rgba(0,0,0,0.3)",
-                                    border: `1px solid ${color}`,
-                                    color: "#eee",
-                                    padding: "2px 6px",
-                                    borderRadius: "3px"
+                                    gap: "4px"
                                   }}
                                 >
-                                  <span>{name} <span style={{ fontSize: "0.65rem", color }}>({typeKo})</span></span>
+                                  <strong style={{ borderBottom: `1px dotted ${color}` }}>{name}</strong>
+                                  <span style={{ fontSize: "0.68rem", opacity: 0.8 }}>({typeKo})</span>
                                   {isFriend && (
                                     <button
-                                      className="btn-medieval-small"
                                       style={{
-                                        fontSize: "0.62rem",
-                                        padding: "1px 4px",
-                                        marginLeft: "4px",
-                                        background: isAidedToday ? "rgba(255,255,255,0.05)" : "rgba(76, 175, 80, 0.2)",
-                                        border: `1px solid ${isAidedToday ? "#555" : "#4caf50"}`,
-                                        color: isAidedToday ? "#888" : "#4caf50",
+                                        fontSize: "0.65rem",
+                                        background: "none",
+                                        border: "none",
+                                        color: isAidedToday ? "var(--text-muted)" : "var(--color-gold)",
+                                        textDecoration: isAidedToday ? "none" : "underline",
                                         cursor: isAidedToday ? "not-allowed" : "pointer",
-                                        height: "18px",
-                                        lineHeight: "1"
+                                        padding: 0,
+                                        marginLeft: "3px"
                                       }}
                                       disabled={isAidedToday}
                                       onClick={() => useFriendAid(name)}
                                       title={isAidedToday ? "오늘 이미 도움을 받았습니다." : "친구의 도움을 요청합니다."}
                                     >
-                                      {isAidedToday ? "🤝 오늘원조완료" : "🤝 원조받기"}
+                                      {isAidedToday ? "(원조 완료)" : "[원조 받기]"}
                                     </button>
                                   )}
-                                </div>
+                                </span>
                               );
                             })}
                           </div>
@@ -7548,7 +7545,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
             {/* Adventure Events & Combat Tracker */}
             <div className="card-panel flex-1">
-              <h3 className="gothic-sub">돌발 인카운터 &amp; 전투 트래커</h3>
+              <h3 className="gothic-sub">여정의 조우 &amp; 갈등 (Encounters)</h3>
               
               {/* Event Drawer */}
               <div className="event-drawer-box" style={{ marginTop: "1rem" }}>
@@ -7858,7 +7855,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                 {/* Left Column: Chronicle Editor & Daily Feed */}
                 <div className="card-panel gold-border" style={{ flex: 2, padding: "20px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "10px", marginBottom: "15px", flexWrap: "wrap", gap: "10px" }}>
-                    <h3 className="gothic-sub" style={{ margin: 0 }}>모험 연대기 &amp; 서사 일지</h3>
+                    <h3 className="gothic-sub" style={{ margin: 0 }}>시간의 서사 (Chronicle)</h3>
                     <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                       <button 
                         className={`btn-medieval-small ${journalDisplayMode === "thematic" ? "gold-btn" : ""}`} 
@@ -7911,7 +7908,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
                   {/* Grouped Chronicle Feed */}
                   <div className="journal-history-list" style={{ marginTop: "2rem" }}>
-                    <h4 className="gothic-sub" style={{ fontSize: "1.1rem", borderBottom: "1px solid #333", paddingBottom: "5px" }}>연대기 기록 (Chronicle History)</h4>
+                    <h4 className="gothic-sub" style={{ fontSize: "1.1rem", borderBottom: "1px solid #333", paddingBottom: "5px" }}>지나온 여정의 기록</h4>
                     
                     {state.journals.length === 0 ? (
                       <p className="empty-text" style={{ fontStyle: "italic", textAlign: "center", color: "#666", marginTop: "20px" }}>기록된 모험 일지가 아직 존재하지 않습니다.</p>

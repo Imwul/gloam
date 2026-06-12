@@ -841,15 +841,24 @@ h1, h2, h3, h4, h5, h6, .gothic-title, .gothic-sub {
   flex-direction: column;
   align-items: center;
   color: var(--text-muted);
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+
+.map-grid-cell:hover .unrevealed-map-cell {
+  opacity: 0.9;
 }
 
 .unrevealed-map-cell .coord {
   font-size: 0.7rem;
+  font-family: var(--gothic);
+  letter-spacing: 0.05em;
 }
 
 .unrevealed-map-cell .draw-prompt {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   margin-top: 3px;
+  font-style: italic;
 }
 
 .revealed-map-cell {
@@ -873,15 +882,55 @@ h1, h2, h3, h4, h5, h6, .gothic-title, .gothic-sub {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(0,0,0,0.85);
-  padding: 4px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+  padding: 8px 4px 4px 4px;
   text-align: center;
+  opacity: 0.75;
+  transition: opacity 0.2s ease;
+}
+
+.map-grid-cell:hover .cell-overlay {
+  opacity: 1;
 }
 
 .cell-overlay span {
-  font-size: 0.75rem;
-  color: var(--text-bright);
+  font-size: 0.7rem;
+  color: #FAF5EB;
   font-family: var(--serif);
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.cell-badge {
+  position: absolute;
+  font-size: 1rem;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.25s ease-in-out;
+  pointer-events: none;
+}
+
+.campsite-badge {
+  top: 6px;
+  right: 6px;
+  filter: drop-shadow(0 0 4px rgba(150, 111, 35, 0.8));
+}
+
+.death-badge {
+  top: 6px;
+  left: 6px;
+  filter: drop-shadow(0 0 4px rgba(128, 28, 29, 0.8));
+}
+
+.battle-badge {
+  top: 6px;
+  left: 6px;
+  font-size: 0.9rem;
+  filter: drop-shadow(0 0 3px rgba(128, 28, 29, 0.8));
+}
+
+.map-grid-cell:hover .cell-badge,
+.map-grid-cell.selected .cell-badge {
+  opacity: 1;
 }
 
 /* Combat tracker box */
