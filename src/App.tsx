@@ -226,6 +226,11 @@ export interface MapCell {
   card?: Card;
   type?: "wilderness" | "dungeon" | "settlement";
   description?: string;
+  hasCampsite?: boolean;
+  campsitesCount?: number;
+  battlesCount?: number;
+  settlementTragedies?: number;
+  settlementRecoveries?: number;
 }
 
 export interface CombatMonster {
@@ -1243,16 +1248,7 @@ export default function App() {
       })
       .join('\n\n');
 
-    const scarsList = (char.injuryLogs || [])
-      .map(log => {
-        const locMap: Record<string, string> = { head: "머리", torso: "몸통", lArm: "왼팔", rArm: "오른팔", lLeg: "왼다리", rLeg: "오른다리" };
-        const loc = locMap[log.location] || log.location;
-        const healedStatus = log.healed
-          ? `완치 (완치일: ${log.dateHealed || '미상'})\n  *남겨진 흔적: ${log.scarsNotes || '치유됨'}*`
-          : `부상 중 (부상 획득일: ${log.dateAcquired})`;
-        return `- **[${loc}]** ${log.injuryText}\n  *상태: ${healedStatus}*`;
-      })
-      .join('\n');
+
 
     const instinctsList = (char.instinctTriggers || [])
       .map(t => `- **[${t.date}]** 본능 '${t.instinctText}' 격발\n  *시련 내용: ${t.narrativeNote}*`)
@@ -1319,12 +1315,7 @@ ${hirelingsList || "*고용한 용병이 없습니다.*"}
 
 ---
 
-## 🩹 신체 부상 및 흉터 연대기 (Anatomy & Scar Chronicle)
-${scarsList || "*신체가 깨끗하며 남겨진 흉터가 없습니다.*"}
-
----
-
-## ⚡ 본능 격발 역사 (Instinct Triggers)
+  ## ⚡ 본능 격발 역사 (Instinct Triggers)
 ${instinctsList || "*본능으로 인한 곤경 격발 기록이 없습니다.*"}
 
 ---
@@ -1910,14 +1901,23 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
         chronicleText = `⚔️ [첫 전투 승리] 전장에 울려 퍼진 첫 번째 혈전에서 [${monsterNames}] 무리를 물리치고 첫 승리를 선포합니다!`;
       }
 
-      const isChronicle = !!chronicleCategory;
+      const isChronicle = hasBoss; // ONLY boss defeats enter the Chronicle from battles
+
+      const nextGrid = [...s.mapGrid];
+      if (selectedMapCellIdx !== null) {
+        const cell = nextGrid[selectedMapCellIdx];
+        nextGrid[selectedMapCellIdx] = {
+          ...cell,
+          battlesCount: (cell.battlesCount || 0) + 1
+        };
+      }
 
       if (triggerFoolReshuffle) {
         setTimeout(() => {
           alert("🔄 이번 전투 중 광대(The Fool) 카드가 소모되었습니다! 라운드 종료 규칙에 따라 모든 손패를 버리고 양쪽 덱 전체를 새로 섞습니다.");
         }, 50);
 
-        const thematicText = isChronicle ? chronicleText : `[전투 종결 및 소집] 승리의 검을 거두지만, 광대의 마법이 덱을 헤집어 놓아 덱을 소집합니다.`;
+        const thematicText = hasBoss ? chronicleText : (chronicleText || `[전투 종결 및 소집] 승리의 검을 거두지만, 광대의 마법이 덱을 헤집어 놓아 덱을 소집합니다.`);
         const systemLog = `[전투 종료] 광대(The Fool) 카드 소모로 인한 덱 전체 셔플 초기화`;
 
         const playerMap = new Map<string, Card>();
@@ -1941,6 +1941,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
           ...s,
           combatRound: 1,
           combatMonsters: [],
+          mapGrid: nextGrid,
           playerDeck: shuffle(Array.from(playerMap.values())),
           playerDiscard: [],
           refereeDeck: shuffle(Array.from(refereeMap.values())),
@@ -1970,13 +1971,14 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
         };
       }
 
-      const thematicText = isChronicle ? chronicleText : `[전투 종결] 적들의 숨통이 끊어지거나 어둠 너머로 퇴각했습니다. 무기를 거두고 호흡을 고릅니다.`;
+      const thematicText = hasBoss ? chronicleText : (chronicleText || `[전투 종결] 적들의 숨통이 끊어지거나 어둠 너머로 퇴각했습니다. 무기를 거두고 호흡을 고릅니다.`);
       const systemLog = `[전투 종료] 전투가 격파/종료되었습니다.`;
 
       return {
         ...s,
         combatRound: 1,
         combatMonsters: [],
+        mapGrid: nextGrid,
         playerDiscard: nextDiscard,
         refereeDiscard: nextRefereeDiscard,
         playerInitiativeCard: null,
@@ -2579,11 +2581,22 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
           return log;
         });
 
-        const cell = s.selectedMapCellIdx !== null ? s.mapGrid[s.selectedMapCellIdx] : null;
+        const nextGrid = [...s.mapGrid];
+        const cellIdx = s.selectedMapCellIdx;
+        const cell = cellIdx !== null ? nextGrid[cellIdx] : null;
+        if (cellIdx !== null && cell) {
+          nextGrid[cellIdx] = {
+            ...cell,
+            hasCampsite: true,
+            campsitesCount: (cell.campsitesCount || 0) + 1
+          };
+        }
+
         return {
           ...s,
           day: s.day + 1,
           watch: 1,
+          mapGrid: nextGrid,
           character: {
             ...s.character,
             wounds: {
@@ -2603,7 +2616,8 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
               y: cell ? cell.y : undefined,
               chronicle: false,
               chronicleCategory: "campsite",
-              chronicleIcon: "⛺"
+              chronicleIcon: "⛺",
+              systemGenerated: true
             },
             ...s.journals
           ]
@@ -2665,16 +2679,23 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
           const currentWTaken = typeof h.woundsTaken === 'number' ? h.woundsTaken : 0;
           const nextWounds = currentWTaken + 1;
           const isDead = nextWounds >= maxW;
+
+          const hirelingMemoryLog = `제 ${s.day}일 제 ${s.watch}워치: 방랑자 대신 ${partNameKo} 부상을 입음 (용병 부상: ${nextWounds}/${maxW})`;
           if (isDead) {
             newH[chosenHirelingIdx] = { 
               ...h, 
               woundsTaken: nextWounds,
               deceased: true,
               deathDay: s.day,
-              deathCell: { x: cell ? cell.x : 0, y: cell ? cell.y : 0 }
+              deathCell: { x: cell ? cell.x : 0, y: cell ? cell.y : 0 },
+              memoryLogs: [...(h.memoryLogs || []), hirelingMemoryLog, `제 ${s.day}일 제 ${s.watch}워치: 방랑자를 지키다 사망`]
             };
           } else {
-            newH[chosenHirelingIdx] = { ...h, woundsTaken: nextWounds };
+            newH[chosenHirelingIdx] = { 
+              ...h, 
+              woundsTaken: nextWounds,
+              memoryLogs: [...(h.memoryLogs || []), hirelingMemoryLog]
+            };
           }
           let nextJournals = [...s.journals];
 
@@ -2689,9 +2710,9 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
               date: new Date().toLocaleString(),
               day: s.day,
               watch: s.watch,
-              pinned: true,
+              pinned: false,
               systemGenerated: true,
-              chronicle: true,
+              chronicle: false,
               chronicleCategory: "hireling_protection",
               chronicleIcon: "🛡️"
             },
@@ -2763,9 +2784,9 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
               date: new Date().toLocaleString(),
               day: s.day,
               watch: s.watch,
-              pinned: isFirstInjury,
+              pinned: false,
               systemGenerated: true,
-              chronicle: isFirstInjury,
+              chronicle: false,
               chronicleCategory: category,
               chronicleIcon: icon
             },
@@ -2839,7 +2860,9 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                 text: `[부상 치료 - ${partNameKo}] ${scar.trim() || "부상이 수동 치료되었습니다."}`,
                 date: new Date().toLocaleString(),
                 day: s.day,
-                watch: s.watch
+                watch: s.watch,
+                systemGenerated: true,
+                chronicle: false
               },
               ...s.journals
             ]
@@ -2866,32 +2889,48 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     const aidType = choice ? "bonus" : "resolve_discount";
     const aidText = choice ? "일반 판정 +2 보너스" : "결의 소모 1 감소";
 
-    updateState(s => ({
-      ...s,
-      activeFriendAid: {
-        npcName,
-        type: aidType
-      },
-      usedFriendAids: {
-        ...(s.usedFriendAids || {}),
-        [npcName]: s.day
-      },
-      journals: [
-        {
-          id: generateUniqueId(),
-          text: `🤝 [친구의 도움] 현재 구역에 머물고 있는 친구 ${npcName}의 원조를 받았습니다. (효과: ${aidText})`,
-          date: new Date().toLocaleString(),
-          day: s.day,
-          watch: s.watch,
-          pinned: true,
-          systemGenerated: true,
-          chronicle: true,
-          chronicleCategory: "friend_aid",
-          chronicleIcon: "🤝"
+    updateState(s => {
+      const nextFriends = (s.character.friends || []).map(f => {
+        if (f.name === npcName) {
+          const logs = f.memoryLogs ? [...f.memoryLogs] : [];
+          return {
+            ...f,
+            memoryLogs: [...logs, `제 ${s.day}일 제 ${s.watch}워치: 원조 받음 (${aidText})`]
+          };
+        }
+        return f;
+      });
+      return {
+        ...s,
+        activeFriendAid: {
+          npcName,
+          type: aidType
         },
-        ...s.journals
-      ]
-    }));
+        usedFriendAids: {
+          ...(s.usedFriendAids || {}),
+          [npcName]: s.day
+        },
+        character: {
+          ...s.character,
+          friends: nextFriends
+        },
+        journals: [
+          {
+            id: generateUniqueId(),
+            text: `🤝 [친구의 도움] 현재 구역에 머물고 있는 친구 ${npcName}의 원조를 받았습니다. (효과: ${aidText})`,
+            date: new Date().toLocaleString(),
+            day: s.day,
+            watch: s.watch,
+            pinned: false,
+            systemGenerated: true,
+            chronicle: false,
+            chronicleCategory: "friend_aid",
+            chronicleIcon: "🤝"
+          },
+          ...s.journals
+        ]
+      };
+    });
 
     alert(`🤝 ${npcName}의 도움이 활성화되었습니다: ${aidText}\n\n대시보드에서 다음 판정을 진행하십시오.`);
   };
@@ -3208,21 +3247,32 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
       alert(
         `[용병 고용 성공!]\nCoins 판정 결과: ${hireTotal}점 (카드: ${getCardDisplayName(hCard)} + Coins: ${coinsStat})\n\n${candidateName}이(가) 계약을 수락하고 당신의 용병으로 합류했습니다!`
       );
-      updateState(s => ({
-        ...s,
-        character: {
-          ...s.character,
-          hirelings: [...(s.character.hirelings || []), { name: candidateName, info: `${candidateOccupation} (${candidatePersonality})` }]
-        },
-        journals: [
-          {
-            id: generateUniqueId(),
-            text: `[용병 고용 성공] Cups(${searchTotal}) 및 Coins(${hireTotal}) 판정에 성공하여 용병 ${candidateName}(${candidateOccupation})을 고용했습니다.`,
-            date: new Date().toLocaleString()
+      updateState(s => {
+        const memoryLogEntry = `제 ${s.day}일 제 ${s.watch}워치: 용병으로 합류 (Cups 판정 ${searchTotal}점, Coins 판정 ${hireTotal}점)`;
+        return {
+          ...s,
+          character: {
+            ...s.character,
+            hirelings: [...(s.character.hirelings || []), { 
+              name: candidateName, 
+              info: `${candidateOccupation} (${candidatePersonality})`,
+              memoryLogs: [memoryLogEntry]
+            }]
           },
-          ...s.journals
-        ]
-      }));
+          journals: [
+            {
+              id: generateUniqueId(),
+              text: `[용병 고용 성공] Cups(${searchTotal}) 및 Coins(${hireTotal}) 판정에 성공하여 용병 ${candidateName}(${candidateOccupation})을 고용했습니다.`,
+              date: new Date().toLocaleString(),
+              day: s.day,
+              watch: s.watch,
+              systemGenerated: true,
+              chronicle: false
+            },
+            ...s.journals
+          ]
+        };
+      });
     } else {
       alert(
         `[용병 고용 실패]\nCoins 판정 결과: ${hireTotal}점 (카드: ${getCardDisplayName(hCard)} + Coins: ${coinsStat})\n\n${candidateName}이(가) 제시한 고용 금액이나 모험의 위험성에 동의하지 못하고 자리를 떠났습니다.`
@@ -3233,7 +3283,11 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
           {
             id: generateUniqueId(),
             text: `[용병 계약 실패] Coins 판정 결과 ${hireTotal}점 부족으로 용병 ${candidateName}과의 고용 계약이 무산되었습니다.`,
-            date: new Date().toLocaleString()
+            date: new Date().toLocaleString(),
+            day: s.day,
+            watch: s.watch,
+            systemGenerated: true,
+            chronicle: false
           },
           ...s.journals
         ]
@@ -3275,17 +3329,35 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
     if (success) {
       alert(`[주간 급여 판정 성공]\nCoins 판정 결과: ${total}점 (성공)\n\n급여가 만족스럽게 지급되었습니다. ${hireling.name}은(는) 고용 상태를 계속 유지합니다.`);
-      updateState(s => ({
-        ...s,
-        journals: [
-          {
-            id: generateUniqueId(),
-            text: `[용병 유지 성공] Coins 판정 ${total}점으로 ${hireling.name}에게 주간 급여를 정상 지급하여 계약을 연장했습니다.`,
-            date: new Date().toLocaleString()
+      updateState(s => {
+        const nextH = [...s.character.hirelings];
+        if (nextH[idx]) {
+          const logs = nextH[idx].memoryLogs ? [...nextH[idx].memoryLogs] : [];
+          nextH[idx] = {
+            ...nextH[idx],
+            memoryLogs: [...logs, `제 ${s.day}일: 주간 급여 성공적 지급 (Coins 판정 ${total}점)`]
+          };
+        }
+        return {
+          ...s,
+          character: {
+            ...s.character,
+            hirelings: nextH
           },
-          ...s.journals
-        ]
-      }));
+          journals: [
+            {
+              id: generateUniqueId(),
+              text: `[용병 유지 성공] Coins 판정 ${total}점으로 ${hireling.name}에게 주간 급여를 정상 지급하여 계약을 연장했습니다.`,
+              date: new Date().toLocaleString(),
+              day: s.day,
+              watch: s.watch,
+              systemGenerated: true,
+              chronicle: false
+            },
+            ...s.journals
+          ]
+        };
+      });
     } else {
       alert(`[주간 급여 판정 실패]\nCoins 판정 결과: ${total}점 (실패)\n\n제시한 주간 급여가 적거나 계약금 부족으로 인해 ${hireling.name}이(가) 즉시 계약을 해지하고 사직했습니다.`);
       updateState(s => ({
@@ -3301,9 +3373,9 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
             date: new Date().toLocaleString(),
             day: s.day,
             watch: s.watch,
-            pinned: true,
+            pinned: false,
             systemGenerated: true,
-            chronicle: true,
+            chronicle: false,
             chronicleCategory: "hireling_quit",
             chronicleIcon: "🏃"
           },
@@ -3401,7 +3473,13 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     const info = `${folkNpcResult.occupation} (${folkNpcResult.personality})`;
     updateState(s => {
       const isFirstFriend = !s.journals.some(j => j.chronicleCategory === "first_friend");
-      const nextFriends = [...s.character.friends, { name, info }];
+      const memoryLogEntry = `제 ${s.day}일 제 ${s.watch}워치: 인연을 맺음. (${folkNpcResult.occupation}, ${folkNpcResult.personality})`;
+      const nextFriends = [...s.character.friends, { 
+        name, 
+        info, 
+        relationship: "Friendly" as const, 
+        memoryLogs: [memoryLogEntry] 
+      }];
       
       const newJournal: JournalEntry = {
         id: generateUniqueId(),
@@ -3411,9 +3489,9 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
         date: new Date().toLocaleString(),
         day: s.day,
         watch: s.watch,
-        pinned: isFirstFriend,
+        pinned: false,
         systemGenerated: true,
-        chronicle: isFirstFriend,
+        chronicle: false,
         chronicleCategory: isFirstFriend ? "first_friend" : undefined,
         chronicleIcon: isFirstFriend ? "⚜" : undefined
       };
@@ -3436,7 +3514,13 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     const info = `${folkNpcResult.occupation} (${folkNpcResult.personality})`;
     updateState(s => {
       const isFirstFoe = !s.journals.some(j => j.chronicleCategory === "first_foe");
-      const nextFoes = [...s.character.foes, { name, info }];
+      const memoryLogEntry = `제 ${s.day}일 제 ${s.watch}워치: 원수 관계로 각인됨. (${folkNpcResult.occupation}, ${folkNpcResult.personality})`;
+      const nextFoes = [...s.character.foes, { 
+        name, 
+        info, 
+        relationship: "Hostile" as const, 
+        memoryLogs: [memoryLogEntry] 
+      }];
       
       const newJournal: JournalEntry = {
         id: generateUniqueId(),
@@ -3446,9 +3530,9 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
         date: new Date().toLocaleString(),
         day: s.day,
         watch: s.watch,
-        pinned: isFirstFoe,
+        pinned: false,
         systemGenerated: true,
-        chronicle: isFirstFoe,
+        chronicle: false,
         chronicleCategory: isFirstFoe ? "first_foe" : undefined,
         chronicleIcon: isFirstFoe ? "⚔" : undefined
       };
@@ -3517,11 +3601,16 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
           ? `🤝 [첫 용병 고용] 길에서 만난 NPC ${name}(${folkNpcResult.occupation})을 Coins 판정(${hireTotal}점) 성공으로 고용하여 동행을 시작했습니다.`
           : `👥 [용병 고용 성공] 길에서 만난 NPC ${name}(${folkNpcResult.occupation})을 Coins 판정(${hireTotal}점) 성공으로 고용했습니다.`;
 
+        const memoryLogEntry = `제 ${s.day}일 제 ${s.watch}워치: 용병으로 합류 (Coins 판정 ${hireTotal}점)`;
         return {
           ...s,
           character: {
             ...s.character,
-            hirelings: [...(s.character.hirelings || []), { name, info }]
+            hirelings: [...(s.character.hirelings || []), { 
+              name, 
+              info, 
+              memoryLogs: [memoryLogEntry] 
+            }]
           },
           journals: [
             {
@@ -3530,9 +3619,9 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
               date: new Date().toLocaleString(),
               day: s.day,
               watch: s.watch,
-              pinned: isFirstHireling,
+              pinned: false,
               systemGenerated: true,
-              chronicle: isFirstHireling,
+              chronicle: false,
               chronicleCategory: category,
               chronicleIcon: icon
             },
@@ -3550,7 +3639,11 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
           {
             id: generateUniqueId(),
             text: `[용병 고용 실패] 길에서 만난 NPC ${name} 고용 계약 Coins 판정(${hireTotal}점) 실패로 무산되었습니다.`,
-            date: new Date().toLocaleString()
+            date: new Date().toLocaleString(),
+            day: s.day,
+            watch: s.watch,
+            systemGenerated: true,
+            chronicle: false
           },
           ...s.journals
         ]
@@ -3821,16 +3914,45 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     );
     if (scars.length === 0) return null;
 
+    // Grouping by injury text
+    const counts: Record<string, { count: number; details: string[] }> = {};
+    scars.forEach(scar => {
+      const text = scar.injuryText;
+      if (!counts[text]) {
+        counts[text] = { count: 0, details: [] };
+      }
+      counts[text].count += 1;
+      const detailStr = `• ${scar.dateAcquired} 획득 -> ${scar.dateHealed || '치료일 미상'} 완치 (${scar.scarsNotes || '치유됨'})`;
+      counts[text].details.push(detailStr);
+    });
+
     return (
-      <div className="injury-card-content" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px", marginTop: "4px", borderTop: "1px dashed rgba(255, 215, 0, 0.15)", paddingTop: "4px" }}>
+      <div className="injury-card-content" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px", marginTop: "4px", borderTop: "1px dashed rgba(255, 215, 0, 0.15)", paddingTop: "4px", width: "100%" }}>
         <span style={{ fontSize: "0.68rem", color: "var(--color-gold)", fontWeight: "bold" }}>🩹 흉터 (Scars):</span>
-        <ul style={{ margin: 0, paddingLeft: "12px", fontSize: "0.68rem", color: "var(--text-muted)", listStyleType: "disc", width: "100%", textAlign: "left" }}>
-          {scars.map((scar) => (
-            <li key={scar.id} title={`획득: ${scar.dateAcquired}${scar.dateHealed ? ` / 치료: ${scar.dateHealed}` : ""}`}>
-              {scar.injuryText} {scar.scarsNotes ? `(${scar.scarsNotes})` : ""}
-            </li>
-          ))}
-        </ul>
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px", width: "100%" }}>
+          {Object.entries(counts).map(([text, data]) => {
+            const displayText = data.count > 1 ? `${text} (${data.count}회 누적)` : text;
+            const tooltip = `[상세 기록]\n` + data.details.join("\n");
+            return (
+              <div
+                key={text}
+                title={tooltip}
+                style={{
+                  fontSize: "0.68rem",
+                  color: "var(--text-muted)",
+                  padding: "2px 4px",
+                  borderRadius: "2px",
+                  background: "rgba(255, 255, 255, 0.02)",
+                  cursor: "help",
+                  textAlign: "left",
+                  wordBreak: "break-all"
+                }}
+              >
+                • {displayText}
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -6915,7 +7037,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                   const chronicleJournals = cellJournals.filter(j => j.chronicle === true);
 
                   // Calculate Place Scar Index
-                  const scarIndex = cellJournals.reduce((acc, j) => {
+                  let scarIndex = cellJournals.reduce((acc, j) => {
                     if (j.chronicleCategory === "character_death") return acc + 1.5;
                     if (j.chronicleCategory === "hireling_death") return acc + 1.5;
                     if (j.chronicleCategory === "first_defeat") return acc + 1.0;
@@ -6923,8 +7045,16 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                     return acc;
                   }, 0);
 
+                  // Accumulate battles and tragedies
+                  if (cell.battlesCount) {
+                    scarIndex += cell.battlesCount * 0.4;
+                  }
+                  if (cell.settlementTragedies) {
+                    scarIndex += cell.settlementTragedies * 1.0;
+                  }
+
                   // Check Sanctuary status
-                  const hasCampsite = cellJournals.some(j => j.chronicleCategory === "campsite");
+                  const hasCampsite = !!cell.hasCampsite || (cell.settlementRecoveries && cell.settlementRecoveries > 0) || cellJournals.some(j => j.chronicleCategory === "campsite");
 
                   // Build blended filters and cell styles (older, quieter, heavier)
                   let cardFilter = "none";
@@ -7177,6 +7307,83 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                           {cell.description || (cell.card ? "묘사 없음" : "아직 탐색되지 않은 지역입니다.")}
                         </strong>
                       </div>
+
+                      {cell.type === "settlement" && (
+                        <div style={{ margin: "10px 0", borderTop: "1px dashed rgba(255, 215, 0, 0.15)", paddingTop: "8px", display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+                          <span style={{ fontSize: "0.75rem", color: "#aaa" }}>🏰 정착지 상태:</span>
+                          <span style={{ fontSize: "0.75rem", color: "var(--color-gold)", fontWeight: "bold" }}>
+                            참상: {cell.settlementTragedies || 0} / 복구: {cell.settlementRecoveries || 0}
+                          </span>
+                          <button
+                            className="btn-medieval-small"
+                            style={{ fontSize: "0.68rem", padding: "1px 4px", height: "18px" }}
+                            onClick={() => {
+                              updateState(s => {
+                                const nextGrid = [...s.mapGrid];
+                                const idx = selectedMapCellIdx!;
+                                nextGrid[idx] = {
+                                  ...nextGrid[idx],
+                                  settlementTragedies: (nextGrid[idx].settlementTragedies || 0) + 1
+                                };
+                                return {
+                                  ...s,
+                                  mapGrid: nextGrid,
+                                  journals: [
+                                    {
+                                      id: generateUniqueId(),
+                                      text: `[정착지 참상] (${cell.x + 1}, ${cell.y + 1}) 정착지에 비극적인 참상이 기록되었습니다.`,
+                                      date: new Date().toLocaleString(),
+                                      day: s.day,
+                                      watch: s.watch,
+                                      x: cell.x,
+                                      y: cell.y,
+                                      systemGenerated: true,
+                                      chronicle: false
+                                    },
+                                    ...s.journals
+                                  ]
+                                };
+                              });
+                            }}
+                          >
+                            참상 기록
+                          </button>
+                          <button
+                            className="btn-medieval-small"
+                            style={{ fontSize: "0.68rem", padding: "1px 4px", height: "18px" }}
+                            onClick={() => {
+                              updateState(s => {
+                                const nextGrid = [...s.mapGrid];
+                                const idx = selectedMapCellIdx!;
+                                nextGrid[idx] = {
+                                  ...nextGrid[idx],
+                                  settlementRecoveries: (nextGrid[idx].settlementRecoveries || 0) + 1
+                                };
+                                return {
+                                  ...s,
+                                  mapGrid: nextGrid,
+                                  journals: [
+                                    {
+                                      id: generateUniqueId(),
+                                      text: `[정착지 복구] (${cell.x + 1}, ${cell.y + 1}) 정착지에 희망적인 복구 노력이 시작되었습니다.`,
+                                      date: new Date().toLocaleString(),
+                                      day: s.day,
+                                      watch: s.watch,
+                                      x: cell.x,
+                                      y: cell.y,
+                                      systemGenerated: true,
+                                      chronicle: false
+                                    },
+                                    ...s.journals
+                                  ]
+                                };
+                              });
+                            }}
+                          >
+                            복구 기록
+                          </button>
+                        </div>
+                      )}
 
                       {/* Synced Journals */}
                       <div style={{ marginTop: "12px", borderTop: "1px dashed #444", paddingTop: "8px" }}>
@@ -7721,7 +7928,12 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                         return groups;
                       };
                       
-                      const grouped = groupJournalsByDayAndWatch(state.journals);
+                      const filteredJournals = state.journals.filter(j => {
+                        if (journalDisplayMode === "system") return true;
+                        if (j.systemGenerated && !j.chronicle) return false;
+                        return true;
+                      });
+                      const grouped = groupJournalsByDayAndWatch(filteredJournals);
                       const sortedDays = Object.keys(grouped).map(Number).sort((a, b) => b - a);
                       
                       return sortedDays.map(dayNum => {
@@ -8013,19 +8225,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                       )}
                     </div>
 
-                    {/* Scars */}
-                    <div>
-                      <h5 style={{ color: "var(--color-gold)", margin: "0 0 5px 0", fontSize: "0.82rem", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "2px" }}>부상 및 흉터</h5>
-                      {(!state.character.injuryLogs || state.character.injuryLogs.length === 0) ? (
-                        <span style={{ color: "#666", fontStyle: "italic" }}>기록된 신체 흉터가 없습니다.</span>
-                      ) : (
-                        state.character.injuryLogs.map(l => (
-                          <div key={l.id} style={{ margin: "3px 0 0 5px", color: "#ccc" }}>
-                            • [{l.location === "head" ? "머리" : l.location === "torso" ? "몸통" : l.location === "lArm" ? "왼팔" : l.location === "rArm" ? "오른팔" : l.location === "lLeg" ? "왼다리" : "오른다리"}] {l.injuryText} {l.healed && `(흔적: ${l.scarsNotes})`}
-                          </div>
-                        ))
-                      )}
-                    </div>
+
 
                     {/* Relationships */}
                     <div>
