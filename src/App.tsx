@@ -116,6 +116,9 @@ export interface Hireling {
   paidThisWeek?: boolean;
   loyalty?: number;
   memoryLogs?: string[];
+  deceased?: boolean;
+  deathDay?: number;
+  deathCell?: { x: number; y: number };
 }
 
 export interface JournalEntry {
@@ -2576,6 +2579,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
           return log;
         });
 
+        const cell = s.selectedMapCellIdx !== null ? s.mapGrid[s.selectedMapCellIdx] : null;
         return {
           ...s,
           day: s.day + 1,
@@ -2592,7 +2596,14 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
             {
               id: generateUniqueId(),
               text: `[야영 휴식 - ${partNameKo} 완치] 식사와 함께 편안한 휴식을 취해 부상을 치유했습니다. (흔적: ${scar.trim() || "치유됨"})`,
-              date: new Date().toLocaleString()
+              date: new Date().toLocaleString(),
+              day: s.day,
+              watch: s.watch,
+              x: cell ? cell.x : undefined,
+              y: cell ? cell.y : undefined,
+              chronicle: true,
+              chronicleCategory: "campsite",
+              chronicleIcon: "⛺"
             },
             ...s.journals
           ]
@@ -2649,12 +2660,22 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
         updateState(s => {
           const newH = [...s.character.hirelings];
           const h = newH[chosenHirelingIdx];
+          const cell = s.selectedMapCellIdx !== null ? s.mapGrid[s.selectedMapCellIdx] : null;
           const maxW = typeof h.maxWounds === 'number' ? h.maxWounds : 2;
           const currentWTaken = typeof h.woundsTaken === 'number' ? h.woundsTaken : 0;
           const nextWounds = currentWTaken + 1;
-          newH[chosenHirelingIdx] = { ...h, woundsTaken: nextWounds };
-
           const isDead = nextWounds >= maxW;
+          if (isDead) {
+            newH[chosenHirelingIdx] = { 
+              ...h, 
+              woundsTaken: nextWounds,
+              deceased: true,
+              deathDay: s.day,
+              deathCell: { x: cell ? cell.x : 0, y: cell ? cell.y : 0 }
+            };
+          } else {
+            newH[chosenHirelingIdx] = { ...h, woundsTaken: nextWounds };
+          }
           let nextJournals = [...s.journals];
 
           // Add Chronicle / Journal for absorbing wound
@@ -3794,6 +3815,26 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     );
   };
 
+  const renderPartScars = (partKey: "head" | "torso" | "lArm" | "rArm" | "lLeg" | "rLeg") => {
+    const scars = (state.character.injuryLogs || []).filter(
+      (log) => log.location === partKey && log.healed
+    );
+    if (scars.length === 0) return null;
+
+    return (
+      <div className="injury-card-content" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px", marginTop: "4px", borderTop: "1px dashed rgba(255, 215, 0, 0.15)", paddingTop: "4px" }}>
+        <span style={{ fontSize: "0.68rem", color: "var(--color-gold)", fontWeight: "bold" }}>🩹 흉터 (Scars):</span>
+        <ul style={{ margin: 0, paddingLeft: "12px", fontSize: "0.68rem", color: "var(--text-muted)", listStyleType: "disc", width: "100%", textAlign: "left" }}>
+          {scars.map((scar) => (
+            <li key={scar.id} title={`획득: ${scar.dateAcquired}${scar.dateHealed ? ` / 치료: ${scar.dateHealed}` : ""}`}>
+              {scar.injuryText} {scar.scarsNotes ? `(${scar.scarsNotes})` : ""}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
   return (
     <div className="app-container">
       <section className="folio-shell" aria-label="Gloam character folio">
@@ -4809,6 +4850,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                           ))}
                         </div>
                       </div>
+                      {renderPartScars("head")}
                     </div>
 
                     {/* Torso Injury Card */}
@@ -4840,6 +4882,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                           ))}
                         </div>
                       </div>
+                      {renderPartScars("torso")}
                     </div>
 
                     {/* Left Arm Injury Card */}
@@ -4863,6 +4906,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                           updateState(s => ({ ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, gauntletL: s.character.armorNotches.gauntletL === 1 ? 0 : 1 } } }));
                         }} />
                       </div>
+                      {renderPartScars("lArm")}
                     </div>
 
                     {/* Right Arm Injury Card */}
@@ -4886,6 +4930,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                           updateState(s => ({ ...s, character: { ...s.character, armorNotches: { ...s.character.armorNotches, gauntletR: s.character.armorNotches.gauntletR === 1 ? 0 : 1 } } }));
                         }} />
                       </div>
+                      {renderPartScars("rArm")}
                     </div>
 
                     {/* Left Leg Injury Card */}
@@ -4917,6 +4962,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                           ))}
                         </div>
                       </div>
+                      {renderPartScars("lLeg")}
                     </div>
 
                     {/* Right Leg Injury Card */}
@@ -4948,6 +4994,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                           ))}
                         </div>
                       </div>
+                      {renderPartScars("rLeg")}
                     </div>
 
                     {/* Shield Injury Card */}
@@ -5386,6 +5433,11 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                               </div>
                             </div>
                             <div style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem", paddingLeft: "10px", marginTop: "2px" }}>{f.info || "설명 없음"}</div>
+                            {f.memoryLogs && f.memoryLogs.length > 0 && (
+                              <div style={{ fontSize: "0.7rem", color: "var(--color-gold)", paddingLeft: "10px", marginTop: "2px", opacity: 0.85 }}>
+                                📜 최근 기록: {f.memoryLogs[f.memoryLogs.length - 1]}
+                              </div>
+                            )}
                             
                             {isExpanded && (
                               <div style={{ marginLeft: "10px", marginTop: "6px", borderLeft: "1px solid rgba(255, 215, 0, 0.2)", background: "rgba(0,0,0,0.15)", padding: "8px", borderRadius: "3px" }}>
@@ -5666,6 +5718,11 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                               </div>
                             </div>
                             <div style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "0.75rem", paddingLeft: "10px", marginTop: "2px" }}>{f.info || "설명 없음"}</div>
+                            {f.memoryLogs && f.memoryLogs.length > 0 && (
+                              <div style={{ fontSize: "0.7rem", color: "var(--color-gold)", paddingLeft: "10px", marginTop: "2px", opacity: 0.85 }}>
+                                📜 최근 기록: {f.memoryLogs[f.memoryLogs.length - 1]}
+                              </div>
+                            )}
                             
                             {isExpanded && (
                               <div style={{ marginLeft: "10px", marginTop: "6px", borderLeft: "1px solid rgba(220, 53, 69, 0.2)", background: "rgba(0,0,0,0.15)", padding: "8px", borderRadius: "3px" }}>
@@ -5848,258 +5905,327 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                       </div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "260px", overflowY: "auto", fontSize: "0.8rem" }}>
-                      {(state.character.hirelings || []).map((h, i) => {
-                        const isExpanded = expandedHirelingIdx === i;
-                        const loyaltyVal = typeof h.loyalty === 'number' ? h.loyalty : 5;
-                        const maxW = typeof h.maxWounds === 'number' ? h.maxWounds : 2;
-                        const wTaken = typeof h.woundsTaken === 'number' ? h.woundsTaken : 0;
-                        const recentJournals = state.journals.slice(0, 10);
-                        
+                      {(() => {
+                        const activeHirelings = (state.character.hirelings || []).map((h, originalIdx) => ({ h, originalIdx })).filter(item => item.h.deceased !== true);
+                        const deceasedHirelings = (state.character.hirelings || []).map((h, originalIdx) => ({ h, originalIdx })).filter(item => item.h.deceased === true);
+
                         return (
-                          <div key={i} style={{ borderBottom: "1px dashed rgba(212,175,55,0.2)", paddingBottom: "6px", paddingTop: "4px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <div style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "3px" }} onClick={() => setExpandedHirelingIdx(isExpanded ? null : i)}>
-                                <span style={{ fontSize: "0.65rem", color: "var(--color-gold)" }}>{isExpanded ? "▼" : "▶"}</span>
-                                <strong style={{ color: "var(--color-gold)" }}>{h.name || "이름 없는 용병"}</strong>
-                              </div>
-                              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                                <label style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "0.7rem", color: h.paidThisWeek ? "#85bb65" : "#ff9800", cursor: "pointer", userSelect: "none" }}>
-                                  <input 
-                                    type="checkbox"
-                                    checked={!!h.paidThisWeek}
-                                    onChange={(e) => {
-                                      const checked = e.target.checked;
-                                      updateState(s => {
-                                        const newH = [...s.character.hirelings];
-                                        newH[i] = { ...newH[i], paidThisWeek: checked };
-                                        return { ...s, character: { ...s.character, hirelings: newH } };
-                                      });
-                                    }}
-                                    style={{ margin: 0 }}
-                                  />
-                                  급여지급
-                                </label>
-                                <button 
-                                  className="btn-medieval-small" 
-                                  style={{ fontSize: "0.62rem", padding: "1px 3px", background: "transparent", color: "var(--color-gold)", border: "1px solid var(--color-gold)", height: "18px" }}
-                                  onClick={() => payWeeklyHireling(i)}
-                                  title="주간 급여 Coins 판정"
-                                >급여판정</button>
-                                <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => {
-                                  if (confirm(`${h.name} 용병을 해고/목록 삭제하시겠습니까?`)) {
-                                    updateState(s => ({ ...s, character: { ...s.character, hirelings: s.character.hirelings.filter((_, idx) => idx !== i) } }));
-                                  }
-                                }}>&times;</button>
-                              </div>
-                            </div>
-                            
-                            <div style={{ display: "flex", gap: "10px", fontSize: "0.72rem", color: "#bbb", paddingLeft: "10px", marginTop: "2px", alignItems: "center" }}>
-                              <span style={{ fontStyle: "italic", color: "var(--text-muted)", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{h.info || "설명 없음"}</span>
-                              <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-                                <span style={{ color: "#888", fontSize: "0.65rem" }}>부상:</span>
-                                {Array.from({ length: maxW }).map((_, wIdx) => {
-                                  const isWounded = wIdx < wTaken;
+                          <>
+                            {activeHirelings.map((item) => {
+                              const h = item.h;
+                              const i = item.originalIdx;
+                              const isExpanded = expandedHirelingIdx === i;
+                              const loyaltyVal = typeof h.loyalty === 'number' ? h.loyalty : 5;
+                              const maxW = typeof h.maxWounds === 'number' ? h.maxWounds : 2;
+                              const wTaken = typeof h.woundsTaken === 'number' ? h.woundsTaken : 0;
+                              const recentJournals = state.journals.slice(0, 10);
+
+                              return (
+                                <div key={i} style={{ borderBottom: "1px dashed rgba(212,175,55,0.2)", paddingBottom: "6px", paddingTop: "4px" }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "3px" }} onClick={() => setExpandedHirelingIdx(isExpanded ? null : i)}>
+                                      <span style={{ fontSize: "0.65rem", color: "var(--color-gold)" }}>{isExpanded ? "▼" : "▶"}</span>
+                                      <strong style={{ color: "var(--color-gold)" }}>{h.name || "이름 없는 용병"}</strong>
+                                    </div>
+                                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                      <label style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "0.7rem", color: h.paidThisWeek ? "#85bb65" : "#ff9800", cursor: "pointer", userSelect: "none" }}>
+                                        <input 
+                                          type="checkbox"
+                                          checked={!!h.paidThisWeek}
+                                          onChange={(e) => {
+                                            const checked = e.target.checked;
+                                            updateState(s => {
+                                              const newH = [...s.character.hirelings];
+                                              newH[i] = { ...newH[i], paidThisWeek: checked };
+                                              return { ...s, character: { ...s.character, hirelings: newH } };
+                                            });
+                                          }}
+                                          style={{ margin: 0 }}
+                                        />
+                                        급여지급
+                                      </label>
+                                      <button 
+                                        className="btn-medieval-small" 
+                                        style={{ fontSize: "0.62rem", padding: "1px 3px", background: "transparent", color: "var(--color-gold)", border: "1px solid var(--color-gold)", height: "18px" }}
+                                        onClick={() => payWeeklyHireling(i)}
+                                        title="주간 급여 Coins 판정"
+                                      >급여판정</button>
+                                      <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }} onClick={() => {
+                                        if (confirm(`${h.name} 용병을 해고/목록 삭제하시겠습니까?`)) {
+                                          updateState(s => ({ ...s, character: { ...s.character, hirelings: s.character.hirelings.filter((_, idx) => idx !== i) } }));
+                                        }
+                                      }}>&times;</button>
+                                    </div>
+                                  </div>
+                                  
+                                  <div style={{ display: "flex", gap: "10px", fontSize: "0.72rem", color: "#bbb", paddingLeft: "10px", marginTop: "2px", alignItems: "center" }}>
+                                    <span style={{ fontStyle: "italic", color: "var(--text-muted)", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{h.info || "설명 없음"}</span>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+                                      <span style={{ color: "#888", fontSize: "0.65rem" }}>부상:</span>
+                                      {Array.from({ length: maxW }).map((_, wIdx) => {
+                                        const isWounded = wIdx < wTaken;
+                                        return (
+                                          <span
+                                            key={wIdx}
+                                            onClick={() => {
+                                              updateState(s => {
+                                                const newH = [...s.character.hirelings];
+                                                const nextWounds = isWounded ? wIdx : wIdx + 1;
+                                                newH[i] = { ...newH[i], woundsTaken: nextWounds };
+                                                
+                                                const isDead = nextWounds >= maxW;
+                                                let nextJournals = [...s.journals];
+                                                const cell = s.selectedMapCellIdx !== null ? s.mapGrid[s.selectedMapCellIdx] : null;
+                                                if (isDead) {
+                                                  newH[i] = {
+                                                    ...newH[i],
+                                                    deceased: true,
+                                                    deathDay: s.day,
+                                                    deathCell: { x: cell ? cell.x : 0, y: cell ? cell.y : 0 }
+                                                  };
+                                                  nextJournals = [
+                                                    {
+                                                      id: generateUniqueId(),
+                                                      text: `🕯 [용병 사망] 당신을 지탱해 주던 동료 용병 ${h.name || "이름 없음"}이(가) 치명상을 입고 목숨을 잃었습니다.`,
+                                                      date: new Date().toLocaleString(),
+                                                      day: s.day,
+                                                      watch: s.watch,
+                                                      pinned: true,
+                                                      systemGenerated: true,
+                                                      chronicle: true,
+                                                      chronicleCategory: "hireling_death",
+                                                      chronicleIcon: "🕯"
+                                                    },
+                                                    ...nextJournals
+                                                  ];
+                                                }
+                                                return { 
+                                                  ...s, 
+                                                  character: { ...s.character, hirelings: newH },
+                                                  journals: nextJournals
+                                                };
+                                              });
+                                            }}
+                                            style={{
+                                              cursor: "pointer",
+                                              fontSize: "0.75rem",
+                                              userSelect: "none"
+                                            }}
+                                            title={isWounded ? "부상 치료" : "부상 추가"}
+                                          >
+                                            {isWounded ? "❤️" : "🖤"}
+                                          </span>
+                                        );
+                                      })}
+                                    </div>
+                                    <span style={{ color: "var(--color-gold)", fontSize: "0.68rem" }}>충성도: {loyaltyVal}</span>
+                                  </div>
+                                  {h.memoryLogs && h.memoryLogs.length > 0 && (
+                                    <div style={{ fontSize: "0.7rem", color: "var(--color-gold)", paddingLeft: "10px", marginTop: "2px", opacity: 0.85 }}>
+                                      📜 최근 기록: {h.memoryLogs[h.memoryLogs.length - 1]}
+                                    </div>
+                                  )}
+
+                                  {isExpanded && (
+                                    <div style={{ marginLeft: "10px", marginTop: "6px", borderLeft: "1px solid rgba(255, 215, 0, 0.2)", background: "rgba(0,0,0,0.15)", padding: "8px", borderRadius: "3px" }}>
+                                      {/* Inline editable fields */}
+                                      <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginBottom: "8px" }}>
+                                        <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                                          <span style={{ fontSize: "0.68rem", color: "#888", width: "40px" }}>이름:</span>
+                                          <input
+                                            type="text"
+                                            value={h.name}
+                                            onChange={(e) => {
+                                              const val = e.target.value;
+                                              updateState(s => {
+                                                const newH = [...s.character.hirelings];
+                                                newH[i] = { ...newH[i], name: val };
+                                                return { ...s, character: { ...s.character, hirelings: newH } };
+                                              });
+                                            }}
+                                            style={{ fontSize: "0.72rem", background: "rgba(0,0,0,0.4)", border: "1px solid #444", color: "#fff", borderRadius: "3px", padding: "1px 4px", flex: 1 }}
+                                          />
+                                        </div>
+                                        <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                                          <span style={{ fontSize: "0.68rem", color: "#888", width: "40px" }}>설명:</span>
+                                          <input
+                                            type="text"
+                                            value={h.info}
+                                            onChange={(e) => {
+                                              const val = e.target.value;
+                                              updateState(s => {
+                                                const newH = [...s.character.hirelings];
+                                                newH[i] = { ...newH[i], info: val };
+                                                return { ...s, character: { ...s.character, hirelings: newH } };
+                                              });
+                                            }}
+                                            style={{ fontSize: "0.72rem", background: "rgba(0,0,0,0.4)", border: "1px solid #444", color: "#fff", borderRadius: "3px", padding: "1px 4px", flex: 1 }}
+                                          />
+                                        </div>
+                                      </div>
+
+                                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "6px" }}>
+                                        <span style={{ fontSize: "0.68rem", color: "#888", whiteSpace: "nowrap" }}>충성도 조정:</span>
+                                        <input 
+                                          type="range"
+                                          min="0"
+                                          max="10"
+                                          value={loyaltyVal}
+                                          onChange={(e) => {
+                                            const val = parseInt(e.target.value);
+                                            updateState(s => {
+                                              const newH = [...s.character.hirelings];
+                                              newH[i] = { ...newH[i], loyalty: val };
+                                              return { ...s, character: { ...s.character, hirelings: newH } };
+                                            });
+                                          }}
+                                          style={{ flex: 1, height: "4px", background: "#444", outline: "none", cursor: "pointer" }}
+                                        />
+                                        <span style={{ fontSize: "0.68rem", color: "var(--color-gold)", width: "15px", textAlign: "right" }}>{loyaltyVal}</span>
+                                      </div>
+
+                                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "5px", marginBottom: "4px" }}>
+                                        <span style={{ fontSize: "0.7rem", color: "var(--color-gold)", fontWeight: "bold" }}>용병 활동 및 계약 (Memory Logs)</span>
+                                        <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+                                          <select
+                                            value=""
+                                            onChange={(e) => {
+                                              const selectedVal = e.target.value;
+                                              if (!selectedVal) return;
+                                              updateState(s => {
+                                                const newH = [...s.character.hirelings];
+                                                const logs = Array.isArray(newH[i].memoryLogs) ? [...newH[i].memoryLogs!] : [];
+                                                newH[i] = { ...newH[i], memoryLogs: [...logs, selectedVal] };
+                                                return { ...s, character: { ...s.character, hirelings: newH } };
+                                              });
+                                            }}
+                                            style={{
+                                              fontSize: "0.65rem",
+                                              background: "rgba(0,0,0,0.4)",
+                                              color: "var(--color-gold)",
+                                              border: "1px solid var(--color-gold)",
+                                              borderRadius: "3px",
+                                              padding: "1px 3px",
+                                              maxWidth: "110px",
+                                              height: "18px"
+                                            }}
+                                          >
+                                            <option value="" style={{ color: "#888" }}>일지 연결...</option>
+                                            {recentJournals.map(j => {
+                                              const displayDate = `Day ${j.day || 1} W${j.watch || 1}`;
+                                              const snippet = j.text.length > 15 ? j.text.slice(0, 15) + "..." : j.text;
+                                              const optionVal = `[일지 - ${displayDate}] ${j.text}`;
+                                              return (
+                                                <option key={j.id} value={optionVal} style={{ background: "#222", color: "#fff" }}>
+                                                  [{displayDate}] {snippet}
+                                                </option>
+                                              );
+                                            })}
+                                          </select>
+                                          <button
+                                            className="btn-medieval-small"
+                                            style={{ fontSize: "0.6rem", padding: "0 3px", height: "18px" }}
+                                            onClick={() => {
+                                              const log = prompt("기록할 용병의 계약/전투 실적 등을 입력하세요:\n(취소 시 취소, 입력 없이 확인 시 '새로운 계약'으로 저장)");
+                                              if (log === null) return;
+                                              const finalLog = log.trim() || "새로운 계약";
+                                              updateState(s => {
+                                                const newH = [...s.character.hirelings];
+                                                const logs = Array.isArray(newH[i].memoryLogs) ? [...newH[i].memoryLogs!] : [];
+                                                newH[i] = { ...newH[i], memoryLogs: [...logs, finalLog] };
+                                                return { ...s, character: { ...s.character, hirelings: newH } };
+                                              });
+                                            }}
+                                          >
+                                            + 추가
+                                          </button>
+                                        </div>
+                                      </div>
+                                      {(!h.memoryLogs || h.memoryLogs.length === 0) ? (
+                                        <div style={{ fontSize: "0.68rem", color: "#666", fontStyle: "italic" }}>기록된 활동이 없습니다.</div>
+                                      ) : (
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "2px", maxHeight: "80px", overflowY: "auto" }}>
+                                          {h.memoryLogs.map((log, lIdx) => (
+                                            <div key={lIdx} style={{ fontSize: "0.7rem", color: "#ccc", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                              <span style={{ wordBreak: "break-all", paddingRight: "5px" }}>&bull; {log}</span>
+                                              <button
+                                                style={{ background: "transparent", border: "none", color: "#999", cursor: "pointer", fontSize: "0.7rem", padding: "0 2px" }}
+                                                onClick={() => {
+                                                  if (confirm("기록을 삭제할까요?")) {
+                                                    updateState(s => {
+                                                      const newH = [...s.character.hirelings];
+                                                      newH[i] = {
+                                                        ...newH[i],
+                                                        memoryLogs: newH[i].memoryLogs?.filter((_, idx) => idx !== lIdx)
+                                                      };
+                                                      return { ...s, character: { ...s.character, hirelings: newH } };
+                                                    });
+                                                  }
+                                                }}
+                                              >
+                                                &times;
+                                              </button>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+
+                            {activeHirelings.length === 0 && (
+                              <p style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: "0.75rem", margin: "10px 0" }}>고용된 용병이 없습니다 (최대 {state.character.stats.cups}명 가능).</p>
+                            )}
+
+                            {/* Deceased Memorial Sub-section */}
+                            {deceasedHirelings.length > 0 && (
+                              <div style={{ marginTop: "12px", borderTop: "1px dashed rgba(212,175,55,0.3)", paddingTop: "8px" }}>
+                                <span style={{ color: "#888", fontSize: "0.75rem", fontWeight: "bold", display: "block", marginBottom: "4px" }}>
+                                  🕯️ Fallen Memorial (영면한 동료들)
+                                </span>
+                                {deceasedHirelings.map((item) => {
+                                  const h = item.h;
+                                  const deathDayText = h.deathDay ? `제 ${h.deathDay}일` : "알 수 없는 날";
+                                  const deathCellText = h.deathCell ? `(${h.deathCell.x + 1}, ${h.deathCell.y + 1})` : "알 수 없는 구역";
                                   return (
-                                    <span
-                                      key={wIdx}
-                                      onClick={() => {
-                                        updateState(s => {
-                                          const newH = [...s.character.hirelings];
-                                          const nextWounds = isWounded ? wIdx : wIdx + 1;
-                                          newH[i] = { ...newH[i], woundsTaken: nextWounds };
-                                          
-                                          const isDead = nextWounds >= maxW;
-                                          let nextJournals = [...s.journals];
-                                          if (isDead) {
-                                            nextJournals = [
-                                              {
-                                                id: generateUniqueId(),
-                                                text: `🕯 [용병 사망] 당신을 지탱해 주던 동료 용병 ${h.name || "이름 없음"}이(가) 치명상을 입고 목숨을 잃었습니다.`,
-                                                date: new Date().toLocaleString(),
-                                                day: s.day,
-                                                watch: s.watch,
-                                                pinned: true,
-                                                systemGenerated: true,
-                                                chronicle: true,
-                                                chronicleCategory: "hireling_death",
-                                                chronicleIcon: "🕯"
-                                              },
-                                              ...nextJournals
-                                            ];
+                                    <div key={item.originalIdx} style={{
+                                      background: "rgba(10, 10, 10, 0.4)",
+                                      border: "1px dashed rgba(255, 255, 255, 0.15)",
+                                      borderRadius: "3px",
+                                      padding: "6px 10px",
+                                      marginBottom: "4px",
+                                      fontSize: "0.75rem",
+                                      color: "#999",
+                                      filter: "sepia(25%) brightness(85%)"
+                                    }}>
+                                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                        <strong>🕯️ {h.name || "이름 없는 용병"}</strong>
+                                        <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#555" }} onClick={() => {
+                                          if (confirm(`${h.name} 용병의 기록을 추모비에서 완전히 제거하시겠습니까?`)) {
+                                            updateState(s => ({
+                                              ...s,
+                                              character: {
+                                                ...s.character,
+                                                hirelings: s.character.hirelings.filter((_, idx) => idx !== item.originalIdx)
+                                              }
+                                            }));
                                           }
-                                          return { 
-                                            ...s, 
-                                            character: { ...s.character, hirelings: newH },
-                                            journals: nextJournals
-                                          };
-                                        });
-                                      }}
-                                      style={{
-                                        cursor: "pointer",
-                                        fontSize: "0.75rem",
-                                        userSelect: "none"
-                                      }}
-                                      title={isWounded ? "부상 치료" : "부상 추가"}
-                                    >
-                                      {isWounded ? "❤️" : "🖤"}
-                                    </span>
+                                        }}>&times;</button>
+                                      </div>
+                                      <div style={{ fontSize: "0.68rem", color: "#777", marginTop: "2px", fontStyle: "italic" }}>
+                                        {deathDayText} {deathCellText} 구역에서 전사함.
+                                      </div>
+                                      {h.info && <div style={{ fontSize: "0.68rem", color: "#666", marginTop: "2px" }}>{h.info}</div>}
+                                    </div>
                                   );
                                 })}
                               </div>
-                              <span style={{ color: "var(--color-gold)", fontSize: "0.68rem" }}>충성도: {loyaltyVal}</span>
-                            </div>
-
-                            {isExpanded && (
-                              <div style={{ marginLeft: "10px", marginTop: "6px", borderLeft: "1px solid rgba(255, 215, 0, 0.2)", background: "rgba(0,0,0,0.15)", padding: "8px", borderRadius: "3px" }}>
-                                {/* Inline editable fields */}
-                                <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginBottom: "8px" }}>
-                                  <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
-                                    <span style={{ fontSize: "0.68rem", color: "#888", width: "40px" }}>이름:</span>
-                                    <input
-                                      type="text"
-                                      value={h.name}
-                                      onChange={(e) => {
-                                        const val = e.target.value;
-                                        updateState(s => {
-                                          const newH = [...s.character.hirelings];
-                                          newH[i] = { ...newH[i], name: val };
-                                          return { ...s, character: { ...s.character, hirelings: newH } };
-                                        });
-                                      }}
-                                      style={{ fontSize: "0.72rem", background: "rgba(0,0,0,0.4)", border: "1px solid #444", color: "#fff", borderRadius: "3px", padding: "1px 4px", flex: 1 }}
-                                    />
-                                  </div>
-                                  <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
-                                    <span style={{ fontSize: "0.68rem", color: "#888", width: "40px" }}>설명:</span>
-                                    <input
-                                      type="text"
-                                      value={h.info}
-                                      onChange={(e) => {
-                                        const val = e.target.value;
-                                        updateState(s => {
-                                          const newH = [...s.character.hirelings];
-                                          newH[i] = { ...newH[i], info: val };
-                                          return { ...s, character: { ...s.character, hirelings: newH } };
-                                        });
-                                      }}
-                                      style={{ fontSize: "0.72rem", background: "rgba(0,0,0,0.4)", border: "1px solid #444", color: "#fff", borderRadius: "3px", padding: "1px 4px", flex: 1 }}
-                                    />
-                                  </div>
-                                </div>
-
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "6px" }}>
-                                  <span style={{ fontSize: "0.68rem", color: "#888", whiteSpace: "nowrap" }}>충성도 조정:</span>
-                                  <input 
-                                    type="range"
-                                    min="0"
-                                    max="10"
-                                    value={loyaltyVal}
-                                    onChange={(e) => {
-                                      const val = parseInt(e.target.value);
-                                      updateState(s => {
-                                        const newH = [...s.character.hirelings];
-                                        newH[i] = { ...newH[i], loyalty: val };
-                                        return { ...s, character: { ...s.character, hirelings: newH } };
-                                      });
-                                    }}
-                                    style={{ flex: 1, height: "4px", background: "#444", outline: "none", cursor: "pointer" }}
-                                  />
-                                  <span style={{ fontSize: "0.68rem", color: "var(--color-gold)", width: "15px", textAlign: "right" }}>{loyaltyVal}</span>
-                                </div>
-
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "5px", marginBottom: "4px" }}>
-                                  <span style={{ fontSize: "0.7rem", color: "var(--color-gold)", fontWeight: "bold" }}>용병 활동 및 계약 (Memory Logs)</span>
-                                  <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-                                    <select
-                                      value=""
-                                      onChange={(e) => {
-                                        const selectedVal = e.target.value;
-                                        if (!selectedVal) return;
-                                        updateState(s => {
-                                          const newH = [...s.character.hirelings];
-                                          const logs = Array.isArray(newH[i].memoryLogs) ? [...newH[i].memoryLogs!] : [];
-                                          newH[i] = { ...newH[i], memoryLogs: [...logs, selectedVal] };
-                                          return { ...s, character: { ...s.character, hirelings: newH } };
-                                        });
-                                      }}
-                                      style={{
-                                        fontSize: "0.65rem",
-                                        background: "rgba(0,0,0,0.4)",
-                                        color: "var(--color-gold)",
-                                        border: "1px solid var(--color-gold)",
-                                        borderRadius: "3px",
-                                        padding: "1px 3px",
-                                        maxWidth: "110px",
-                                        height: "18px"
-                                      }}
-                                    >
-                                      <option value="" style={{ color: "#888" }}>일지 연결...</option>
-                                      {recentJournals.map(j => {
-                                        const displayDate = `Day ${j.day || 1} W${j.watch || 1}`;
-                                        const snippet = j.text.length > 15 ? j.text.slice(0, 15) + "..." : j.text;
-                                        const optionVal = `[일지 - ${displayDate}] ${j.text}`;
-                                        return (
-                                          <option key={j.id} value={optionVal} style={{ background: "#222", color: "#fff" }}>
-                                            [{displayDate}] {snippet}
-                                          </option>
-                                        );
-                                      })}
-                                    </select>
-                                    <button
-                                      className="btn-medieval-small"
-                                      style={{ fontSize: "0.6rem", padding: "0 3px", height: "18px" }}
-                                      onClick={() => {
-                                        const log = prompt("기록할 용병의 계약/전투 실적 등을 입력하세요:\n(취소 시 취소, 입력 없이 확인 시 '새로운 계약'으로 저장)");
-                                        if (log === null) return;
-                                        const finalLog = log.trim() || "새로운 계약";
-                                        updateState(s => {
-                                          const newH = [...s.character.hirelings];
-                                          const logs = Array.isArray(newH[i].memoryLogs) ? [...newH[i].memoryLogs!] : [];
-                                          newH[i] = { ...newH[i], memoryLogs: [...logs, finalLog] };
-                                          return { ...s, character: { ...s.character, hirelings: newH } };
-                                        });
-                                      }}
-                                    >
-                                      + 추가
-                                    </button>
-                                  </div>
-                                </div>
-                                {(!h.memoryLogs || h.memoryLogs.length === 0) ? (
-                                  <div style={{ fontSize: "0.68rem", color: "#666", fontStyle: "italic" }}>기록된 활동이 없습니다.</div>
-                                ) : (
-                                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", maxHeight: "80px", overflowY: "auto" }}>
-                                    {h.memoryLogs.map((log, lIdx) => (
-                                      <div key={lIdx} style={{ fontSize: "0.7rem", color: "#ccc", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <span style={{ wordBreak: "break-all", paddingRight: "5px" }}>&bull; {log}</span>
-                                        <button
-                                          style={{ background: "transparent", border: "none", color: "#999", cursor: "pointer", fontSize: "0.7rem", padding: "0 2px" }}
-                                          onClick={() => {
-                                            if (confirm("기록을 삭제할까요?")) {
-                                              updateState(s => {
-                                                const newH = [...s.character.hirelings];
-                                                newH[i] = {
-                                                  ...newH[i],
-                                                  memoryLogs: newH[i].memoryLogs?.filter((_, idx) => idx !== lIdx)
-                                                };
-                                                return { ...s, character: { ...s.character, hirelings: newH } };
-                                              });
-                                            }
-                                          }}
-                                        >
-                                          &times;
-                                        </button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
                             )}
-                          </div>
+                          </>
                         );
-                      })}
-                      {(!state.character.hirelings || state.character.hirelings.length === 0) && (
-                        <p style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: "0.75rem", margin: "10px 0" }}>고용된 용병이 없습니다 (최대 {state.character.stats.cups}명 가능).</p>
-                      )}
+                      })()}
                     </div>
                   </div>
 
@@ -6785,33 +6911,137 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
               </div>
               
               <div className="grid-map-board" style={{ marginTop: "1rem" }}>
-                {state.mapGrid.map((cell, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`map-grid-cell ${selectedMapCellIdx === idx ? "selected" : ""}`} 
-                    onClick={() => {
-                      setSelectedMapCellIdx(idx);
-                    }}
-                  >
-                    {cell.card ? (
-                      <div className="revealed-map-cell">
-                        <img 
-                          src={getCardImageUrl(cell.card)} 
-                          alt="map" 
-                          className={`map-card-thumbnail ${cell.card.reversed ? "reversed-image" : ""}`}
-                        />
-                        <div className="cell-overlay">
-                          <span>{cell.description}</span>
+                {state.mapGrid.map((cell, idx) => {
+                  const cellJournals = state.journals.filter(j => j.x === cell.x && j.y === cell.y);
+                  const chronicleJournals = cellJournals.filter(j => j.chronicle === true);
+
+                  // Calculate Place Scar Index
+                  const scarIndex = cellJournals.reduce((acc, j) => {
+                    if (j.chronicleCategory === "character_death") return acc + 1.5;
+                    if (j.chronicleCategory === "hireling_death") return acc + 1.5;
+                    if (j.chronicleCategory === "first_defeat") return acc + 1.0;
+                    if (j.chronicleCategory === "boss_slain") return acc + 1.0;
+                    return acc;
+                  }, 0);
+
+                  // Check Sanctuary status
+                  const hasCampsite = cellJournals.some(j => j.chronicleCategory === "campsite");
+
+                  // Build blended filters and cell styles (older, quieter, heavier)
+                  let cardFilter = "none";
+                  let cellStyle: React.CSSProperties = {
+                    transition: "all 0.4s ease-in-out",
+                    position: "relative"
+                  };
+
+                  if (scarIndex >= 2.0) {
+                    // Cursed Ground (Abandoned)
+                    cardFilter = hasCampsite
+                      ? "grayscale(75%) brightness(50%) sepia(10%) contrast(95%)"
+                      : "grayscale(85%) brightness(55%) contrast(90%)";
+                    cellStyle = {
+                      ...cellStyle,
+                      borderColor: "rgba(90, 80, 80, 0.55)",
+                      boxShadow: "inset 0 0 10px rgba(90, 80, 80, 0.45)",
+                      backgroundColor: "rgba(20, 10, 10, 0.9)"
+                    };
+                  } else if (scarIndex > 0) {
+                    // Scarred Ground (Exhausted)
+                    cardFilter = hasCampsite
+                      ? "grayscale(40%) brightness(65%) sepia(10%) contrast(95%)"
+                      : "grayscale(45%) brightness(70%) contrast(95%)";
+                    cellStyle = {
+                      ...cellStyle,
+                      borderColor: "rgba(110, 110, 110, 0.45)",
+                      boxShadow: "inset 0 0 6px rgba(110, 110, 110, 0.3)",
+                      backgroundColor: "rgba(25, 20, 20, 0.95)"
+                    };
+                  } else if (hasCampsite) {
+                    // Sanctuary Ground (Warm)
+                    cardFilter = "sepia(35%) brightness(90%) contrast(95%)";
+                    cellStyle = {
+                      ...cellStyle,
+                      borderColor: "rgba(187, 153, 93, 0.3)",
+                      boxShadow: "inset 0 0 6px rgba(187, 153, 93, 0.15)",
+                      backgroundColor: "rgba(30, 26, 20, 0.95)"
+                    };
+                  }
+
+                  const isSelected = selectedMapCellIdx === idx;
+                  if (isSelected) {
+                    cellStyle.borderColor = "var(--color-gold)";
+                    cellStyle.boxShadow = (cellStyle.boxShadow ? cellStyle.boxShadow + ", " : "") + "0 0 15px rgba(255, 215, 0, 0.4)";
+                  }
+
+                  // Check if any active Friend or Foe is present in this cell
+                  const presentFriendNames: string[] = [];
+                  const presentFoeNames: string[] = [];
+                  
+                  cellJournals.forEach(j => {
+                    const combinedText = `${j.text} ${j.systemLog || ""}`.toLowerCase();
+                    state.character.friends.forEach(f => {
+                      if (f.name && combinedText.includes(f.name.toLowerCase())) {
+                        if (!presentFriendNames.includes(f.name)) {
+                          presentFriendNames.push(f.name);
+                        }
+                      }
+                    });
+                    state.character.foes.forEach(f => {
+                      if (f.name && combinedText.includes(f.name.toLowerCase())) {
+                        if (!presentFoeNames.includes(f.name)) {
+                          presentFoeNames.push(f.name);
+                        }
+                      }
+                    });
+                  });
+
+                  // Build tooltip title
+                  let tooltipTitle = `${cell.description || "미개척 지역"} (${cell.x + 1}, ${cell.y + 1})`;
+                  if (presentFriendNames.length > 0) {
+                    tooltipTitle += `\n🤝 인연: ${presentFriendNames.join(", ")}`;
+                  }
+                  if (presentFoeNames.length > 0) {
+                    tooltipTitle += `\n⚔️ 원수: ${presentFoeNames.join(", ")}`;
+                  }
+                  if (chronicleJournals.length > 0) {
+                    tooltipTitle += `\n\n📜 역사 기록:`;
+                    chronicleJournals.forEach(j => {
+                      const icon = j.chronicleIcon ? `[${j.chronicleIcon}] ` : "";
+                      tooltipTitle += `\n- Day ${j.day} Watch ${j.watch}: ${icon}${j.text}`;
+                    });
+                  }
+
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`map-grid-cell ${isSelected ? "selected" : ""}`} 
+                      onClick={() => {
+                        setSelectedMapCellIdx(idx);
+                      }}
+                      title={tooltipTitle}
+                      style={cellStyle}
+                    >
+                      {cell.card ? (
+                        <div className="revealed-map-cell">
+                          <img 
+                            src={getCardImageUrl(cell.card)} 
+                            alt="map" 
+                            className={`map-card-thumbnail ${cell.card.reversed ? "reversed-image" : ""}`}
+                            style={{ filter: cardFilter }}
+                          />
+                          <div className="cell-overlay">
+                            <span>{cell.description}</span>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="unrevealed-map-cell">
-                        <span className="coord">{cell.x + 1}, {cell.y + 1}</span>
-                        <span className="draw-prompt">카드 탐색</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      ) : (
+                        <div className="unrevealed-map-cell">
+                          <span className="coord">{cell.x + 1}, {cell.y + 1}</span>
+                          <span className="draw-prompt">카드 탐색</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               <p className="rules-helper-text" style={{ marginTop: "10px" }}>
                 * 지도 격자 구역을 클릭하여 선택하면 아래에 세부 정보가 표시되며, 지형 탐색, 스토리 일지 기록 및 만난 인연/원수 확인이 가능합니다.
@@ -6989,29 +7219,50 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                           <div style={{ fontSize: "0.75rem", color: "#666", fontStyle: "italic" }}>기록된 일지가 없습니다.</div>
                         ) : (
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "150px", overflowY: "auto" }}>
-                            {cellJournals.map(j => (
-                              <div key={j.id} style={{ borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "4px" }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "#888" }}>
-                                  <span>제 {j.day || 1}일 {j.watch || 1}워치 ({j.date})</span>
-                                  <button
-                                    style={{ background: "transparent", border: "none", color: "#666", cursor: "pointer", padding: "0 3px" }}
-                                    onClick={() => {
-                                      if (confirm("이 일지를 삭제하시겠습니까?")) {
-                                        updateState(s => ({
-                                          ...s,
-                                          journals: s.journals.filter(x => x.id !== j.id)
-                                        }));
-                                      }
-                                    }}
-                                  >
-                                    &times;
-                                  </button>
+                            {cellJournals.map(j => {
+                              const isChronicle = j.chronicle === true;
+                              return (
+                                <div 
+                                  key={j.id} 
+                                  style={isChronicle ? {
+                                    border: "1px solid var(--color-gold)",
+                                    backgroundColor: "rgba(187, 153, 93, 0.08)",
+                                    borderRadius: "4px",
+                                    padding: "6px 10px",
+                                    marginBottom: "4px",
+                                    boxShadow: "0 0 5px rgba(187, 153, 93, 0.15)"
+                                  } : {
+                                    borderBottom: "1px dashed rgba(255,255,255,0.05)",
+                                    paddingBottom: "4px",
+                                    marginBottom: "4px"
+                                  }}
+                                >
+                                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: isChronicle ? "var(--color-gold)" : "#888" }}>
+                                    <span>
+                                      {isChronicle && <span style={{ marginRight: "4px" }}>📜 연대기 ·</span>}
+                                      제 {j.day || 1}일 {j.watch || 1}워치 ({j.date})
+                                    </span>
+                                    <button
+                                      style={{ background: "transparent", border: "none", color: "#666", cursor: "pointer", padding: "0 3px" }}
+                                      onClick={() => {
+                                        if (confirm("이 일지를 삭제하시겠습니까?")) {
+                                          updateState(s => ({
+                                            ...s,
+                                            journals: s.journals.filter(x => x.id !== j.id)
+                                          }));
+                                        }
+                                      }}
+                                    >
+                                      &times;
+                                    </button>
+                                  </div>
+                                  <div style={{ fontSize: "0.8rem", color: isChronicle ? "var(--text-bright)" : "#ddd", marginTop: "2px", fontWeight: isChronicle ? "bold" : "normal" }}>
+                                    {j.chronicleIcon && <span style={{ marginRight: "6px", fontSize: "0.9rem" }}>{j.chronicleIcon}</span>}
+                                    {j.text}
+                                  </div>
                                 </div>
-                                <div style={{ fontSize: "0.8rem", color: "#ddd", marginTop: "2px" }}>
-                                  {j.text}
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
