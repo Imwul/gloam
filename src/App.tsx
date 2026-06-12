@@ -129,6 +129,10 @@ export interface JournalEntry {
   pinned?: boolean;
   isThematic?: boolean;
   systemLog?: string;
+  systemGenerated?: boolean;
+  chronicle?: boolean;
+  chronicleCategory?: string;
+  chronicleIcon?: string;
 }
 
 export interface Goal {
@@ -513,7 +517,7 @@ const generateUniqueId = (): string => {
 const pruneJournals = (journals: JournalEntry[]): JournalEntry[] => {
   let unpinnedCount = 0;
   return journals.filter(j => {
-    if (j.pinned) return true;
+    if (j.pinned || j.chronicle) return true;
     if (unpinnedCount < 50) {
       unpinnedCount++;
       return true;
@@ -779,7 +783,11 @@ const sanitizeGameState = (loaded: any): GameState => {
       y: typeof j.y === 'number' ? j.y : null,
       pinned: !!j.pinned,
       isThematic: !!j.isThematic,
-      systemLog: j.systemLog || j.text || ''
+      systemLog: j.systemLog || j.text || '',
+      systemGenerated: !!j.systemGenerated,
+      chronicle: !!j.chronicle,
+      chronicleCategory: typeof j.chronicleCategory === 'string' ? j.chronicleCategory : undefined,
+      chronicleIcon: typeof j.chronicleIcon === 'string' ? j.chronicleIcon : undefined
     };
   });
 
@@ -1238,10 +1246,29 @@ export default function App() {
       .map((c, idx) => `### Chapter ${idx + 1}. ${c.title} (기간: ${c.dateRange})\n${c.summary}`)
       .join('\n\n');
 
-    const journalTimeline = (gameState.journals || [])
+    const formatEntry = (j: JournalEntry) => {
+      const coords = j.x !== null && j.y !== null && j.x !== undefined && j.y !== undefined ? ` @ (${j.x}, ${j.y})` : "";
+      const icon = j.chronicleIcon ? `${j.chronicleIcon} ` : "";
+      return `- **Day ${j.day || 1}, Watch ${j.watch || 1}**${coords}: ${icon}${j.text}`;
+    };
+
+    const sortedJournals = (gameState.journals || [])
       .slice()
-      .sort((a, b) => (a.day || 1) - (b.day || 1) || (a.watch || 1) - (b.watch || 1))
-      .map(j => `- **Day ${j.day || 1}, Watch ${j.watch || 1}**${j.x !== null && j.y !== null && j.x !== undefined && j.y !== undefined ? ` @ (${j.x}, ${j.y})` : ""}: ${j.text}`)
+      .sort((a, b) => (a.day || 1) - (b.day || 1) || (a.watch || 1) - (b.watch || 1));
+
+    const chronicleTimeline = sortedJournals
+      .filter(j => j.chronicle)
+      .map(formatEntry)
+      .join('\n');
+
+    const pinnedNotesTimeline = sortedJournals
+      .filter(j => j.pinned && !j.chronicle)
+      .map(formatEntry)
+      .join('\n');
+
+    const recentJournalTimeline = sortedJournals
+      .filter(j => !j.pinned && !j.chronicle)
+      .map(formatEntry)
       .join('\n');
 
     return `# 📜 GLOAM - 캐릭터 연대기 & 서사 기록 (Character Chronicle)
@@ -1291,8 +1318,18 @@ ${chaptersList || "*기록된 캠페인 챕터가 없습니다.*"}
 
 ---
 
-## 🗺️ 현장 일지 타임라인 (Field Journal Timeline)
-${journalTimeline || "*기록된 현장 일지가 없습니다.*"}
+## 📖 캐릭터 대서사 (Chronicle)
+${chronicleTimeline || "*기록된 대서사(Chronicle)가 없습니다.*"}
+
+---
+
+## 📌 플레이어 고정 메모 (Pinned Notes)
+${pinnedNotesTimeline || "*고정된 일지 메모가 없습니다.*"}
+
+---
+
+## 📜 최근 모험 일지 (Recent Journal)
+${recentJournalTimeline || "*최근 기록된 일지가 없습니다.*"}
 
 ---
 
@@ -1826,12 +1863,45 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
       const x = selectedMapCellIdx !== null ? (selectedMapCellIdx % 4) : null;
       const y = selectedMapCellIdx !== null ? Math.floor(selectedMapCellIdx / 4) : null;
 
+      // Chronicle analysis
+      const monsters = s.combatMonsters;
+      const monsterNames = monsters.map(m => m.name).join(", ");
+      const hasBoss = monsters.some(m => {
+        const ref = BESTIARY.find(b => b.name === m.name);
+        return ref && ref.stat >= 8;
+      });
+      const hasMajor = monsters.some(m => {
+        const ref = BESTIARY.find(b => b.name === m.name);
+        return ref && ref.stat >= 4 && ref.stat < 8;
+      });
+      const isFirstVictory = !s.journals.some(j => j.chronicleCategory === "first_victory");
+
+      let chronicleCategory: string | undefined = undefined;
+      let chronicleIcon: string | undefined = undefined;
+      let chronicleText = "";
+
+      if (hasBoss) {
+        chronicleCategory = "boss_slain";
+        chronicleIcon = "💀";
+        chronicleText = `💀 [보스 처치] 황혼의 가장 강력하고 무시무시한 존재인 [${monsterNames}]과의 목숨을 건 사투 끝에 승리를 거두었습니다!`;
+      } else if (hasMajor) {
+        chronicleCategory = "major_foe_defeat";
+        chronicleIcon = "👾";
+        chronicleText = `👾 [주요 적 격퇴] 위협적인 적 [${monsterNames}]의 포악한 공세를 꺾고 승리를 쟁취했습니다.`;
+      } else if (isFirstVictory) {
+        chronicleCategory = "first_victory";
+        chronicleIcon = "⚔️";
+        chronicleText = `⚔️ [첫 전투 승리] 전장에 울려 퍼진 첫 번째 혈전에서 [${monsterNames}] 무리를 물리치고 첫 승리를 선포합니다!`;
+      }
+
+      const isChronicle = !!chronicleCategory;
+
       if (triggerFoolReshuffle) {
         setTimeout(() => {
           alert("🔄 이번 전투 중 광대(The Fool) 카드가 소모되었습니다! 라운드 종료 규칙에 따라 모든 손패를 버리고 양쪽 덱 전체를 새로 섞습니다.");
         }, 50);
 
-        const thematicText = `[전투 종결 및 소집] 승리의 검을 거두지만, 광대의 마법이 덱을 헤집어 놓아 덱을 소집합니다.`;
+        const thematicText = isChronicle ? chronicleText : `[전투 종결 및 소집] 승리의 검을 거두지만, 광대의 마법이 덱을 헤집어 놓아 덱을 소집합니다.`;
         const systemLog = `[전투 종료] 광대(The Fool) 카드 소모로 인한 덱 전체 셔플 초기화`;
 
         const playerMap = new Map<string, Card>();
@@ -1871,16 +1941,20 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
               watch: s.watch,
               x,
               y,
-              pinned: false,
+              pinned: isChronicle,
               isThematic: true,
-              systemLog
+              systemLog,
+              systemGenerated: true,
+              chronicle: isChronicle,
+              chronicleCategory,
+              chronicleIcon
             },
             ...s.journals
           ]
         };
       }
 
-      const thematicText = `[전투 종결] 적들의 숨통이 끊어지거나 어둠 너머로 퇴각했습니다. 무기를 거두고 호흡을 고릅니다.`;
+      const thematicText = isChronicle ? chronicleText : `[전투 종결] 적들의 숨통이 끊어지거나 어둠 너머로 퇴각했습니다. 무기를 거두고 호흡을 고릅니다.`;
       const systemLog = `[전투 종료] 전투가 격파/종료되었습니다.`;
 
       return {
@@ -1899,9 +1973,13 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
             watch: s.watch,
             x,
             y,
-            pinned: false,
+            pinned: isChronicle,
             isThematic: true,
-            systemLog
+            systemLog,
+            systemGenerated: true,
+            chronicle: isChronicle,
+            chronicleCategory,
+            chronicleIcon
           },
           ...s.journals
         ]
@@ -2484,71 +2562,120 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
       );
       if (desc === null) return; // Cancel
 
-      updateState(s => ({
-        ...s,
-        character: {
-          ...s.character,
-          wounds: { ...s.character.wounds, [partKey]: true },
-          injuryLogs: [
-            ...(s.character.injuryLogs || []),
-            {
-              id: generateUniqueId(),
-              location: partKey,
-              injuryText: desc.trim() || "원인 불명의 부상",
-              dateAcquired: dateStr,
-              healed: false
-            }
-          ]
-        },
-        journals: [
-          {
-            id: generateUniqueId(),
-            text: `[부상 획득 - ${partNameKo}] ${desc.trim() || "부상을 입었습니다."}`,
-            date: new Date().toLocaleString(),
-            day: s.day,
-            watch: s.watch
-          },
-          ...s.journals
-        ]
-      }));
-    } else {
-      const scar = prompt(
-        `🩹 [부상 완치] ${partNameKo} 부위가 어떻게 치유되었습니까?\n남겨진 흉터나 치유 과정을 기록해 주십시오 (취소 시 완치 취소, 입력 없이 확인 시 '치유됨'으로 저장):`
-      );
-      if (scar === null) return; // Cancel
-
       updateState(s => {
-        const nextLogs = (s.character.injuryLogs || []).map(log => {
-          if (log.location === partKey && !log.healed) {
-            return {
-              ...log,
-              healed: true,
-              dateHealed: dateStr,
-              scarsNotes: scar.trim() || "치유됨"
-            };
-          }
-          return log;
-        });
+        const isFirstInjury = !s.journals.some(j => j.chronicleCategory === "first_serious_injury");
+        const category = isFirstInjury ? "first_serious_injury" : undefined;
+        const icon = isFirstInjury ? "🩸" : undefined;
+        const logText = isFirstInjury
+          ? `🩸 [첫 중상] ${partNameKo} 부위에 심각한 부상을 입었습니다. (원인: ${desc.trim() || "원인 불명"})`
+          : `🚨 [부상 획득 - ${partNameKo}] ${desc.trim() || "부상을 입었습니다."}`;
 
         return {
           ...s,
           character: {
             ...s.character,
-            wounds: { ...s.character.wounds, [partKey]: false },
-            injuryLogs: nextLogs
+            wounds: { ...s.character.wounds, [partKey]: true },
+            injuryLogs: [
+              ...(s.character.injuryLogs || []),
+              {
+                id: generateUniqueId(),
+                location: partKey,
+                injuryText: desc.trim() || "원인 불명의 부상",
+                dateAcquired: dateStr,
+                healed: false
+              }
+            ]
           },
           journals: [
             {
               id: generateUniqueId(),
-              text: `[부상 치료 - ${partNameKo}] ${scar.trim() || "치유되었습니다."}`,
+              text: logText,
               date: new Date().toLocaleString(),
               day: s.day,
-              watch: s.watch
+              watch: s.watch,
+              pinned: isFirstInjury,
+              systemGenerated: true,
+              chronicle: isFirstInjury,
+              chronicleCategory: category,
+              chronicleIcon: icon
             },
             ...s.journals
           ]
         };
       });
+    } else {
+      const otherWounds = state.character.wounds;
+      const allWounded = !!(otherWounds.head && otherWounds.torso && otherWounds.lArm && otherWounds.rArm && otherWounds.lLeg && otherWounds.rLeg);
+      const isLethalTrigger = (partKey === "head") || (allWounded);
+
+      let choice = "";
+      if (isLethalTrigger) {
+        choice = confirm(`💀 [치명적 부상 감지] ${partNameKo}에 이미 부상이 존재하며, 추가 부상을 입는 경우 캐릭터가 사망(두 번째 머리 부상)에 이르게 됩니다.\n\n추가 부상으로 인한 캐릭터 사망을 기록하시겠습니까?\n(확인: 사망 기록 등록, 취소: 일반 부상 정정/수동 치료 진행)`) ? "death" : "heal";
+      } else {
+        choice = confirm(`🩹 ${partNameKo} 부위의 부상을 수동으로 해제(치료)하시겠습니까?\n(확인: 부상 해제, 취소: 돌아가기)`) ? "heal" : "cancel";
+      }
+
+      if (choice === "death") {
+        const deathNote = prompt("💀 방랑자의 죽음에 관한 경위나 마지막 기록을 적어주십시오:");
+        updateState(s => ({
+          ...s,
+          journals: [
+            {
+              id: generateUniqueId(),
+              text: `💀 [캐릭터 사망] ${partNameKo}에 치명적인 추가 부상을 입고 최후를 맞이했습니다. (경위: ${deathNote?.trim() || "기록 없음"})`,
+              date: new Date().toLocaleString(),
+              day: s.day,
+              watch: s.watch,
+              pinned: true,
+              systemGenerated: true,
+              chronicle: true,
+              chronicleCategory: "character_death",
+              chronicleIcon: "💀"
+            },
+            ...s.journals
+          ]
+        }));
+        alert("방랑자의 사망이 연대기 및 일지에 기록되었습니다.");
+        return;
+      } else if (choice === "heal") {
+        const scar = prompt(
+          `🩹 [부상 완치/해제] ${partNameKo} 부위가 치료되었습니다.\n치유 흔적이나 치료 경위를 기록해 주십시오 (취소 시 취소, 입력 없이 확인 시 '부상 해제됨'으로 저장):`
+        );
+        if (scar === null) return;
+
+        updateState(s => {
+          const nextLogs = (s.character.injuryLogs || []).map(log => {
+            if (log.location === partKey && !log.healed) {
+              return {
+                ...log,
+                healed: true,
+                dateHealed: dateStr,
+                scarsNotes: scar.trim() || "부상 해제됨"
+              };
+            }
+            return log;
+          });
+
+          return {
+            ...s,
+            character: {
+              ...s.character,
+              wounds: { ...s.character.wounds, [partKey]: false },
+              injuryLogs: nextLogs
+            },
+            journals: [
+              {
+                id: generateUniqueId(),
+                text: `[부상 치료 - ${partNameKo}] ${scar.trim() || "부상이 수동 치료되었습니다."}`,
+                date: new Date().toLocaleString(),
+                day: s.day,
+                watch: s.watch
+              },
+              ...s.journals
+            ]
+          };
+        });
+      }
     }
   };
 
@@ -2953,8 +3080,15 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
         journals: [
           {
             id: generateUniqueId(),
-            text: `[용병 사직] Coins 판정 ${total}점 실패로 용병 ${hireling.name}이(가) 계약을 파기하고 탈퇴했습니다.`,
-            date: new Date().toLocaleString()
+            text: `🏃 [용병 탈퇴] Coins 판정 ${total}점 실패로 용병 ${hireling.name}이(가) 계약을 파기하고 탈퇴했습니다.`,
+            date: new Date().toLocaleString(),
+            day: s.day,
+            watch: s.watch,
+            pinned: true,
+            systemGenerated: true,
+            chronicle: true,
+            chronicleCategory: "hireling_quit",
+            chronicleIcon: "🏃"
           },
           ...s.journals
         ]
@@ -3048,13 +3182,34 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     if (!folkNpcResult) return;
     const name = `${folkNpcResult.femaleName}/${folkNpcResult.maleName}`;
     const info = `${folkNpcResult.occupation} (${folkNpcResult.personality})`;
-    updateState(s => ({
-      ...s,
-      character: {
-        ...s.character,
-        friends: [...s.character.friends, { name, info }]
-      }
-    }));
+    updateState(s => {
+      const isFirstFriend = !s.journals.some(j => j.chronicleCategory === "first_friend");
+      const nextFriends = [...s.character.friends, { name, info }];
+      
+      const newJournal: JournalEntry = {
+        id: generateUniqueId(),
+        text: isFirstFriend 
+          ? `⚜ [첫 인연] 새로운 친구 ${name}(${folkNpcResult.occupation})을(를) 만났습니다.`
+          : `👥 [새로운 친구] ${name}(${folkNpcResult.occupation})와(과) 인연을 맺었습니다.`,
+        date: new Date().toLocaleString(),
+        day: s.day,
+        watch: s.watch,
+        pinned: isFirstFriend,
+        systemGenerated: true,
+        chronicle: isFirstFriend,
+        chronicleCategory: isFirstFriend ? "first_friend" : undefined,
+        chronicleIcon: isFirstFriend ? "⚜" : undefined
+      };
+
+      return {
+        ...s,
+        character: {
+          ...s.character,
+          friends: nextFriends
+        },
+        journals: [newJournal, ...s.journals]
+      };
+    });
     alert(`${name}이(가) 인연(Friends) 목록에 추가되었습니다.`);
   };
 
@@ -3062,13 +3217,34 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     if (!folkNpcResult) return;
     const name = `${folkNpcResult.femaleName}/${folkNpcResult.maleName}`;
     const info = `${folkNpcResult.occupation} (${folkNpcResult.personality})`;
-    updateState(s => ({
-      ...s,
-      character: {
-        ...s.character,
-        foes: [...s.character.foes, { name, info }]
-      }
-    }));
+    updateState(s => {
+      const isFirstFoe = !s.journals.some(j => j.chronicleCategory === "first_foe");
+      const nextFoes = [...s.character.foes, { name, info }];
+      
+      const newJournal: JournalEntry = {
+        id: generateUniqueId(),
+        text: isFirstFoe 
+          ? `⚔ [첫 숙적] 새로운 원수 ${name}(${folkNpcResult.occupation})가 앞날을 가로막습니다.`
+          : `👿 [새로운 원수] ${name}(${folkNpcResult.occupation})와(과) 적대적인 관계로 각인되었습니다.`,
+        date: new Date().toLocaleString(),
+        day: s.day,
+        watch: s.watch,
+        pinned: isFirstFoe,
+        systemGenerated: true,
+        chronicle: isFirstFoe,
+        chronicleCategory: isFirstFoe ? "first_foe" : undefined,
+        chronicleIcon: isFirstFoe ? "⚔" : undefined
+      };
+
+      return {
+        ...s,
+        character: {
+          ...s.character,
+          foes: nextFoes
+        },
+        journals: [newJournal, ...s.journals]
+      };
+    });
     alert(`${name}이(가) 원수(Foes) 목록에 추가되었습니다.`);
   };
 
@@ -3116,21 +3292,37 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
       alert(
         `[용병 고용 성공!]\nCoins 판정 결과: ${hireTotal}점 (카드: ${getCardDisplayName(hCard)} + Coins: ${coinsStat})\n\n${name}이(가) 계약을 수락하고 당신의 용병으로 합류했습니다!`
       );
-      updateState(s => ({
-        ...s,
-        character: {
-          ...s.character,
-          hirelings: [...(s.character.hirelings || []), { name, info }]
-        },
-        journals: [
-          {
-            id: generateUniqueId(),
-            text: `[용병 고용 성공] 길에서 만난 NPC ${name}(${folkNpcResult.occupation})을 Coins 판정(${hireTotal}점) 성공으로 고용했습니다.`,
-            date: new Date().toLocaleString()
+      updateState(s => {
+        const isFirstHireling = !s.journals.some(j => j.chronicleCategory === "first_hireling");
+        const category = isFirstHireling ? "first_hireling" : undefined;
+        const icon = isFirstHireling ? "🤝" : undefined;
+        const logText = isFirstHireling
+          ? `🤝 [첫 용병 고용] 길에서 만난 NPC ${name}(${folkNpcResult.occupation})을 Coins 판정(${hireTotal}점) 성공으로 고용하여 동행을 시작했습니다.`
+          : `👥 [용병 고용 성공] 길에서 만난 NPC ${name}(${folkNpcResult.occupation})을 Coins 판정(${hireTotal}점) 성공으로 고용했습니다.`;
+
+        return {
+          ...s,
+          character: {
+            ...s.character,
+            hirelings: [...(s.character.hirelings || []), { name, info }]
           },
-          ...s.journals
-        ]
-      }));
+          journals: [
+            {
+              id: generateUniqueId(),
+              text: logText,
+              date: new Date().toLocaleString(),
+              day: s.day,
+              watch: s.watch,
+              pinned: isFirstHireling,
+              systemGenerated: true,
+              chronicle: isFirstHireling,
+              chronicleCategory: category,
+              chronicleIcon: icon
+            },
+            ...s.journals
+          ]
+        };
+      });
     } else {
       alert(
         `[용병 고용 실패]\nCoins 판정 결과: ${hireTotal}점 (카드: ${getCardDisplayName(hCard)} + Coins: ${coinsStat})\n\n${name}이(가) 제시한 조건을 거절하여 고용에 실패했습니다.`
@@ -3163,7 +3355,12 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
   };
 
   // Add Item to Journal
-  const addJournalEntry = (textOverride?: string, actionType?: string, details?: any) => {
+  const addJournalEntry = (
+    textOverride?: string,
+    actionType?: string,
+    details?: any,
+    chronicleOpts?: { pinned?: boolean; systemGenerated?: boolean; chronicle?: boolean; chronicleCategory?: string; chronicleIcon?: string }
+  ) => {
     const entryText = textOverride || newJournalText;
     if (!entryText.trim()) return;
 
@@ -3174,18 +3371,41 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
       const x = selectedMapCellIdx !== null ? (selectedMapCellIdx % 4) : null;
       const y = selectedMapCellIdx !== null ? Math.floor(selectedMapCellIdx / 4) : null;
 
+      // Auto-detect first defeat
+      let isFirstDefeat = false;
+      let opts = { ...chronicleOpts };
+      if (
+        (thematicText.includes("결과: 실패") || thematicText.includes("결과: 대실패")) &&
+        !s.journals.some(j => j.chronicleCategory === "first_defeat")
+      ) {
+        isFirstDefeat = true;
+        opts = {
+          pinned: true,
+          systemGenerated: true,
+          chronicle: true,
+          chronicleCategory: "first_defeat",
+          chronicleIcon: "💥"
+        };
+      }
+
+      const logText = isFirstDefeat ? `💥 [첫 패배] ${thematicText}` : thematicText;
+
       const nextJournals = [
         {
           id: generateUniqueId(),
-          text: thematicText,
+          text: logText,
           date: new Date().toLocaleString(),
           day: s.day,
           watch: s.watch,
           x,
           y,
-          pinned: false,
+          pinned: opts?.pinned !== undefined ? opts.pinned : false,
           isThematic,
-          systemLog: entryText
+          systemLog: entryText,
+          systemGenerated: opts?.systemGenerated !== undefined ? opts.systemGenerated : false,
+          chronicle: opts?.chronicle !== undefined ? opts.chronicle : false,
+          chronicleCategory: opts?.chronicleCategory,
+          chronicleIcon: opts?.chronicleIcon
         },
         ...s.journals
       ];
@@ -3205,17 +3425,34 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     }));
   };
 
+  const toggleChronicleJournalEntry = (id: string) => {
+    updateState(s => ({
+      ...s,
+      journals: s.journals.map(j => {
+        if (j.id === id) {
+          const nextChronicle = !j.chronicle;
+          return {
+            ...j,
+            chronicle: nextChronicle,
+            pinned: nextChronicle ? true : j.pinned
+          };
+        }
+        return j;
+      })
+    }));
+  };
+
   const handleManualPruneJournals = () => {
     const totalCount = state.journals.length;
-    const pinnedCount = state.journals.filter(j => j.pinned).length;
+    const pinnedCount = state.journals.filter(j => j.pinned || j.chronicle).length;
     const unpinnedCount = totalCount - pinnedCount;
 
     if (unpinnedCount <= 50) {
-      alert(`ℹ️ 정리할 고정되지 않은 기록이 50개 이하입니다.\n(전체 기록: ${totalCount}개, 고정됨: ${pinnedCount}개)`);
+      alert(`ℹ️ 정리할 고정되지 않은 기록이 50개 이하입니다.\n(전체 기록: ${totalCount}개, 보존됨: ${pinnedCount}개)`);
       return;
     }
 
-    if (window.confirm(`⚠️ 일지 최적화 정리를 진행하시겠습니까?\n고정(Pin)된 일지는 모두 유지되며, 고정되지 않은 일지는 최근 50개만 남기고 삭제됩니다.\n(현재 전체 기록: ${totalCount}개 -> 정리 후 예상: ${pinnedCount + 50}개)`)) {
+    if (window.confirm(`⚠️ 일지 최적화 정리를 진행하시겠습니까?\n고정(Pin) 및 연대기(Chronicle) 일지는 모두 유지되며, 그 외의 일지는 최근 50개만 남기고 삭제됩니다.\n(현재 전체 기록: ${totalCount}개 -> 정리 후 예상: ${pinnedCount + 50}개)`)) {
       updateState(s => {
         const nextJournals = pruneJournals(s.journals);
         return {
@@ -3969,6 +4206,13 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                                 ? { ...item, status: "completed" as const, completedDate: dateStr, milestoneNote: finalNote, linkedJournalId: journalId }
                                 : item
                             );
+                            const isFirstGoal = !s.journals.some(j => j.chronicleCategory === "first_goal");
+                            const category = isFirstGoal ? "first_goal" : "goal_complete";
+                            const icon = isFirstGoal ? "🏆" : "✨";
+                            const logText = isFirstGoal 
+                              ? `🏆 [첫 목표 달성] ${g.text} (기록: ${finalNote})`
+                              : `✨ [목표 완료] ${g.text} (기록: ${finalNote})`;
+
                             return {
                               ...s,
                               character: {
@@ -3978,10 +4222,15 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                               journals: [
                                 {
                                   id: journalId,
-                                  text: `[목표 달성] ${g.text} (기록: ${finalNote})`,
+                                  text: logText,
                                   date: new Date().toLocaleString(),
                                   day: s.day,
-                                  watch: s.watch
+                                  watch: s.watch,
+                                  pinned: true,
+                                  systemGenerated: true,
+                                  chronicle: true,
+                                  chronicleCategory: category,
+                                  chronicleIcon: icon
                                 },
                                 ...s.journals
                               ]
@@ -4259,6 +4508,33 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                 <div className="card-panel" style={{ padding: "20px" }}>
                   <h4 className="gothic-sub" style={{ borderBottom: "1px solid var(--border-color)", fontSize: "1.1rem" }}>
                     Anatomy &amp; Injuries (신체 부위 및 부상)
+                    <button
+                      className="btn-medieval-small danger"
+                      style={{ float: "right", marginTop: "-4px", fontSize: "0.7rem", borderColor: "var(--color-crimson)", color: "var(--color-crimson)", padding: "2px 6px" }}
+                      onClick={() => {
+                        const deathNote = prompt("💀 방랑자의 죽음에 관한 경위나 유언을 기록해 주십시오:");
+                        if (deathNote === null) return;
+                        updateState(s => ({
+                          ...s,
+                          journals: [
+                            {
+                              id: generateUniqueId(),
+                              text: `💀 [캐릭터 사망] 최후를 맞이했습니다. (경위: ${deathNote.trim() || "기록 없음"})`,
+                              date: new Date().toLocaleString(),
+                              day: s.day,
+                              watch: s.watch,
+                              pinned: true,
+                              systemGenerated: true,
+                              chronicle: true,
+                              chronicleCategory: "character_death",
+                              chronicleIcon: "💀"
+                            },
+                            ...s.journals
+                          ]
+                        }));
+                        alert("사망이 연대기 및 일지에 기록되었습니다.");
+                      }}
+                    >💀 사망 기록</button>
                   </h4>
                   
                   <div className="injuries-grid">
@@ -5387,8 +5663,33 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                                       onClick={() => {
                                         updateState(s => {
                                           const newH = [...s.character.hirelings];
-                                          newH[i] = { ...newH[i], woundsTaken: isWounded ? wIdx : wIdx + 1 };
-                                          return { ...s, character: { ...s.character, hirelings: newH } };
+                                          const nextWounds = isWounded ? wIdx : wIdx + 1;
+                                          newH[i] = { ...newH[i], woundsTaken: nextWounds };
+                                          
+                                          const isDead = nextWounds >= maxW;
+                                          let nextJournals = [...s.journals];
+                                          if (isDead) {
+                                            nextJournals = [
+                                              {
+                                                id: generateUniqueId(),
+                                                text: `🕯 [용병 사망] 당신을 지탱해 주던 동료 용병 ${h.name || "이름 없음"}이(가) 치명상을 입고 목숨을 잃었습니다.`,
+                                                date: new Date().toLocaleString(),
+                                                day: s.day,
+                                                watch: s.watch,
+                                                pinned: true,
+                                                systemGenerated: true,
+                                                chronicle: true,
+                                                chronicleCategory: "hireling_death",
+                                                chronicleIcon: "🕯"
+                                              },
+                                              ...nextJournals
+                                            ];
+                                          }
+                                          return { 
+                                            ...s, 
+                                            character: { ...s.character, hirelings: newH },
+                                            journals: nextJournals
+                                          };
                                         });
                                       }}
                                       style={{
@@ -6322,7 +6623,51 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                                     type: s.mapType,
                                     description: terrain
                                   };
-                                  return { ...s, mapGrid: nextGrid };
+
+                                  const isFirstDiscovery = !s.journals.some(j => j.chronicleCategory === "first_discovery");
+                                  const isFirstSettlement = s.mapType === "settlement" && !s.journals.some(j => j.chronicleCategory === "first_settlement");
+                                  const isFirstDungeon = s.mapType === "dungeon" && !s.journals.some(j => j.chronicleCategory === "first_dungeon");
+
+                                  let category: string | undefined = undefined;
+                                  let icon: string | undefined = undefined;
+                                  let logText = `🗺 [구역 탐색] 좌표 (${cell.x + 1}, ${cell.y + 1}) 지역을 탐색하여 [${terrain}] 발견 (타로 카드: ${getCardDisplayName(card)})`;
+
+                                  if (isFirstDiscovery) {
+                                    category = "first_discovery";
+                                    icon = "🧭";
+                                    logText = `🧭 [최초 지역 발견] 최초로 좌표 (${cell.x + 1}, ${cell.y + 1}) 구역을 개척하고 [${terrain}] 지형을 발견했습니다!`;
+                                  } else if (isFirstSettlement) {
+                                    category = "first_settlement";
+                                    icon = "🏰";
+                                    logText = `🏰 [최초 정착지 발견] 좌표 (${cell.x + 1}, ${cell.y + 1})에서 사람들의 온기가 서린 정착지 [${terrain}]을(를) 최초 발견했습니다.`;
+                                  } else if (isFirstDungeon) {
+                                    category = "first_dungeon";
+                                    icon = "🗝";
+                                    logText = `🗝 [최초 던전 발견] 어둠과 위험이 도사리는 유적/던전 [${terrain}]을(를) 최초로 발견했습니다.`;
+                                  }
+
+                                  const isChronicle = !!category;
+
+                                  const newJournal: JournalEntry = {
+                                    id: generateUniqueId(),
+                                    text: logText,
+                                    date: new Date().toLocaleString(),
+                                    day: s.day,
+                                    watch: s.watch,
+                                    x: cell.x,
+                                    y: cell.y,
+                                    pinned: isChronicle,
+                                    systemGenerated: true,
+                                    chronicle: isChronicle,
+                                    chronicleCategory: category,
+                                    chronicleIcon: icon
+                                  };
+
+                                  return { 
+                                    ...s, 
+                                    mapGrid: nextGrid,
+                                    journals: [newJournal, ...s.journals]
+                                  };
                                 });
                               });
                             }}
@@ -6894,11 +7239,18 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                                               </span>
                                             )}
                                           </div>
-                                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                                            <button 
+                                              style={{ background: "transparent", border: "none", cursor: "pointer", color: j.chronicle ? "var(--color-gold)" : "#555", fontSize: "0.95rem", padding: 0 }}
+                                              onClick={() => toggleChronicleJournalEntry(j.id)}
+                                              title={j.chronicle ? "연대기에서 제외" : "대서사 연대기로 승격 (Add to Chronicle)"}
+                                            >
+                                              📖
+                                            </button>
                                             <button 
                                               style={{ background: "transparent", border: "none", cursor: "pointer", color: j.pinned ? "var(--color-gold)" : "#555", fontSize: "0.95rem", padding: 0 }}
                                               onClick={() => togglePinJournalEntry(j.id)}
-                                              title="연대기 박제 고정 (Pin to Chronicle)"
+                                              title={j.pinned ? "일지 고정 해제 (Unpin Note)" : "일지 고정 (Pin Note - 자동 정리 방지)"}
                                             >
                                               {j.pinned ? "★" : "☆"}
                                             </button>
@@ -6946,13 +7298,13 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                   </p>
 
                   <div style={{ maxHeight: "450px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "5px" }}>
-                    {state.journals.filter(j => j.pinned).length === 0 ? (
+                    {state.journals.filter(j => j.chronicle).length === 0 ? (
                       <p style={{ fontStyle: "italic", fontSize: "0.75rem", color: "#555", textAlign: "center", margin: "20px 0" }}>
-                        아직 고정된 서사가 없습니다. 일지의 [☆]를 클릭해 박제하십시오.
+                        아직 기록된 연대기 사건이 없습니다. 일지의 [📖] 아이콘을 클릭해 연대기로 승격하십시오.
                       </p>
                     ) : (
                       state.journals
-                        .filter(j => j.pinned)
+                        .filter(j => j.chronicle)
                         .sort((a, b) => (a.day || 1) - (b.day || 1) || (a.watch || 1) - (b.watch || 1)) // chronological order for story reading
                         .map(j => (
                           <div key={j.id} style={{ borderBottom: "1px dashed rgba(255, 215, 0, 0.15)", paddingBottom: "8px" }}>
@@ -6963,7 +7315,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                               )}
                             </div>
                             <p style={{ margin: 0, fontSize: "0.82rem", color: "#ccc", lineHeight: "1.5", fontStyle: "italic" }}>
-                              &ldquo;{j.text}&rdquo;
+                              {j.chronicleIcon ? `${j.chronicleIcon} ` : ""}&ldquo;{j.text}&rdquo;
                             </p>
                           </div>
                         ))
@@ -7227,11 +7579,15 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                           journals: [
                             {
                               id: generateUniqueId(),
-                              text: `[에필로그] ${epilogueText}`,
+                              text: `🕯 [캠페인 종료] 에필로그: ${epilogueText}`,
                               date: new Date().toLocaleString(),
                               day: s.day,
                               watch: s.watch,
-                              pinned: true
+                              pinned: true,
+                              systemGenerated: true,
+                              chronicle: true,
+                              chronicleCategory: "campaign_end",
+                              chronicleIcon: "🕯"
                             },
                             ...s.journals
                           ]
