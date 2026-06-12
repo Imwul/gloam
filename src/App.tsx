@@ -2601,7 +2601,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
               watch: s.watch,
               x: cell ? cell.x : undefined,
               y: cell ? cell.y : undefined,
-              chronicle: true,
+              chronicle: false,
               chronicleCategory: "campsite",
               chronicleIcon: "⛺"
             },
@@ -6182,28 +6182,27 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                             {/* Deceased Memorial Sub-section */}
                             {deceasedHirelings.length > 0 && (
                               <div style={{ marginTop: "12px", borderTop: "1px dashed rgba(212,175,55,0.3)", paddingTop: "8px" }}>
-                                <span style={{ color: "#888", fontSize: "0.75rem", fontWeight: "bold", display: "block", marginBottom: "4px" }}>
-                                  🕯️ Fallen Memorial (영면한 동료들)
+                                <span style={{ color: "#777", fontSize: "0.72rem", fontWeight: "bold", display: "block", marginBottom: "4px" }}>
+                                  🕯️ Memorial
                                 </span>
                                 {deceasedHirelings.map((item) => {
                                   const h = item.h;
-                                  const deathDayText = h.deathDay ? `제 ${h.deathDay}일` : "알 수 없는 날";
-                                  const deathCellText = h.deathCell ? `(${h.deathCell.x + 1}, ${h.deathCell.y + 1})` : "알 수 없는 구역";
+                                  const deathCellText = h.deathCell ? `(${h.deathCell.x + 1}, ${h.deathCell.y + 1})` : "";
                                   return (
                                     <div key={item.originalIdx} style={{
                                       background: "rgba(10, 10, 10, 0.4)",
-                                      border: "1px dashed rgba(255, 255, 255, 0.15)",
+                                      border: "1px dashed rgba(255, 255, 255, 0.12)",
                                       borderRadius: "3px",
                                       padding: "6px 10px",
                                       marginBottom: "4px",
                                       fontSize: "0.75rem",
-                                      color: "#999",
-                                      filter: "sepia(25%) brightness(85%)"
+                                      color: "#888",
+                                      filter: "sepia(15%) brightness(80%)"
                                     }}>
                                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <strong>🕯️ {h.name || "이름 없는 용병"}</strong>
-                                        <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#555" }} onClick={() => {
-                                          if (confirm(`${h.name} 용병의 기록을 추모비에서 완전히 제거하시겠습니까?`)) {
+                                        <strong>{h.name || "이름 없는 용병"}</strong>
+                                        <button className="delete-btn" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#444" }} onClick={() => {
+                                          if (confirm(`${h.name} 용병의 기록을 완전히 제거하시겠습니까?`)) {
                                             updateState(s => ({
                                               ...s,
                                               character: {
@@ -6214,10 +6213,10 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                                           }
                                         }}>&times;</button>
                                       </div>
-                                      <div style={{ fontSize: "0.68rem", color: "#777", marginTop: "2px", fontStyle: "italic" }}>
-                                        {deathDayText} {deathCellText} 구역에서 전사함.
+                                      <div style={{ fontSize: "0.68rem", color: "#666", marginTop: "2px", fontStyle: "italic" }}>
+                                        제 {h.deathDay || "?"}일 {deathCellText}
                                       </div>
-                                      {h.info && <div style={{ fontSize: "0.68rem", color: "#666", marginTop: "2px" }}>{h.info}</div>}
+                                      {h.info && <div style={{ fontSize: "0.68rem", color: "#556", marginTop: "2px" }}>{h.info}</div>}
                                     </div>
                                   );
                                 })}
