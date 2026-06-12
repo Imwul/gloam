@@ -229,6 +229,16 @@ export interface CombatMonster {
   initiativeCard?: Card;
 }
 
+export interface SessionRewardRecord {
+  id: string;
+  date: string;
+  day: number;
+  watch: number;
+  xp: number;
+  resolve: number;
+  reasons: string[];
+}
+
 export interface ActiveTest {
   stat: "cups" | "swords" | "coins" | "wands" | "none";
   statUsed: number;
@@ -287,6 +297,8 @@ export interface GameState {
   carousingResult: { card: Card; text: string } | null;
   folkNpcResult: { card: Card; femaleName: string; maleName: string; occupation: string; personality: string } | null;
   magickItemResult: { card: Card; suit: string; name: string; text: string } | null;
+  currentSessionId: string;
+  sessionRewardHistory: SessionRewardRecord[];
 }
 
 const INITIAL_CHARACTER: Character = {
@@ -393,7 +405,9 @@ const INITIAL_STATE: GameState = {
   selectedMapCellIdx: null,
   carousingResult: null,
   folkNpcResult: null,
-  magickItemResult: null
+  magickItemResult: null,
+  currentSessionId: "session-initial",
+  sessionRewardHistory: []
 };
 
 // =================================================================
@@ -520,6 +534,65 @@ const getRandomCandidate = () => {
 
 const getCardIdentity = (card: Card): string => `${card.type}-${card.suit || ""}-${card.card}`;
 
+const PLAYER_HAND_LIMIT = 4;
+
+const getExpectedPlayerIdentities = () => new Set(createPlayerDeck().map(getCardIdentity));
+const getExpectedRefereeIdentities = () => new Set(createRefereeDeck().map(getCardIdentity));
+
+const isValidCardForSet = (card: any, expected: Set<string>): card is Card => {
+  if (!card || typeof card !== "object") return false;
+  const identity = getCardIdentity(card as Card);
+  return expected.has(identity);
+};
+
+const cleanCard = (card: Card): Card => ({ ...card, reversed: !!card.reversed });
+
+const cleanCardArray = (cards: any): Card[] => Array.isArray(cards)
+  ? cards.filter((card): card is Card => card && typeof card === "object").map(cleanCard)
+  : [];
+
+const validateCardEconomy = (
+  zones: Card[][],
+  expected: Set<string>
+): boolean => {
+  const seen = new Set<string>();
+  for (const zone of zones) {
+    for (const card of zone) {
+      if (!isValidCardForSet(card, expected)) return false;
+      const identity = getCardIdentity(card);
+      if (seen.has(identity)) return false;
+      seen.add(identity);
+    }
+  }
+  if (seen.size !== expected.size) return false;
+  for (const identity of expected) {
+    if (!seen.has(identity)) return false;
+  }
+  return true;
+};
+
+const sanitizeMapGrid = (loadedGrid: any): MapCell[] => {
+  const refereeIdentities = getExpectedRefereeIdentities();
+  const source = Array.isArray(loadedGrid) ? loadedGrid : [];
+  return Array.from({ length: 16 }, (_, i) => {
+    const raw = source[i] || {};
+    const cell: MapCell = {
+      x: typeof raw.x === "number" ? raw.x : i % 4,
+      y: typeof raw.y === "number" ? raw.y : Math.floor(i / 4)
+    };
+    if (raw.type === "wilderness" || raw.type === "dungeon" || raw.type === "settlement") {
+      cell.type = raw.type;
+    }
+    if (typeof raw.description === "string") {
+      cell.description = raw.description;
+    }
+    if (isValidCardForSet(raw.card, refereeIdentities)) {
+      cell.card = cleanCard(raw.card);
+    }
+    return cell;
+  });
+};
+
 const appendUniqueCards = (cards: Card[], additions: Card[]): Card[] => {
   const seen = new Set(cards.map(getCardIdentity));
   const next = [...cards];
@@ -643,16 +716,55 @@ const sanitizeGameState = (loaded: any): GameState => {
 
   character.epilogue = typeof loaded.character?.epilogue === 'string' ? loaded.character.epilogue : "";
 
-  const mapGrid = Array.isArray(loaded.mapGrid) ? loaded.mapGrid : Array.from({ length: 16 }, (_, i) => ({
-    x: i % 4,
-    y: Math.floor(i / 4)
+  const repairWarnings: string[] = [];
+  const mapGrid = sanitizeMapGrid(loaded.mapGrid);
+
+  let playerDeck = cleanCardArray(loaded.playerDeck);
+  let playerDiscard = cleanCardArray(loaded.playerDiscard);
+  let hand = cleanCardArray(loaded.hand);
+  let playerInitiativeCard = loaded.playerInitiativeCard !== undefined && loaded.playerInitiativeCard !== null
+    ? cleanCard(loaded.playerInitiativeCard)
+    : null;
+
+  const playerExpected = getExpectedPlayerIdentities();
+  const isPlayerEconomyValid =
+    hand.length <= PLAYER_HAND_LIMIT &&
+    validateCardEconomy(
+      [playerDeck, playerDiscard, hand, playerInitiativeCard ? [playerInitiativeCard] : []],
+      playerExpected
+    );
+
+  if (!isPlayerEconomyValid) {
+    playerDeck = createPlayerDeck();
+    playerDiscard = [];
+    hand = [];
+    playerInitiativeCard = null;
+    repairWarnings.push("[저장 복구] 플레이어 덱/손패/선제권 카드 상태가 불가능하여 플레이어 카드 경제만 초기화했습니다.");
+  }
+
+  let refereeDeck = cleanCardArray(loaded.refereeDeck);
+  let refereeDiscard = cleanCardArray(loaded.refereeDiscard);
+  let combatMonsters: CombatMonster[] = Array.isArray(loaded.combatMonsters) ? loaded.combatMonsters : [];
+  combatMonsters = combatMonsters.map((m: any) => ({
+    id: m.id || generateUniqueId(),
+    monsterId: typeof m.monsterId === "number" ? m.monsterId : 1,
+    name: m.name || "Unknown",
+    woundsTaken: typeof m.woundsTaken === "number" ? m.woundsTaken : 0,
+    initiativeCard: m.initiativeCard ? cleanCard(m.initiativeCard) : undefined
   }));
 
-  const playerDeck = Array.isArray(loaded.playerDeck) ? loaded.playerDeck : createPlayerDeck();
-  const playerDiscard = Array.isArray(loaded.playerDiscard) ? loaded.playerDiscard : [];
-  const refereeDeck = Array.isArray(loaded.refereeDeck) ? loaded.refereeDeck : createRefereeDeck();
-  const refereeDiscard = Array.isArray(loaded.refereeDiscard) ? loaded.refereeDiscard : [];
-  const hand = Array.isArray(loaded.hand) ? loaded.hand : [];
+  const refereeExpected = getExpectedRefereeIdentities();
+  const monsterInitiatives = combatMonsters
+    .map((m: CombatMonster) => m.initiativeCard)
+    .filter((card): card is Card => !!card);
+  const isRefereeEconomyValid = validateCardEconomy([refereeDeck, refereeDiscard, monsterInitiatives], refereeExpected);
+
+  if (!isRefereeEconomyValid) {
+    refereeDeck = createRefereeDeck();
+    refereeDiscard = [];
+    combatMonsters = combatMonsters.map((m: CombatMonster) => ({ ...m, initiativeCard: undefined }));
+    repairWarnings.push("[저장 복구] 레프리 덱/몬스터 선제권 카드 상태가 불가능하여 레프리 카드 경제만 초기화했습니다.");
+  }
   const rawJournals = Array.isArray(loaded.journals) ? loaded.journals : [];
   
   const journals = rawJournals.map((j: any) => {
@@ -671,7 +783,16 @@ const sanitizeGameState = (loaded: any): GameState => {
     };
   });
 
-  const combatMonsters = Array.isArray(loaded.combatMonsters) ? loaded.combatMonsters : [];
+  const repairJournals: JournalEntry[] = repairWarnings.map(text => ({
+    id: generateUniqueId(),
+    text,
+    date: new Date().toLocaleString(),
+    day: typeof loaded.day === 'number' ? loaded.day : 1,
+    watch: typeof loaded.watch === 'number' ? loaded.watch : 1,
+    pinned: false,
+    isThematic: false,
+    systemLog: text
+  }));
 
   return {
     character,
@@ -681,7 +802,7 @@ const sanitizeGameState = (loaded: any): GameState => {
     refereeDiscard,
     hand,
     mapGrid,
-    journals,
+    journals: [...repairJournals, ...journals],
     combatMonsters,
     combatRound: typeof loaded.combatRound === 'number' ? loaded.combatRound : 1,
     mapType: loaded.mapType || "wilderness",
@@ -691,7 +812,7 @@ const sanitizeGameState = (loaded: any): GameState => {
     activeTest: loaded.activeTest !== undefined ? loaded.activeTest : null,
     arcaneSpellResult: loaded.arcaneSpellResult !== undefined ? loaded.arcaneSpellResult : null,
     alchemicalBrewResult: loaded.alchemicalBrewResult !== undefined ? loaded.alchemicalBrewResult : null,
-    playerInitiativeCard: loaded.playerInitiativeCard !== undefined ? loaded.playerInitiativeCard : null,
+    playerInitiativeCard,
 
     drawnOracleCard: loaded.drawnOracleCard !== undefined ? loaded.drawnOracleCard : null,
     oracleYesNo: loaded.oracleYesNo !== undefined ? loaded.oracleYesNo : null,
@@ -714,6 +835,20 @@ const sanitizeGameState = (loaded: any): GameState => {
     carousingResult: loaded.carousingResult !== undefined ? loaded.carousingResult : null,
     folkNpcResult: loaded.folkNpcResult !== undefined ? loaded.folkNpcResult : null,
     magickItemResult: loaded.magickItemResult !== undefined ? loaded.magickItemResult : null,
+    currentSessionId: typeof loaded.currentSessionId === "string" && loaded.currentSessionId
+      ? loaded.currentSessionId
+      : `day-${typeof loaded.day === "number" ? loaded.day : 1}-watch-${typeof loaded.watch === "number" ? loaded.watch : 1}`,
+    sessionRewardHistory: Array.isArray(loaded.sessionRewardHistory)
+      ? loaded.sessionRewardHistory.map((r: any) => ({
+          id: r.id || generateUniqueId(),
+          date: r.date || new Date().toLocaleString(),
+          day: typeof r.day === "number" ? r.day : 1,
+          watch: typeof r.watch === "number" ? r.watch : 1,
+          xp: typeof r.xp === "number" ? r.xp : 0,
+          resolve: typeof r.resolve === "number" ? r.resolve : 0,
+          reasons: Array.isArray(r.reasons) ? r.reasons.filter((x: any) => typeof x === "string") : []
+        }))
+      : [],
   };
 };
 
@@ -1433,14 +1568,22 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
   const playCardAsPlayerInitiative = (idx: number) => {
     updateState(s => {
       const card = s.hand[idx];
+      if (!card) {
+        alert("선제권으로 제시할 손패 카드가 없습니다.");
+        return s;
+      }
+      if (s.playerInitiativeCard) {
+        alert("이번 라운드의 플레이어 선제권은 이미 정해졌습니다. 다음 라운드까지 변경할 수 없습니다.");
+        return s;
+      }
       const nextHand = s.hand.filter((_, i) => i !== idx);
-      const nextDiscard = s.playerInitiativeCard 
-        ? [...s.playerDiscard, s.playerInitiativeCard] 
-        : s.playerDiscard;
       const cardName = getCardDisplayName(card);
+      const isFool = card.type === "major" && card.card === "0";
 
       const thematicText = getThematicLogText("combat_initiative", { cardName });
-      const systemLog = `[선제권 결정] 손패에서 ${cardName} 카드를 이번 라운드 선제권으로 제시했습니다.`;
+      const systemLog = isFool
+        ? `[선제권 결정] 손패에서 광대(The Fool)를 선제권 0으로 제시했습니다. 라운드 종료 시 광대 규칙에 따라 양쪽 덱을 회수해 섞습니다.`
+        : `[선제권 결정] 손패에서 ${cardName} 카드를 이번 라운드 선제권으로 제시했습니다.`;
 
       const x = selectedMapCellIdx !== null ? (selectedMapCellIdx % 4) : null;
       const y = selectedMapCellIdx !== null ? Math.floor(selectedMapCellIdx / 4) : null;
@@ -1448,58 +1591,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
       return {
         ...s,
         hand: nextHand,
-        playerDiscard: nextDiscard,
         playerInitiativeCard: card,
-        journals: [
-          {
-            id: generateUniqueId(),
-            text: thematicText,
-            date: new Date().toLocaleString(),
-            day: s.day,
-            watch: s.watch,
-            x,
-            y,
-            pinned: false,
-            isThematic: true,
-            systemLog
-          },
-          ...s.journals
-        ]
-      };
-    });
-  };
-
-  const drawPlayerInitiativeFromDeck = () => {
-    updateState(s => {
-      let deck = [...s.playerDeck];
-      let discard = [...s.playerDiscard];
-      
-      if (deck.length === 0) {
-        if (discard.length === 0) return s;
-        deck = shuffle(discard);
-        discard = [];
-      }
-      
-      const card = deck.shift();
-      if (!card) return s;
-
-      const cardWithReversed = { ...card, reversed: Math.random() < 0.25 };
-      const nextDiscard = s.playerInitiativeCard 
-        ? [...discard, s.playerInitiativeCard] 
-        : discard;
-      const cardName = getCardDisplayName(cardWithReversed);
-
-      const thematicText = getThematicLogText("combat_initiative_draw", { cardName });
-      const systemLog = `[선제권 결정] 플레이어 덱에서 ${cardName} 카드를 선제권으로 직접 드로우했습니다.`;
-
-      const x = selectedMapCellIdx !== null ? (selectedMapCellIdx % 4) : null;
-      const y = selectedMapCellIdx !== null ? Math.floor(selectedMapCellIdx / 4) : null;
-
-      return {
-        ...s,
-        playerDeck: deck,
-        playerDiscard: nextDiscard,
-        playerInitiativeCard: cardWithReversed,
         journals: [
           {
             id: generateUniqueId(),
@@ -1521,6 +1613,20 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
   const startNextRound = () => {
     updateState(s => {
+      if (s.combatMonsters.length === 0) {
+        alert("전투 중인 몬스터가 없어 라운드를 진행할 수 없습니다.");
+        return s;
+      }
+      const unresolved: string[] = [];
+      if (!s.playerInitiativeCard) unresolved.push("플레이어 선제권");
+      s.combatMonsters.forEach(mon => {
+        if (!mon.initiativeCard) unresolved.push(`${mon.name} 선제권`);
+      });
+      if (unresolved.length > 0) {
+        alert(`라운드를 넘길 수 없습니다. 미해결 항목: ${unresolved.join(", ")}`);
+        return s;
+      }
+
       const monsterInitiativeCards = s.combatMonsters
         .map(mon => mon.initiativeCard)
         .filter((card): card is Card => !!card);
@@ -1831,31 +1937,42 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     }
   };
 
-  const drawRefereeCardToHold = (onDraw: (card: Card) => void) => {
-    let cardDrawn: Card | null = null;
+  const assignMonsterInitiative = (monsterInstanceId: string) => {
     updateState(s => {
+      const monsterIndex = s.combatMonsters.findIndex(mon => mon.id === monsterInstanceId);
+      if (monsterIndex === -1) return s;
+      if (s.combatMonsters[monsterIndex].initiativeCard) {
+        alert("이번 라운드의 몬스터 선제권은 이미 정해졌습니다. 다음 라운드까지 다시 뽑을 수 없습니다.");
+        return s;
+      }
+
       let deck = [...s.refereeDeck];
       let discard = [...s.refereeDiscard];
-
       if (deck.length === 0) {
-        if (discard.length === 0) return s;
+        if (discard.length === 0) {
+          alert("레프리 덱에 뽑을 카드가 없습니다.");
+          return s;
+        }
         deck = shuffle(discard);
         discard = [];
       }
+
       const c = deck.shift();
-      if (c) {
-        cardDrawn = { ...c, reversed: Math.random() < 0.25 };
-      }
+      if (!c) return s;
+      const cardDrawn = { ...c, reversed: Math.random() < 0.25 };
+      const nextMonsters = [...s.combatMonsters];
+      nextMonsters[monsterIndex] = {
+        ...nextMonsters[monsterIndex],
+        initiativeCard: cardDrawn
+      };
 
       return {
         ...s,
         refereeDeck: deck,
-        refereeDiscard: discard
+        refereeDiscard: discard,
+        combatMonsters: nextMonsters
       };
     });
-    if (cardDrawn) {
-      onDraw(cardDrawn);
-    }
   };
 
   const drawPlayerCard = (purpose: string = "oracle"): Card | null => {
@@ -5649,7 +5766,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                           const purpose = prompt("이 카드를 제출하는 목적/행동을 간단히 적으세요:");
                           if (purpose) playCardFromHand(idx, purpose);
                         }}>행동/판정에 내기</button>
-                        <button className="btn-card-small gold-btn" onClick={() => {
+                        <button className="btn-card-small gold-btn" disabled={!!state.playerInitiativeCard} onClick={() => {
                           playCardAsPlayerInitiative(idx);
                         }}>선제권으로 제시</button>
                         <button className="btn-card-small toggle" onClick={() => updateState(s => {
@@ -6403,12 +6520,10 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                         {getCardDisplayName(state.playerInitiativeCard)}
                       </span>
                     ) : (
-                      <span style={{ color: "#888" }}>미정 (손패에서 제시하거나 덱에서 드로우)</span>
+                      <span style={{ color: "#888" }}>미정 (손패에서 제시)</span>
                     )}
                   </div>
-                  <button className="btn-medieval-small" onClick={drawPlayerInitiativeFromDeck}>
-                    선제권 덱에서 드로우
-                  </button>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>선제권은 손패 카드만 사용</span>
                 </div>
                 
                 {/* Spawner */}
@@ -6470,26 +6585,12 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                         {/* Monster Initiative card */}
                         <div className="flex-row justify-between align-center" style={{ marginTop: "8px", borderTop: "1px dashed #333", paddingTop: "5px" }}>
                           <span>선제권: {mon.initiativeCard ? getCardDisplayName(mon.initiativeCard) : "미정"}</span>
-                          <button className="btn-medieval-small" onClick={() => {
-                            // Draw initiative for monster from player/referee logic
-                            drawRefereeCardToHold((card) => {
-                              updateState(s => {
-                                const nextMonsters = [...s.combatMonsters];
-                                if (!nextMonsters[mIdx]) return s;
-                                const previousInitiative = nextMonsters[mIdx].initiativeCard;
-                                nextMonsters[mIdx] = {
-                                  ...nextMonsters[mIdx],
-                                  initiativeCard: card
-                                };
-                                return {
-                                  ...s,
-                                  combatMonsters: nextMonsters,
-                                  refereeDiscard: previousInitiative
-                                    ? appendUniqueCards(s.refereeDiscard, [previousInitiative])
-                                    : s.refereeDiscard
-                                };
-                              });
-                            });
+                          <button className="btn-medieval-small" disabled={!!mon.initiativeCard} title={mon.initiativeCard ? "이번 라운드 선제권은 이미 결정되었습니다." : "레프리 덱에서 몬스터 선제권을 뽑습니다."} onClick={() => {
+                            if (mon.initiativeCard) {
+                              alert("이번 라운드의 몬스터 선제권은 이미 정해졌습니다. 다음 라운드까지 다시 뽑을 수 없습니다.");
+                              return;
+                            }
+                            assignMonsterInitiative(mon.id);
                           }}>선제권 카드 결정</button>
                         </div>
 
@@ -7271,7 +7372,20 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
             </div>
 
             <div className="flex-row gap-10" style={{ marginTop: "1.5rem" }}>
-              <button className="btn-medieval flex-1" onClick={() => {
+	              <button className="btn-medieval flex-1" onClick={() => {
+                const rewardSessionId = `day-${state.day}-watch-${state.watch}`;
+                if (state.sessionRewardHistory.some(r => r.id === rewardSessionId)) {
+                  alert("이 세션 보상은 이미 정산되었습니다.");
+                  return;
+                }
+                if (!sessionParticipated && !sessionEndangered && !sessionGoalFulfilled) {
+                  alert("정산할 유효한 세션 조건을 하나 이상 선택해야 합니다.");
+                  return;
+                }
+                if (sessionGoalFulfilled && state.character.goals.filter(g => g.status === "completed").length === 0) {
+                  alert("목표 달성 보상을 받으려면 완료된 Goal 기록이 최소 하나 필요합니다.");
+                  return;
+                }
                 const addXp = (sessionParticipated ? 1 : 0) + (sessionEndangered ? 1 : 0) + (sessionGoalFulfilled ? 1 : 0);
                 const addResolve = sessionGoalFulfilled ? 1 : 0;
                 
@@ -7287,8 +7401,20 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                   
                   const reasonStr = reasons.length > 0 ? reasons.join(", ") : "기본 정산";
                   
+                  const rewardRecord: SessionRewardRecord = {
+                    id: rewardSessionId,
+                    date: new Date().toLocaleString(),
+                    day: s.day,
+                    watch: s.watch,
+                    xp: addXp,
+                    resolve: addResolve,
+                    reasons
+                  };
+
                   return {
                     ...s,
+                    currentSessionId: rewardSessionId,
+                    sessionRewardHistory: [...s.sessionRewardHistory, rewardRecord],
                     character: {
                       ...s.character,
                       xp: newXp,

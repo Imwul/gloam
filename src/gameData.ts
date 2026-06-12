@@ -225,64 +225,53 @@ export const BESTIARY: Monster[] = [
     id: 9, name: "Goblin", nameKo: "고블린",
     description: "Small chaotic troglodytes who hate humans and have a disturbing sense of humor.",
     descriptionKo: "인간을 증오하며 기괴한 유머 감각을 가진 무질서하고 작은 혈거인.",
-    stat: 2, wounds: 2, speed: 3,
-    attacks: "Rusty dagger 1 (1 sq)", attacksKo: "녹슨 단검 1점 (사거리 1칸)",
-    armor: "helmet", armorKo: "가죽 투구 (머리에만 AP 2)",
-    talents: ["Sneak attack", "Scurry"], talentsKo: ["은밀한 기습 (아머 무시)", "엄폐물로 빠르게 숨기"]
+    stat: 1, wounds: 1, speed: 3,
+    attacks: "Cleaver 1 (1 sq)", attacksKo: "식칼 1점 (사거리 1칸)",
+    armor: "helmet", armorKo: "투구",
+    talents: ["Call Reinforcement"], talentsKo: ["지원군 호출"]
   },
   {
-    id: 10, name: "Lindwurm", nameKo: "린트부름",
-    description: "Long, legless dragons with venomous breath, living in deep swamps or mud.",
-    descriptionKo: "깊은 늪지나 진흙 속에 사는 독성을 지닌 다리 없는 긴 드래곤.",
-    stat: 5, wounds: 7, speed: 4,
-    attacks: "Bite 3 (2 sq)", attacksKo: "물기 3점 (사거리 2칸)",
-    armor: "tough leather scales (torso)", armorKo: "질긴 가죽 비늘 (몸통 AP 2)",
-    talents: ["Acid spit (4 sq)", "Meld into Mud"],
-    talentsKo: ["강산성 침 뱉기 (범위 4칸)", "진흙탕 속 은신"]
+    id: 10, name: "Harpy", nameKo: "하피",
+    description: "Birds of prey with twisted human faces.",
+    descriptionKo: "뒤틀린 인간 얼굴을 지닌 맹금류.",
+    stat: 1, wounds: 2, speed: 6,
+    attacks: "Talons 1 (1 sq)", attacksKo: "발톱 1점 (사거리 1칸)",
+    armor: "none", armorKo: "없음",
+    talents: ["Mimic Voice"], talentsKo: ["목소리 흉내"]
   },
   {
-    id: 11, name: "Manticore", nameKo: "만티코어",
-    description: "Monsters with a lion's body, a human face, and a venomous scorpion's tail.",
-    descriptionKo: "사자의 몸, 인간의 얼굴, 그리고 치명적인 전갈의 독꼬리를 가진 괴수.",
-    stat: 5, wounds: 6, speed: 4,
-    attacks: "Claws 2 (1 sq) or Tail spike 2 (3 sq)", attacksKo: "발톱 2점 (1칸) 또는 꼬리 침 2점 (3칸)",
-    armor: "thick fur (torso)", armorKo: "두꺼운 모피 (몸통 AP 2)",
-    talents: ["Fly (6 speed)", "Poison tail spike"],
-    talentsKo: ["비행 (이동 6)", "독 꼬리침 (마비 및 중독)"]
+    id: 11, name: "Hag", nameKo: "해그",
+    description: "Scheming swamp-dwellers who practice black magick and eat children. They cannot pass up a good bargain.",
+    descriptionKo: "검은 마법을 부리고 아이를 잡아먹는 음흉한 늪지 거주자. 좋은 거래를 그냥 지나치지 못합니다.",
+    stat: 4, wounds: 6, speed: 3,
+    attacks: "Claws 2 (1 sq)", attacksKo: "발톱 2점 (사거리 1칸)",
+    armor: "none", armorKo: "없음",
+    talents: ["Mimic Voice", "Invisibility", "Breathe Water", "Weaken"],
+    talentsKo: ["목소리 흉내", "투명화", "수중 호흡", "약화"]
   },
   {
-    id: 12, name: "Nightmare", nameKo: "나이트메어",
-    description: "Demonic flaming steeds that spread fear and incinerate their surroundings.",
-    descriptionKo: "공포를 퍼뜨리고 주변을 불태우는 사악한 불꽃의 마마.",
-    stat: 4, wounds: 5, speed: 8,
-    attacks: "Burning hooves 2 (1 sq)", attacksKo: "불타는 발굽 2점 (사거리 1칸)",
-    armor: "scorched hide (full body)", armorKo: "그을린 악마 가죽 (전신 AP 2)",
-    weakness: "water", weaknessKo: "다량의 물",
-    talents: ["Incite fear", "Spontaneous combustion"],
-    talentsKo: ["눈빛 공포 유발", "발굽 주변 발화"]
+    id: 12, name: "Lycanthrope", nameKo: "라이칸스로프",
+    description: "Men and women whose heinous actions manifested in a monstrous, bloodthirsty second form.",
+    descriptionKo: "끔찍한 행위가 피에 굶주린 괴물의 두 번째 형상으로 드러난 사람들.",
+    stat: 5, wounds: 4, speed: 5,
+    attacks: "Bite 3 (1 sq), Slash 4 (1 sq)", attacksKo: "물기 3점 (1칸), 할퀴기 4점 (1칸)",
+    armor: "none", armorKo: "없음",
+    weakness: "silver", weaknessKo: "은",
+    talents: ["Shapechange", "Great Leap", "Transmit Lycanthropy"],
+    talentsKo: ["형상변환", "거대한 도약", "라이칸스로프 감염"]
   },
   {
     id: 13, name: "Oathbreaker", nameKo: "배역자 (기사 서약 파기자)",
     description: "Gave up on being chivalrous long ago.",
     descriptionKo: "오래전에 기사도를 저버리고 타락한 옛 기사들.",
     stat: 6, wounds: 6, speed: 6,
-    attacks: "Depraved greatsword 4 (2 sq)", attacksKo: "타락의 대검 4점 (사거리 2칸)",
-    armor: "full plate", armorKo: "전신 판금 갑옷 (전신 AP 2)",
-    talents: ["Martial dominance", "Geas"],
-    talentsKo: ["전투 지배 (범위 이탈 시 선공)", "기아스 속박"]
+    attacks: "Sword 3 (1 sq)", attacksKo: "검 3점 (사거리 1칸)",
+    armor: "full plate (fully armored)", armorKo: "전신 판금 갑옷 (완전 무장)",
+    talents: ["Sally Forth", "Mock", "Martial Dominance"],
+    talentsKo: ["과감한 돌격", "조롱", "전투 지배"]
   },
   {
-    id: 14, name: "Ogre", nameKo: "오우거",
-    description: "Huge, dim-witted brutes who love treasure and have a terrifying roar.",
-    descriptionKo: "보물을 탐내고 무시무시한 포효를 지르는 지능이 낮고 거대한 야수.",
-    stat: 3, wounds: 7, speed: 3,
-    attacks: "Club 2 (2 sq)", attacksKo: "단단한 곤봉 2점 (사거리 2칸)",
-    armor: "thick hide (torso)", armorKo: "통가죽 털옷 (몸통 AP 2)",
-    talents: ["Frightening roar", "Smell treasure"],
-    talentsKo: ["심장 저격 포효", "보물 상자 냄새 맡기"]
-  },
-  {
-    id: 15, name: "Pixy", nameKo: "픽시",
+    id: 14, name: "Pixy", nameKo: "픽시",
     description: "Tiny fey with insect wings and a knack for mischief.",
     descriptionKo: "곤충의 날개를 가졌고 장난에 특화된 초소형 요정.",
     stat: 3, wounds: 1, speed: 7,
@@ -292,7 +281,7 @@ export const BESTIARY: Monster[] = [
     talentsKo: ["수면 유도", "매혹", "회피", "사라지기"]
   },
   {
-    id: 16, name: "Redcap", nameKo: "레드캡",
+    id: 15, name: "Redcap", nameKo: "레드캡",
     description: "Gaunt, murderous fairies with blood-soaked caps.",
     descriptionKo: "희생자의 피로 모자를 붉게 물들이는 수척하고 살인적인 요정.",
     stat: 3, wounds: 3, speed: 3,
@@ -302,7 +291,7 @@ export const BESTIARY: Monster[] = [
     talentsKo: ["생명력 흡수", "태클"]
   },
   {
-    id: 17, name: "Restless Dead", nameKo: "떠도는 시체들",
+    id: 16, name: "Restless Dead", nameKo: "떠도는 시체들",
     description: "Skeletons, zombies, bog-men, ghouls.",
     descriptionKo: "스켈레톤, 좀비, 늪지 미라, 구울 등 안식에 들지 못한 망자.",
     stat: 2, wounds: 2, speed: 2,
@@ -312,7 +301,7 @@ export const BESTIARY: Monster[] = [
     talentsKo: ["목 조르기"]
   },
   {
-    id: 18, name: "Scarecrow", nameKo: "허수아비",
+    id: 17, name: "Scarecrow", nameKo: "허수아비",
     description: "Animated by the Gloaming. Having killed their farmers long ago, they wander the fields for prey.",
     descriptionKo: "황혼(Gloaming)의 기운으로 생명을 얻은 존재. 오래전 자신들의 주인을 살해하고 들판을 배회하며 사냥감을 찾습니다.",
     stat: 6, wounds: 6, speed: 2,
@@ -321,6 +310,17 @@ export const BESTIARY: Monster[] = [
     weakness: "fire", weaknessKo: "불",
     talents: ["Summon Murder"],
     talentsKo: ["까마귀 떼 소환"]
+  },
+  {
+    id: 18, name: "Shade", nameKo: "셰이드",
+    description: "Evil incorporeal manifestations of the Gloaming.",
+    descriptionKo: "황혼의 사악한 비물질 현현.",
+    stat: 2, wounds: 3, speed: 4,
+    attacks: "Tendrils 1 (2 sq)", attacksKo: "그림자 촉수 1점 (사거리 2칸)",
+    armor: "none", armorKo: "없음",
+    weakness: "light", weaknessKo: "빛",
+    talents: ["Possess", "Teleport to Shadow", "Slow"],
+    talentsKo: ["빙의", "그림자로 순간이동", "감속"]
   },
   {
     id: 19, name: "Troll", nameKo: "트롤",
