@@ -303,6 +303,9 @@ export interface GameState {
   magickItemResult: { card: Card; suit: string; name: string; text: string } | null;
   currentSessionId: string;
   sessionRewardHistory: SessionRewardRecord[];
+  activeFriendAid: { npcName: string; type: "bonus" | "resolve_discount" } | null;
+  usedFriendAids: Record<string, number>;
+  testFriendBonus: number;
 }
 
 const INITIAL_CHARACTER: Character = {
@@ -411,7 +414,10 @@ const INITIAL_STATE: GameState = {
   folkNpcResult: null,
   magickItemResult: null,
   currentSessionId: "session-initial",
-  sessionRewardHistory: []
+  sessionRewardHistory: [],
+  activeFriendAid: null,
+  usedFriendAids: {},
+  testFriendBonus: 0
 };
 
 // =================================================================
@@ -857,6 +863,9 @@ const sanitizeGameState = (loaded: any): GameState => {
           reasons: Array.isArray(r.reasons) ? r.reasons.filter((x: any) => typeof x === "string") : []
         }))
       : [],
+    activeFriendAid: loaded.activeFriendAid !== undefined ? loaded.activeFriendAid : null,
+    usedFriendAids: loaded.usedFriendAids && typeof loaded.usedFriendAids === 'object' ? loaded.usedFriendAids : {},
+    testFriendBonus: typeof loaded.testFriendBonus === 'number' ? loaded.testFriendBonus : 0,
   };
 };
 
@@ -1167,6 +1176,10 @@ export default function App() {
   const testStatus = state?.testStatus ?? "idle";
   const setTestStatus = (val: any | ((prev: any) => any)) => {
     updateState(s => ({ ...s, testStatus: typeof val === "function" ? val(s.testStatus) : val }));
+  };
+
+  const setTestFriendBonus = (val: number | ((prev: number) => number)) => {
+    updateState(s => ({ ...s, testFriendBonus: typeof val === "function" ? val(s.testFriendBonus) : val }));
   };
 
   // Alchemy state
@@ -2267,6 +2280,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     setTestStatus("idle");
     setTestCurrentTotal(0);
     setTestResolveSpent(0);
+    setTestFriendBonus(0);
   };
 
   const prepareSpellCast = (spellName: string) => {
@@ -2275,6 +2289,29 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     setTestPurpose(`주문 시전: ${spellName}`);
     setActiveTab("dashboard");
     alert(`⚡ 비술 마법 주문 [${spellName}] 시전 판정이 대시보드 테스트 영역에 설정되었습니다.\n완드(Wands) 판정(난이도 14)이 진행됩니다. 필요에 따라 모디파이어를 입력한 후 판정을 치르십시오.`);
+  };
+
+  const hasFoeInSelectedCell = (): boolean => {
+    const selectedIdx = state?.selectedMapCellIdx;
+    if (selectedIdx === null || selectedIdx === undefined) return false;
+    const cell = state.mapGrid[selectedIdx];
+    if (!cell) return false;
+    
+    const cellJournals = state.journals.filter(j => j.x === cell.x && j.y === cell.y);
+    let foundFoe = false;
+    cellJournals.forEach(j => {
+      const combinedText = `${j.text} ${j.systemLog || ""}`.toLowerCase();
+      (state.character.foes || []).forEach(foe => {
+        if (foe.name && combinedText.includes(foe.name.toLowerCase())) {
+          foundFoe = true;
+        }
+      });
+    });
+    return foundFoe;
+  };
+
+  const getFoePenalty = (): number => {
+    return hasFoeInSelectedCell() ? -2 : 0;
   };
 
   const rollGeneralTest = () => {
@@ -2303,7 +2340,10 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
     const cardVal = getCardNumericValue(card);
 
-    const total = cardVal + statVal + testMod - oppPenalty + testHelpStat + testPenalty;
+    const friendBonus = state.activeFriendAid?.type === "bonus" ? 2 : 0;
+    const foePenalty = getFoePenalty();
+
+    const total = cardVal + statVal + testMod - oppPenalty + testHelpStat + testPenalty + friendBonus + foePenalty;
     const isSuccess = total >= 14;
     const isSuitMatch = card.suit === testStat;
     const isGreatSuccess = isSuccess && isSuitMatch;
@@ -2312,6 +2352,11 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     setTestPushed(false);
     setTestCurrentTotal(total);
     setTestResolveSpent(0);
+    setTestFriendBonus(friendBonus);
+
+    if (state.activeFriendAid?.type === "bonus") {
+      updateState(s => ({ ...s, activeFriendAid: null }));
+    }
 
     if (isGreatSuccess) {
       setTestStatus("great_success");
@@ -2323,7 +2368,11 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
     const statName = testStat === "cups" ? "Cups" : testStat === "swords" ? "Swords" : testStat === "coins" ? "Coins" : testStat === "wands" ? "Wands" : "None";
     const statusText = isGreatSuccess ? "극적 성공 (Great Success)" : isSuccess ? "성공 (Success)" : "실패 (Failure)";
-    const logMsg = `[판정 - ${statName}] 목적: ${testPurpose || "일반 판정"} | 카드: ${getCardDisplayName(card)} (${cardVal}) | 합계: ${total} (스탯: ${statVal}, 모디파이어: ${testMod}, 대항패널티: -${oppPenalty}, 헬프: +${testHelpStat}, 부상패널티: ${testPenalty}) -> 결과: ${statusText}`;
+    
+    const friendText = friendBonus > 0 ? `, 친구원조: +2` : "";
+    const foeText = foePenalty !== 0 ? `, 원수패널티: -2` : "";
+
+    const logMsg = `[판정 - ${statName}] 목적: ${testPurpose || "일반 판정"} | 카드: ${getCardDisplayName(card)} (${cardVal}) | 합계: ${total} (스탯: ${statVal}, 모디파이어: ${testMod}, 대항패널티: -${oppPenalty}, 헬프: +${testHelpStat}, 부상패널티: ${testPenalty}${friendText}${foeText}) -> 결과: ${statusText}`;
     addJournalEntry(logMsg);
   };
 
@@ -2365,7 +2414,8 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
       else origCardVal = parseInt(origCard.card) || 0;
     }
 
-    const total = origCardVal + cardVal + statVal + testMod - oppPenalty + testHelpStat + testPenalty;
+    const foePenalty = getFoePenalty();
+    const total = origCardVal + cardVal + statVal + testMod - oppPenalty + testHelpStat + testPenalty + state.testFriendBonus + foePenalty;
     const isSuccess = total >= 14;
 
     setTestDrawnCards([...testDrawnCards, card]);
@@ -2557,6 +2607,105 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     const dateStr = `제 ${state.day}일 제 ${state.watch}워치`;
 
     if (nextVal) {
+      // 1. Check for available hirelings to absorb the wound
+      const eligibleHirelings = (state.character.hirelings || []).filter(h => {
+        const maxW = typeof h.maxWounds === 'number' ? h.maxWounds : 2;
+        const wTaken = typeof h.woundsTaken === 'number' ? h.woundsTaken : 0;
+        return wTaken < maxW;
+      });
+
+      let hirelingAbsorbed = false;
+      let chosenHirelingIdx = -1;
+
+      if (eligibleHirelings.length > 0) {
+        if (eligibleHirelings.length === 1) {
+          const singleH = eligibleHirelings[0];
+          const confirmAbsorb = confirm(`🛡️ [용병 보호] 살아있는 용병 ${singleH.name || "이름 없음"}이(가) 있습니다.\n\n용병이 대신 상처를 입도록 하시겠습니까?\n(확인: 용병이 상처 대신 입음, 취소: 플레이어가 직접 상처 입음)`);
+          if (confirmAbsorb) {
+            hirelingAbsorbed = true;
+            chosenHirelingIdx = state.character.hirelings.findIndex(h => h === singleH);
+          }
+        } else {
+          const listText = eligibleHirelings.map((h, index) => {
+            const maxW = typeof h.maxWounds === 'number' ? h.maxWounds : 2;
+            const wTaken = typeof h.woundsTaken === 'number' ? h.woundsTaken : 0;
+            return `${index + 1}. ${h.name || "이름 없음"} (부상: ${wTaken}/${maxW})`;
+          }).join("\n");
+          const input = prompt(`🛡️ [용병 보호] 당신 대신 상처를 입을 용병을 선택하십시오.\n\n${listText}\n\n대신 상처를 입을 용병의 번호(1~${eligibleHirelings.length})를 입력해 주십시오.\n(취소하거나 빈칸 확인 시 플레이어가 직접 상처를 입습니다):`);
+          if (input !== null && input.trim() !== "") {
+            const selectedIdx = parseInt(input.trim(), 10) - 1;
+            if (selectedIdx >= 0 && selectedIdx < eligibleHirelings.length) {
+              const selectedH = eligibleHirelings[selectedIdx];
+              hirelingAbsorbed = true;
+              chosenHirelingIdx = state.character.hirelings.findIndex(h => h === selectedH);
+            } else {
+              alert("올바르지 않은 번호 선택입니다. 플레이어가 직접 상처를 입습니다.");
+            }
+          }
+        }
+      }
+
+      if (hirelingAbsorbed && chosenHirelingIdx !== -1) {
+        updateState(s => {
+          const newH = [...s.character.hirelings];
+          const h = newH[chosenHirelingIdx];
+          const maxW = typeof h.maxWounds === 'number' ? h.maxWounds : 2;
+          const currentWTaken = typeof h.woundsTaken === 'number' ? h.woundsTaken : 0;
+          const nextWounds = currentWTaken + 1;
+          newH[chosenHirelingIdx] = { ...h, woundsTaken: nextWounds };
+
+          const isDead = nextWounds >= maxW;
+          let nextJournals = [...s.journals];
+
+          // Add Chronicle / Journal for absorbing wound
+          const absorbLogId = generateUniqueId();
+          const absorbLogText = `🛡️ [용병 보호] 동료 용병 ${h.name || "이름 없음"}이(가) 방랑자 대신 ${partNameKo} 상처를 입었습니다. (용병 부상: ${nextWounds}/${maxW})`;
+          
+          nextJournals = [
+            {
+              id: absorbLogId,
+              text: absorbLogText,
+              date: new Date().toLocaleString(),
+              day: s.day,
+              watch: s.watch,
+              pinned: true,
+              systemGenerated: true,
+              chronicle: true,
+              chronicleCategory: "hireling_protection",
+              chronicleIcon: "🛡️"
+            },
+            ...nextJournals
+          ];
+
+          if (isDead) {
+            // Also add death chronicle entry if this killed the hireling!
+            nextJournals = [
+              {
+                id: generateUniqueId(),
+                text: `🕯 [용병 사망] 당신을 대신해 치명적인 상처를 입은 동료 용병 ${h.name || "이름 없음"}이(가) 끝내 목숨을 잃었습니다.`,
+                date: new Date().toLocaleString(),
+                day: s.day,
+                watch: s.watch,
+                pinned: true,
+                systemGenerated: true,
+                chronicle: true,
+                chronicleCategory: "hireling_death",
+                chronicleIcon: "🕯"
+              },
+              ...nextJournals
+            ];
+          }
+
+          return {
+            ...s,
+            character: { ...s.character, hirelings: newH },
+            journals: nextJournals
+          };
+        });
+        alert(`용병이 대신 ${partNameKo} 상처를 입었습니다!`);
+        return; // Don't proceed to assign wound to the player!
+      }
+
       const desc = prompt(
         `🚨 [부상 기록] ${partNameKo} 부위에 어떤 부상을 입었습니까?\n원인이나 사건을 간략히 적어주십시오 (취소 시 부상 취소, 입력 없이 확인 시 '원인 불명 부상'으로 저장):`
       );
@@ -2677,6 +2826,53 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
         });
       }
     }
+  };
+
+  const useFriendAid = (npcName: string) => {
+    if (state.activeFriendAid !== null) {
+      alert("⚠️ 이미 활성화된 친구의 원조 효과가 존재합니다. 현재 효과를 사용한 후 다시 시도해 주십시오.");
+      return;
+    }
+
+    const lastUsedDay = state.usedFriendAids?.[npcName];
+    if (lastUsedDay === state.day) {
+      alert(`⚠️ ${npcName} 친구는 오늘 이미 도움을 주었습니다. 내일 다시 도움을 청할 수 있습니다.`);
+      return;
+    }
+
+    const choice = confirm(`🤝 [친구의 원조 - ${npcName}]\n\n어떤 도움을 받으시겠습니까?\n\n[확인]: 다음 일반 판정에 +2 보너스 획득\n[취소]: 다음 일반 판정에서 결의 소모 1 감소 획득`);
+    
+    const aidType = choice ? "bonus" : "resolve_discount";
+    const aidText = choice ? "일반 판정 +2 보너스" : "결의 소모 1 감소";
+
+    updateState(s => ({
+      ...s,
+      activeFriendAid: {
+        npcName,
+        type: aidType
+      },
+      usedFriendAids: {
+        ...(s.usedFriendAids || {}),
+        [npcName]: s.day
+      },
+      journals: [
+        {
+          id: generateUniqueId(),
+          text: `🤝 [친구의 도움] 현재 구역에 머물고 있는 친구 ${npcName}의 원조를 받았습니다. (효과: ${aidText})`,
+          date: new Date().toLocaleString(),
+          day: s.day,
+          watch: s.watch,
+          pinned: true,
+          systemGenerated: true,
+          chronicle: true,
+          chronicleCategory: "friend_aid",
+          chronicleIcon: "🤝"
+        },
+        ...s.journals
+      ]
+    }));
+
+    alert(`🤝 ${npcName}의 도움이 활성화되었습니다: ${aidText}\n\n대시보드에서 다음 판정을 진행하십시오.`);
   };
 
   const rollMonsterMoraleTest = (monName: string, monStat: number) => {
@@ -2929,7 +3125,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     const sCardVal = getCardNumericValue(sCard);
 
     const cupsStat = state.character.stats.cups;
-    const searchTotal = sCardVal + cupsStat + testPenalty;
+    const searchTotal = sCardVal + cupsStat + testPenalty + getFoePenalty();
     const searchSuccess = searchTotal >= 14;
 
     if (!searchSuccess) {
@@ -2984,7 +3180,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     const hCardVal = getCardNumericValue(hCard);
 
     const coinsStat = state.character.stats.coins;
-    const hireTotal = hCardVal + coinsStat + testPenalty;
+    const hireTotal = hCardVal + coinsStat + testPenalty + getFoePenalty();
     const hireSuccess = hireTotal >= 14;
 
     if (hireSuccess) {
@@ -3053,7 +3249,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
     const cardVal = getCardNumericValue(card);
 
     const coinsStat = state.character.stats.coins;
-    const total = cardVal + coinsStat + testPenalty;
+    const total = cardVal + coinsStat + testPenalty + getFoePenalty();
     const success = total >= 14;
 
     if (success) {
@@ -3502,7 +3698,7 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
 
       const mod = parseInt(buyCatalogItem.coinsMod) || 0;
       const coinsStat = state.character.stats.coins;
-      const total = cardVal + coinsStat + mod + testPenalty;
+      const total = cardVal + coinsStat + mod + testPenalty + getFoePenalty();
       const success = total >= 14;
 
       setBuyTestResult({
@@ -3766,6 +3962,36 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                 캐릭터 스탯, 보정치, 대항 페널티(Opposed)를 결합하여 운명의 판정을 드로우합니다. (성공 기준: 14점 이상)
               </p>
 
+              {hasFoeInSelectedCell() && (
+                <div style={{
+                  background: "rgba(220, 53, 69, 0.15)",
+                  border: "1px solid var(--color-crimson)",
+                  borderRadius: "4px",
+                  padding: "8px 10px",
+                  marginBottom: "10px",
+                  fontSize: "0.75rem",
+                  color: "#ff8b94",
+                  lineHeight: "1.3"
+                }}>
+                  ⚠️ <strong>원수의 위협:</strong> 이 구역에 원수가 도사리고 있어 모든 판정에 <strong>-2 페널티</strong>가 적용됩니다.
+                </div>
+              )}
+
+              {state.activeFriendAid && (
+                <div style={{
+                  background: "rgba(76, 175, 80, 0.15)",
+                  border: "1px solid #4caf50",
+                  borderRadius: "4px",
+                  padding: "8px 10px",
+                  marginBottom: "10px",
+                  fontSize: "0.75rem",
+                  color: "#a5d6a7",
+                  lineHeight: "1.3"
+                }}>
+                  🤝 <strong>친구의 도움 활성화 ({state.activeFriendAid.npcName}):</strong> {state.activeFriendAid.type === "bonus" ? "다음 판정에 +2 보너스가 가산됩니다." : "다음 판정 보정에서 첫 결의 소모가 면제됩니다."}
+                </div>
+              )}
+
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <div>
                   <label style={{ fontSize: "0.78rem", fontWeight: "bold", display: "block", marginBottom: "3px" }}>판정 능력치 (Stat):</label>
@@ -3928,29 +4154,45 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                           <button
                             className="btn-medieval-small"
                             style={{ flex: 1, fontSize: "0.7rem" }}
-                            disabled={state.character.resolve <= 0}
+                            disabled={state.character.resolve <= 0 && !(state.activeFriendAid?.type === "resolve_discount" && testResolveSpent === 0)}
                             onClick={() => {
-                              if (state.character.resolve <= 0) {
+                              const isDiscountActive = state.activeFriendAid?.type === "resolve_discount" && testResolveSpent === 0;
+                              if (state.character.resolve <= 0 && !isDiscountActive) {
                                 alert("결의(Resolve)가 없습니다!");
                                 return;
                               }
                               const newTotal = testCurrentTotal + testResolveSpent + 1;
                               const newResolveSpent = testResolveSpent + 1;
                               setTestResolveSpent(newResolveSpent);
-                              updateState(s => ({
-                                ...s,
-                                character: { ...s.character, resolve: Math.max(0, s.character.resolve - 1) }
-                              }));
+                              updateState(s => {
+                                const resolveChange = isDiscountActive ? 0 : -1;
+                                const nextState = {
+                                  ...s,
+                                  character: { ...s.character, resolve: Math.max(0, s.character.resolve + resolveChange) }
+                                };
+                                if (isDiscountActive) {
+                                  nextState.activeFriendAid = null; // Consume discount
+                                }
+                                return nextState;
+                              });
                               if (newTotal >= 14 && testStatus === "failed") {
                                 setTestStatus("success");
-                                addJournalEntry(`[판정 결의 보정] 결의 ${newResolveSpent}점 소비하여 총합 ${newTotal}점 달성 → 성공으로 전환!`);
-                                alert(`✨ 결의 ${newResolveSpent}점을 소비하여 총합 ${newTotal}점 달성! 판정이 성공으로 전환되었습니다.`);
-                              } else if (newTotal >= 14) {
-                                addJournalEntry(`[판정 결의 추가 소비] 결의 소비 ${newResolveSpent}점, 총합 ${newTotal}점`);
+                                const logText = isDiscountActive
+                                  ? `[판정 결의 보정 - 친구의 원조] 친구 ${state.activeFriendAid?.npcName || "이름 없음"}의 도움으로 결의를 소모하지 않고 총합 ${newTotal}점 달성 → 성공으로 전환!`
+                                  : `[판정 결의 보정] 결의 ${newResolveSpent}점 소비하여 총합 ${newTotal}점 달성 → 성공으로 전환!`;
+                                addJournalEntry(logText);
+                                alert(`✨ ${isDiscountActive ? "친구의 도움으로 결의 소모 없이" : `결의 ${newResolveSpent}점을 소비하여`} 총합 ${newTotal}점 달성! 판정이 성공으로 전환되었습니다.`);
+                              } else {
+                                const logText = isDiscountActive
+                                  ? `[판정 결의 보정 - 친구의 원조] 친구 ${state.activeFriendAid?.npcName || "이름 없음"}의 도움으로 결의 소모 없이 보정 적용 (총합 ${newTotal}점)`
+                                  : `[판정 결의 추가 소비] 결의 소비 ${newResolveSpent}점, 총합 ${newTotal}점`;
+                                addJournalEntry(logText);
                               }
                             }}
                           >
-                            결의 1점 소비 (+1)
+                            {state.activeFriendAid?.type === "resolve_discount" && testResolveSpent === 0 
+                              ? "🤝 친구 원조 결의 보정 (+1, 결의 소모 0)" 
+                              : "결의 1점 소비 (+1)"}
                           </button>
                         </div>
                       </div>
@@ -6794,10 +7036,16 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                               else if (isFoe) { typeKo = "원수"; color = "var(--color-crimson)"; }
                               else if (isHireling) { typeKo = "용병"; color = "var(--color-gold)"; }
 
+                              const lastUsedDay = state.usedFriendAids?.[name];
+                              const isAidedToday = lastUsedDay === state.day;
+
                               return (
-                                <span
+                                <div
                                   key={name}
                                   style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "5px",
                                     fontSize: "0.75rem",
                                     background: "rgba(0,0,0,0.3)",
                                     border: `1px solid ${color}`,
@@ -6806,8 +7054,29 @@ ${char.epilogue ? char.epilogue : "*아직 작성된 마지막 은퇴 기록/에
                                     borderRadius: "3px"
                                   }}
                                 >
-                                  {name} <span style={{ fontSize: "0.65rem", color }}>({typeKo})</span>
-                                </span>
+                                  <span>{name} <span style={{ fontSize: "0.65rem", color }}>({typeKo})</span></span>
+                                  {isFriend && (
+                                    <button
+                                      className="btn-medieval-small"
+                                      style={{
+                                        fontSize: "0.62rem",
+                                        padding: "1px 4px",
+                                        marginLeft: "4px",
+                                        background: isAidedToday ? "rgba(255,255,255,0.05)" : "rgba(76, 175, 80, 0.2)",
+                                        border: `1px solid ${isAidedToday ? "#555" : "#4caf50"}`,
+                                        color: isAidedToday ? "#888" : "#4caf50",
+                                        cursor: isAidedToday ? "not-allowed" : "pointer",
+                                        height: "18px",
+                                        lineHeight: "1"
+                                      }}
+                                      disabled={isAidedToday}
+                                      onClick={() => useFriendAid(name)}
+                                      title={isAidedToday ? "오늘 이미 도움을 받았습니다." : "친구의 도움을 요청합니다."}
+                                    >
+                                      {isAidedToday ? "🤝 오늘원조완료" : "🤝 원조받기"}
+                                    </button>
+                                  )}
+                                </div>
                               );
                             })}
                           </div>
