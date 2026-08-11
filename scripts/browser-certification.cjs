@@ -6,7 +6,11 @@ const chromePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome
 async function audit(name, browserType, launchOptions = {}) {
   const browser = await browserType.launch({ headless: true, ...launchOptions });
   const results = [];
-  for (const viewport of [{ label: "desktop", width: 1440, height: 900 }, { label: "mobile-360", width: 360, height: 800 }]) {
+  for (const viewport of [
+    { label: "ultrawide-3440", width: 3440, height: 1440 },
+    { label: "desktop", width: 1440, height: 900 },
+    { label: "mobile-360", width: 360, height: 800 },
+  ]) {
     const context = await browser.newContext({ viewport, reducedMotion: "reduce", locale: "ko-KR" });
     const page = await context.newPage();
     const consoleErrors = [];
@@ -59,17 +63,34 @@ async function audit(name, browserType, launchOptions = {}) {
       const entry = performance.getEntriesByType("navigation")[0];
       return entry ? { domContentLoaded: entry.domContentLoadedEventEnd, load: entry.loadEventEnd, transfer: entry.transferSize } : null;
     });
+    await page.getByRole("button", { name: "인물 기록" }).click();
     const printedRulebookVisual = await page.evaluate(() => {
       const panel = document.querySelector(".panel");
       const title = document.querySelector(".gloam-title");
+      const shell = document.querySelector(".app-shell");
+      const main = document.querySelector("main");
+      const firstLabel = document.querySelector("label");
+      const firstButton = document.querySelector("button");
+      const attributeInput = document.querySelector('.stat-box input[type="number"]');
       const bodyStyle = getComputedStyle(document.body);
       const panelStyle = panel ? getComputedStyle(panel) : null;
       const titleStyle = title ? getComputedStyle(title) : null;
       const prohibitedGradients = [...document.querySelectorAll("*")].filter((element) => getComputedStyle(element).backgroundImage.includes("gradient")).length;
       return {
         bodyFont: bodyStyle.fontFamily,
+        rootFontSize: getComputedStyle(document.documentElement).fontSize,
         titleFont: titleStyle?.fontFamily || "",
-        paperBackground: getComputedStyle(document.querySelector(".app-shell") || document.body).backgroundColor,
+        paperBackground: getComputedStyle(shell || document.body).backgroundColor,
+        shellWidth: shell ? Number(shell.getBoundingClientRect().width.toFixed(1)) : 0,
+        mainWidth: main ? Number(main.getBoundingClientRect().width.toFixed(1)) : 0,
+        labelFontSize: firstLabel ? getComputedStyle(firstLabel).fontSize : "",
+        buttonFontSize: firstButton ? getComputedStyle(firstButton).fontSize : "",
+        attributeInput: attributeInput ? {
+          appearance: getComputedStyle(attributeInput).appearance,
+          textAlign: getComputedStyle(attributeInput).textAlign,
+          paddingLeft: getComputedStyle(attributeInput).paddingLeft,
+          paddingRight: getComputedStyle(attributeInput).paddingRight,
+        } : null,
         panelRadius: panelStyle?.borderRadius || "",
         panelShadow: panelStyle?.boxShadow || "",
         prohibitedGradients,

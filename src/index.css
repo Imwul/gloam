@@ -372,6 +372,21 @@ main {
   text-align: center;
 }
 
+/* Attribute values read as handwritten record cells, not offset steppers. */
+
+.stat-box input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+  padding-inline: 0;
+}
+
+.stat-box input[type="number"]::-webkit-inner-spin-button,
+.stat-box input[type="number"]::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 .metric strong {
   display: block;
   margin-top: .35rem;
@@ -2035,5 +2050,81 @@ h3 {
 
   .metric:first-of-type {
     border-left: 0;
+  }
+}
+
+/*
+ * Ultrawide reading edition.
+ * Keep the established sheet at ordinary desktop sizes, then open it into a
+ * two-page rulebook spread on the owner's 3440 × 1440 display.
+ */
+
+@media (min-width: 2200px) {
+  :root {
+    font-size: 18px;
+  }
+
+  .app-shell {
+    width: min(2400px, 92vw);
+  }
+
+  main {
+    max-width: 2160px;
+    padding: 5.5rem clamp(4.5rem, 4.5vw, 7rem) 7rem;
+  }
+
+  .gloam-title {
+    font-size: clamp(6.4rem, 5vw, 7.5rem);
+  }
+
+  .app-kicker,
+  .tabs button,
+  .top-actions button,
+  .top-actions .integrity {
+    font-size: .78rem;
+  }
+
+  label,
+  button,
+  input,
+  select,
+  textarea,
+  .panel-header p,
+  .notice,
+  .talent p,
+  .compact-card p,
+  .bestiary-card p,
+  summary {
+    font-size: .84rem;
+  }
+
+  h3 {
+    font-size: .94rem;
+  }
+
+  small,
+  .reference-note,
+  .stat-box span,
+  .metric span,
+  .deck-counts span,
+  .time-display strong,
+  .bestiary-card dt,
+  .map-cell header > span {
+    font-size: .76rem;
+  }
+
+  .playing-card {
+    flex-basis: 6.5rem;
+    width: 6.5rem;
+  }
+}
+
+@media (min-width: 3000px) {
+  :root {
+    font-size: 22px;
+  }
+
+  body {
+    line-height: 1.55;
   }
 }
