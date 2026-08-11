@@ -25,11 +25,10 @@ Hollow Press의 `Vermis I` 제품 페이지와 사용자가 제공한 내지 캡
 
 - 본문·기입란: Hahmlet
 - 한글 장 제목·도감 표제: Song Myung 400, 로컬 WOFF2
-- GLOAM 표제: 사용자가 제공한 1492 Quadrata Lim의 `GLOAM` 전용 로컬 WOFF2 subset
-- 영문 장 색인·원문 고유명: 사용자가 제공한 Deutsch Gothic 원본 TTF
+- GLOAM 표제·영문 장 색인·원문 고유명: 사용자가 제공한 1492 Quadrata Lim 원본 TTF
 - 3440×1440 기본 본문: 22px
 
-Song Myung은 OFL-1.1 패키지로 포함되며 외부 서체 요청 없이 오프라인에서 표시된다. 1492 Quadrata Lim은 제공 파일의 메타데이터에 따라 비상업용 제한판으로 기록했다. Deutsch Gothic은 변형 금지 조건에 따라 변환하지 않은 TTF와 원문 배포문을 함께 싣는다. 원본 1994 TTF의 legacy metrics table을 거부하는 Firefox에서는 bundled UnifrakturMaguntia로 자동 fallback한다.
+Song Myung은 OFL-1.1 패키지로 포함되며 외부 서체 요청 없이 오프라인에서 표시된다. 1492 Quadrata Lim은 제공된 원본 TTF를 변형 없이 포함하며, 파일 메타데이터에 따라 비상업용 제한판으로 기록했다. 상업 이용 전에는 적합한 라이선스를 확인해야 한다.
 
 ## 원문 표기
 
@@ -98,9 +97,8 @@ WebKit의 오프라인 재로드 자동화 내부 오류는 이전 인증 때와
 | --- | ---: |
 | gameplay 앱 JS | 151.42KB / gzip 49.39KB |
 | vendor JS | 189.63KB / gzip 59.65KB |
-| CSS | 37.95KB / gzip 8.46KB |
-| 1492 Quadrata Lim subset | 7.88KB |
-| Deutsch Gothic original TTF | 29.70KB |
+| CSS | 37.43KB / gzip 8.33KB |
+| 1492 Quadrata Lim original TTF | 68.25KB |
 | Song Myung WOFF2 | 314.51KB |
 | Hahmlet + fallback Unifraktur | 691.27KB |
 
