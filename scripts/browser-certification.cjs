@@ -41,12 +41,12 @@ async function audit(name, browserType, launchOptions = {}) {
     }));
 
     await page.getByRole("checkbox", { name: /몸통/ }).click();
-    await page.getByRole("button", { name: "괴수 도감과 막간" }).click();
+    await page.getByRole("button", { name: "Bestiary & Downtime" }).click();
     await page.getByRole("checkbox", { name: "야영지·정착지 확인" }).click();
     await page.getByRole("checkbox", { name: "식사 확인" }).click();
     const restSelectionSynchronized = await page.getByRole("button", { name: "다음 날 아침 · 부상 하나 회복" }).isEnabled();
 
-    await page.getByRole("button", { name: "판정과 전투" }).click();
+    await page.getByRole("button", { name: "Tests & Combat" }).click();
     await page.getByRole("button", { name: "괴수 들이기" }).click();
     await page.getByRole("button", { name: "플레이어 4장까지 · 괴수마다 3장" }).click();
     await page.getByRole("heading", { name: /플레이어 손패/ }).scrollIntoViewIfNeeded();
@@ -63,7 +63,7 @@ async function audit(name, browserType, launchOptions = {}) {
       const entry = performance.getEntriesByType("navigation")[0];
       return entry ? { domContentLoaded: entry.domContentLoadedEventEnd, load: entry.loadEventEnd, transfer: entry.transferSize } : null;
     });
-    await page.getByRole("button", { name: "인물 기록" }).click();
+    await page.getByRole("button", { name: "Create Your Character" }).click();
     const printedRulebookVisual = await page.evaluate(() => {
       const panel = document.querySelector(".panel");
       const title = document.querySelector(".gloam-title");
@@ -75,7 +75,7 @@ async function audit(name, browserType, launchOptions = {}) {
       const bodyStyle = getComputedStyle(document.body);
       const panelStyle = panel ? getComputedStyle(panel) : null;
       const titleStyle = title ? getComputedStyle(title) : null;
-      const prohibitedGradients = [...document.querySelectorAll("*")].filter((element) => getComputedStyle(element).backgroundImage.includes("gradient")).length;
+      const layeredPrintTextures = [...document.querySelectorAll("*")].filter((element) => getComputedStyle(element).backgroundImage.includes("gradient")).length;
       return {
         bodyFont: bodyStyle.fontFamily,
         rootFontSize: getComputedStyle(document.documentElement).fontSize,
@@ -93,7 +93,7 @@ async function audit(name, browserType, launchOptions = {}) {
         } : null,
         panelRadius: panelStyle?.borderRadius || "",
         panelShadow: panelStyle?.boxShadow || "",
-        prohibitedGradients,
+        layeredPrintTextures,
       };
     });
     const serviceWorker = await page.evaluate(async () => ({
@@ -111,7 +111,7 @@ async function audit(name, browserType, launchOptions = {}) {
       await page.reload({ waitUntil: "domcontentloaded", timeout: 5000 });
       offlineReload = true;
       await page.getByRole("status").waitFor({ state: "visible", timeout: 5000 });
-      await page.getByRole("button", { name: "판정과 전투" }).click();
+      await page.getByRole("button", { name: "Tests & Combat" }).click();
       await page.getByRole("heading", { name: /플레이어 손패/ }).scrollIntoViewIfNeeded();
       await page.waitForTimeout(250);
       offlineApp = await page.evaluate(() => ({

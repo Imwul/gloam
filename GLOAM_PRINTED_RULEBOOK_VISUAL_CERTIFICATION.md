@@ -1,5 +1,7 @@
 # GLOAM — 인쇄 룰북판 시각 구현 인증
 
+> 이 문서는 흑백 인쇄판의 이전 인증 기록이다. 2026-08-11의 Vermis풍 시각 전환이 현재 구현을 대체하며, 최신 결과는 `GLOAM_VERMIS_VISUAL_CERTIFICATION.md`에 기록한다.
+
 ## 시각 기준
 
 `Gloam1.02.pdf`, `Gloam Combat Example.pdf`, `Gloam Char Sheet.pdf`의 지면 구성과 기록표를 기준으로 삼았다. 게임 규칙·상태·저장 구조에는 손대지 않았다.

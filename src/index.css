@@ -1,4 +1,28 @@
 @font-face {
+  font-family: "1492 Quadrata Lim";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/1492-Quadrata-Lim.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Deutsch Gothic";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/Deutsch.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Song Myung";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("@fontsource/song-myung/files/song-myung-korean-400-normal.woff2") format("woff2");
+}
+
+@font-face {
   font-family: "Hahmlet";
   font-style: normal;
   font-weight: 100 900;
@@ -199,7 +223,7 @@ small,
 .gloam-title {
   margin: 0;
   color: #f1dfbd;
-  font-family: "UnifrakturMaguntia", "Times New Roman", serif;
+  font-family: "1492 Quadrata Lim", "UnifrakturMaguntia", "Times New Roman", serif;
   font-size: clamp(2.6rem, 6vw, 4.4rem);
   font-weight: 400;
   line-height: .82;
@@ -2126,5 +2150,637 @@ h3 {
 
   body {
     line-height: 1.55;
+  }
+}
+
+/* Vermis-inspired lost guide edition */
+
+:root {
+  --ink: #d7d0a6;
+  --muted: #918e70;
+  --paper: #0d100c;
+  --paper-2: #161910;
+  --line: #3f5134;
+  --line-strong: #8a3127;
+  --accent: #a94736;
+  --accent-dark: #70251f;
+  --accent-2: #688e3f;
+  --gold: #c1a23f;
+  --danger: #c64b3d;
+  --bruise: #71304f;
+  --night: #080a07;
+  --vellum: #c8c29e;
+  --vellum-dark: #a8a180;
+  color: var(--ink);
+  background: var(--night);
+}
+
+html,
+body {
+  color: var(--ink);
+  background-color: var(--night);
+  background-image:
+    repeating-linear-gradient(0deg, rgb(255 244 187 / 2%) 0 1px, transparent 1px 4px),
+    radial-gradient(circle at 12% 18%, #24351d 0, transparent 23rem),
+    radial-gradient(circle at 88% 72%, #35191c 0, transparent 28rem);
+}
+
+body {
+  text-shadow: 0 0 .01px currentColor;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline-color: #d6aa3c;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+.app-shell {
+  background-color: #0c0f0b;
+  background-image:
+    repeating-linear-gradient(90deg, transparent 0 47px, rgb(115 144 64 / 3%) 47px 48px),
+    repeating-linear-gradient(0deg, rgb(228 212 140 / 2%) 0 1px, transparent 1px 5px);
+  border-inline: 1px solid #3e5530;
+  box-shadow: 0 0 0 2px #151b12, 0 0 48px #000;
+}
+
+.topbar {
+  gap: 1.7rem;
+  color: #d4cda0;
+  background-color: #0a0c09;
+  background-image:
+    radial-gradient(ellipse at center, rgb(71 94 41 / 28%), transparent 58%),
+    repeating-linear-gradient(0deg, transparent 0 3px, rgb(216 203 143 / 2%) 3px 4px);
+  border-top: 8px double #486438;
+  border-bottom: 1px solid #822d27;
+}
+
+.topbar::before {
+  top: .45rem;
+  height: .8rem;
+  color: #bfa83c;
+  background: #0a0c09;
+  border-color: #7b2c25;
+  content: "✦     †     ✦";
+  font-family: "Song Myung", serif;
+  letter-spacing: .45em;
+}
+
+.gloam-title {
+  color: #7fa24b;
+  font-weight: 400 !important;
+  text-shadow: 3px 3px 0 #5d1d1a, -1px -1px 0 #c2a43e;
+  filter: saturate(.78) contrast(1.18);
+}
+
+.app-kicker {
+  color: #c05443;
+  font-family: "Song Myung", "Hahmlet", serif;
+  letter-spacing: .08em;
+}
+
+.top-actions {
+  padding-block: .42rem;
+  background: #0b0d0a;
+  border-top: 1px solid #466037;
+  border-bottom: 5px double #7f2c27;
+}
+
+.top-actions button,
+.top-actions button.danger,
+.top-actions .integrity {
+  color: #c8c19a;
+  border-color: #3d4d32;
+  font-family: "Song Myung", "Hahmlet", serif;
+}
+
+.top-actions button:hover:not(:disabled) {
+  color: #15150f;
+  background: #a9a372;
+  border-color: #8d3329;
+}
+
+.top-actions .integrity.ok {
+  color: #86a956;
+}
+
+.top-actions .integrity.bad,
+.top-actions button.danger,
+.save-error {
+  color: #c65748;
+}
+
+.tabs {
+  background: #10130e;
+  border-top: 1px solid #384a2e;
+  border-bottom: 6px double #7e3028;
+}
+
+.tabs button {
+  color: #aaa483;
+  border-color: #35432d;
+  font-family: "Song Myung", "Hahmlet", serif;
+  letter-spacing: -.01em;
+}
+
+.tabs button:hover:not(:disabled) {
+  color: #d4cc9f;
+  background: #192016;
+}
+
+.tabs button.active {
+  color: #6d251f;
+  background: #d2cda6;
+  border-bottom-color: #c34836;
+  box-shadow: inset 0 0 0 2px #172012;
+}
+
+main.chapter {
+  position: relative;
+  min-height: 68vh;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 3px, rgb(229 218 153 / 2%) 3px 4px),
+    radial-gradient(circle at 85% 12%, rgb(81 112 52 / 16%), transparent 22rem),
+    radial-gradient(circle at 8% 80%, rgb(119 38 37 / 12%), transparent 26rem);
+  border-inline: 1px solid var(--line);
+  box-shadow: inset 0 0 0 4px #080a07, inset 0 0 0 5px var(--line);
+}
+
+main.chapter-character,
+main.chapter-map,
+main.chapter-log {
+  --ink: #191a13;
+  --muted: #4f4d3b;
+  --paper: #c8c29e;
+  --paper-2: #b7b08c;
+  --line: #68664f;
+  --line-strong: #2a2c21;
+  --accent: #762c24;
+  --accent-dark: #4e1c18;
+  --accent-2: #315331;
+  --gold: #8b6e27;
+  --danger: #7f291f;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    repeating-linear-gradient(0deg, rgb(39 39 27 / 3%) 0 1px, transparent 1px 5px),
+    radial-gradient(circle at 18% 16%, rgb(255 249 199 / 32%), transparent 24rem),
+    radial-gradient(circle at 82% 76%, rgb(92 78 44 / 14%), transparent 30rem);
+}
+
+.panel {
+  padding: 1.35rem 1.15rem 2rem;
+  color: var(--ink);
+  background: rgb(6 8 5 / 36%);
+  border: 1px solid var(--line);
+  box-shadow: 5px 5px 0 rgb(0 0 0 / 28%);
+}
+
+.chapter-character .panel,
+.chapter-map .panel,
+.chapter-log .panel {
+  background: rgb(231 225 181 / 18%);
+  box-shadow: 4px 4px 0 rgb(39 36 23 / 18%);
+}
+
+.panel.span-2 {
+  padding-top: 1.55rem;
+  border: 3px double var(--line-strong);
+}
+
+.panel-header {
+  position: relative;
+  margin-bottom: 1.45rem;
+  padding: .15rem .2rem 1rem;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.panel-header::after {
+  position: absolute;
+  right: .2rem;
+  bottom: -.28rem;
+  left: .2rem;
+  height: 4px;
+  background: repeating-linear-gradient(90deg, var(--accent) 0 13%, transparent 13% 15%, var(--accent-2) 15% 27%, transparent 27% 29%);
+  content: "";
+  opacity: .82;
+}
+
+h2,
+h3,
+summary {
+  font-family: "Song Myung", "Hahmlet", serif;
+  font-weight: 400 !important;
+}
+
+h2 {
+  color: #84a651;
+  letter-spacing: -.055em;
+  text-shadow: 1px 1px 0 #5d211c;
+}
+
+.chapter-character h2,
+.chapter-map h2,
+.chapter-log h2 {
+  color: var(--accent);
+  text-shadow: 1px 1px 0 #d9d2aa;
+}
+
+h3,
+summary {
+  color: var(--accent);
+  letter-spacing: -.025em;
+}
+
+.panel:nth-child(even) h2 {
+  color: #bd523e;
+}
+
+.chapter-character .panel:nth-child(even) h2,
+.chapter-map .panel:nth-child(even) h2,
+.chapter-log .panel:nth-child(even) h2 {
+  color: #2e5130;
+}
+
+.panel-header p,
+small,
+.reference-note,
+label {
+  color: var(--muted);
+}
+
+input,
+select,
+textarea {
+  color: var(--ink);
+  background-color: #0b0e09;
+  border-color: var(--line);
+  caret-color: var(--accent);
+}
+
+select {
+  background-color: #11160e;
+}
+
+textarea {
+  background-color: rgb(4 6 4 / 48%);
+  border: 1px solid var(--line);
+}
+
+.chapter-character :is(input, select, textarea),
+.chapter-map :is(input, select, textarea),
+.chapter-log :is(input, select, textarea) {
+  color: var(--ink);
+  background-color: rgb(232 226 183 / 25%);
+}
+
+.chapter-character select,
+.chapter-map select,
+.chapter-log select {
+  background-color: #bdb793;
+}
+
+button {
+  color: #d6cea4;
+  background: #0c0f0b;
+  border-color: #7f332a;
+  font-family: "Hahmlet", serif;
+}
+
+button:hover:not(:disabled),
+button.danger:hover:not(:disabled),
+.icon.danger:hover:not(:disabled) {
+  color: #10120d;
+  background: #99a25b;
+  border-color: #c14b39;
+}
+
+button.danger,
+.icon.danger {
+  color: #ca5846;
+  border-color: #8b3128;
+}
+
+.chapter-character button,
+.chapter-map button,
+.chapter-log button {
+  color: #e0dab1;
+  background: #25271d;
+  border-color: #4f4e3c;
+}
+
+.chapter-character button:hover:not(:disabled),
+.chapter-map button:hover:not(:disabled),
+.chapter-log button:hover:not(:disabled) {
+  color: #efe7bd;
+  background: #6f2a23;
+  border-color: #6f2a23;
+}
+
+.stats-row,
+.catalog,
+.wound-grid,
+.armor-grid,
+.deck-counts,
+.time-display,
+.map-grid {
+  border-color: var(--line-strong);
+}
+
+.stat-box,
+.metric,
+.wound-grid label,
+.armor-grid label,
+.deck-counts span,
+.time-display strong,
+.initiative-slot,
+.map-cell {
+  color: var(--ink);
+  background: rgb(4 7 4 / 32%);
+  border-color: var(--line);
+}
+
+.chapter-character :is(.stat-box, .metric, .wound-grid label, .armor-grid label),
+.chapter-map .map-cell,
+.chapter-log :is(.deck-counts span, .time-display strong) {
+  background: rgb(233 226 181 / 20%);
+}
+
+.stat-box span,
+.metric span,
+.map-cell header > span,
+.oracle-result > strong {
+  color: var(--accent);
+  font-family: "Song Myung", "Hahmlet", serif;
+}
+
+.metric strong {
+  color: var(--ink);
+}
+
+.notice,
+.notice.ok,
+.notice.warn,
+.notice.bad {
+  color: var(--ink);
+  background: rgb(7 9 6 / 42%);
+  border-color: var(--line);
+  border-left-color: var(--accent);
+}
+
+.notice.ok {
+  color: #9bb56f;
+  border-left-color: var(--accent-2);
+}
+
+.notice.warn {
+  color: #c9ad58;
+  border-left-color: var(--gold);
+}
+
+.notice.bad {
+  color: #d36251;
+  border-left-color: var(--danger);
+}
+
+.chapter-character .notice,
+.chapter-map .notice,
+.chapter-log .notice {
+  color: var(--ink);
+  background: rgb(63 58 37 / 9%);
+}
+
+.goal-row,
+.hireling,
+.inventory-list article,
+.bound-list article,
+.log-list article,
+.talent,
+.compact-card,
+.monster-card,
+.bestiary-card,
+.event-result,
+.oracle-result,
+.initiative-slot,
+.catalog-item,
+.record-list li,
+details {
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.goal-row:nth-of-type(even),
+.hireling:nth-of-type(even),
+.inventory-list article:nth-child(even),
+.bound-list article:nth-child(even),
+.log-list article:nth-child(even),
+.compact-card:nth-child(even),
+.catalog-item:nth-child(even),
+.map-cell:nth-child(even) {
+  background: rgb(101 129 63 / 9%);
+}
+
+.chapter-character :is(.goal-row:nth-of-type(even), .inventory-list article:nth-child(even), .catalog-item:nth-child(even)),
+.chapter-map .map-cell:nth-child(even),
+.chapter-log .log-list article:nth-child(even) {
+  background: rgb(89 73 42 / 11%);
+}
+
+.talent p,
+.compact-card p,
+.bestiary-card p,
+.chapter-tests p,
+.chapter-magic p,
+.chapter-downtime p {
+  color: #b8b18e;
+}
+
+.bestiary-grid {
+  gap: 1.1rem;
+  padding-top: .75rem;
+  border: 0;
+}
+
+.bestiary-card {
+  position: relative;
+  padding: 2.25rem 1rem 1.1rem !important;
+  background: #090c08;
+  border: 1px solid #3f6135 !important;
+  box-shadow: inset 0 0 0 3px #11150e;
+}
+
+.bestiary-card::before {
+  position: absolute;
+  top: .55rem;
+  left: 50%;
+  width: 3.3rem;
+  height: 1.25rem;
+  border: 1px solid #547944;
+  border-bottom: 0;
+  border-radius: 50% 50% 0 0;
+  content: "";
+  transform: translateX(-50%);
+}
+
+.bestiary-card:nth-child(3n + 2) {
+  border-color: #7f332d !important;
+}
+
+.bestiary-card:nth-child(3n) {
+  border-color: #7c6930 !important;
+}
+
+.bestiary-card h3 {
+  color: #8eac5b;
+  font-size: 1.05rem;
+}
+
+.bestiary-card:nth-child(even) h3 {
+  color: #c25242;
+}
+
+.bestiary-card dl {
+  border-color: #465638;
+}
+
+.map-cell.visited {
+  background: rgb(51 89 50 / 22%);
+  outline-color: var(--accent-2);
+}
+
+.playing-card {
+  background: #090b08;
+  border: 2px solid #8c352c;
+  box-shadow: 3px 3px 0 #263820;
+  filter: saturate(.82) contrast(1.08) sepia(.08);
+}
+
+.event-result,
+.oracle-result {
+  background: rgb(4 7 4 / 42%);
+  border-color: var(--line-strong);
+}
+
+.chapter-map :is(.event-result, .oracle-result) {
+  background: rgb(58 54 35 / 10%);
+}
+
+summary {
+  color: var(--accent);
+}
+
+::selection {
+  color: #0b0d09;
+  background: #9eaa5f;
+}
+
+@media (max-width: 760px) {
+  main.chapter {
+    border-inline: 0;
+    box-shadow: inset 0 0 0 2px #080a07, inset 0 0 0 3px var(--line);
+  }
+
+  .panel,
+  .panel.span-2 {
+    padding: 1.1rem .8rem 1.6rem;
+  }
+
+  .bestiary-card {
+    padding-inline: .8rem !important;
+  }
+}
+
+/* Canonical chapter index and owner-sized ultrawide masthead. */
+.top-actions,
+.top-actions button,
+.top-actions button.danger,
+.top-actions .integrity,
+.tabs,
+.tabs button,
+.stat-box span,
+.talent-grid h3,
+.talent strong,
+.bestiary-card h3,
+select,
+summary,
+.history-list {
+  font-family: "Deutsch Gothic", "Hahmlet", "AppleMyungjo", serif;
+  font-synthesis: none;
+  font-weight: 400 !important;
+  letter-spacing: .02em;
+}
+
+.top-actions button,
+.top-actions button.danger,
+.top-actions .integrity {
+  font-size: .96rem;
+  letter-spacing: .02em;
+  line-height: 1.1;
+  text-transform: none;
+}
+
+.tabs button {
+  min-height: 4.85rem;
+  padding-inline: .55rem;
+  font-size: 1rem;
+  letter-spacing: .02em;
+  line-height: 1.08;
+  overflow-wrap: normal;
+  text-wrap: balance;
+  white-space: normal;
+}
+
+.stat-box span {
+  font-size: .8rem;
+  text-transform: none;
+}
+
+.talent-grid h3,
+.bestiary-card h3 {
+  font-size: 1.24rem;
+}
+
+.talent strong {
+  font-size: 1.04rem;
+}
+
+@media (min-width: 2200px) {
+  .top-actions button,
+  .top-actions .integrity {
+    min-height: 4rem;
+    font-size: 1.08rem;
+  }
+
+  .tabs button {
+    min-height: 5.15rem;
+    font-size: 1.12rem;
+  }
+}
+
+/* The unmodified 1994 TTF renders in Blink/WebKit, but Firefox rejects one
+   legacy metrics table. Keep the supplied file untouched and use the bundled
+   gothic fallback only in Gecko. */
+@-moz-document url-prefix() {
+  .top-actions,
+  .top-actions button,
+  .top-actions button.danger,
+  .top-actions .integrity,
+  .tabs,
+  .tabs button,
+  .stat-box span,
+  .talent-grid h3,
+  .talent strong,
+  .bestiary-card h3,
+  select,
+  summary,
+  .history-list {
+    font-family: "UnifrakturMaguntia", "Hahmlet", "AppleMyungjo", serif;
   }
 }

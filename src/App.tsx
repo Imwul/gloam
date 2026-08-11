@@ -10,7 +10,6 @@ import {
   FOLK_ROAD_KO,
   LIFEPATH_EVENTS,
   MAGICK_ITEMS,
-  MAGICK_ITEM_NAMES_KO,
   MAGICK_ITEM_TEXT_KO,
   MAP_DUNGEON_KO,
   MAP_SETTLEMENT_KO,
@@ -647,13 +646,6 @@ const woundLabels: Record<WoundPart, string> = {
   rightLeg: "오른다리 — 이동력 −2",
 };
 
-const vocationKo: Record<string, string> = {
-  Herald: "전령관",
-  "Knight-Errant": "방랑기사",
-  Mystic: "비술사",
-  Cutpurse: "소매치기",
-};
-
 const mapTypeKo: Record<MapType, string> = { wilderness: "야외", dungeon: "던전", settlement: "정착지" };
 const combatActionKo: Record<string, string> = {
   Attack: "공격", "Cast a Spell": "주문 시전", "Draw/Sheathe": "무기 꺼내기·넣기", Flee: "도주",
@@ -664,6 +656,8 @@ const combatActionLabel = (action: string) => action.endsWith(" (Called Shot)")
   ? `${combatActionKo[action.replace(" (Called Shot)", "")] || action} · 조준 공격`
   : combatActionKo[action] || ({ "Morale Test": "사기 판정" } as Record<string, string>)[action] || action;
 const monsterSpeedKo = (speed: number | string) => speed;
+const canonicalMonsterName = (monster: Pick<MonsterInCombat, "monsterId" | "name">) =>
+  BESTIARY.find((entry) => entry.id === monster.monsterId)?.name || monster.name;
 const inventoryCategoryKo: Record<InventoryItem["category"], string> = {
   weapon: "무기", armor: "갑옷", trade: "교역품", magic: "마법 물품", container: "용기", other: "그 밖의 물품",
 };
@@ -893,7 +887,7 @@ function App() {
     };
     return {
       ...next,
-      logs: [logEntry(next, "combat", `[${next.combat.round}라운드] 손패 보충: 플레이어 ${dealt.playerHand.length}/4, 각 괴수 ${monsters.map((monster) => `${monster.name} ${monster.hand.length}/3`).join(", ") || "없음"}. 모든 전투 손패는 공용 플레이어 덱에서 옮겼습니다.`), ...next.logs],
+      logs: [logEntry(next, "combat", `[${next.combat.round}라운드] 손패 보충: 플레이어 ${dealt.playerHand.length}/4, 각 괴수 ${monsters.map((monster) => `${canonicalMonsterName(monster)} ${monster.hand.length}/3`).join(", ") || "없음"}. 모든 전투 손패는 공용 플레이어 덱에서 옮겼습니다.`), ...next.logs],
     };
   });
 
@@ -1042,7 +1036,7 @@ function App() {
     const status = total !== null && target !== null ? (total >= target ? "success" : "failure") : "사용·버림";
     const resultRecord: CombatResult | null = asAttack ? {
       id: uid(),
-      actor: monster.name,
+      actor: canonicalMonsterName(monster),
       action: "Attack",
       card,
       total,
@@ -1062,7 +1056,7 @@ function App() {
     };
     return {
       ...next,
-      logs: [logEntry(next, "combat", `[${monster.name}] ${asAttack ? "공격" : "카드 사용"}: ${cardDisplayKo(card)}${total !== null ? ` + 능력치 ${template?.stat ?? 0} = ${total}${target !== null ? ` 대 ${target} → ${testStatusKo[status] || status}` : ""}` : ""}.`), ...next.logs],
+      logs: [logEntry(next, "combat", `[${canonicalMonsterName(monster)}] ${asAttack ? "공격" : "카드 사용"}: ${cardDisplayKo(card)}${total !== null ? ` + 능력치 ${template?.stat ?? 0} = ${total}${target !== null ? ` 대 ${target} → ${testStatusKo[status] || status}` : ""}` : ""}.`), ...next.logs],
     };
   });
 
@@ -1119,7 +1113,7 @@ function App() {
       armorNotches: outcome.notchesArmor ? { ...monster.armorNotches, [label]: clamp((monster.armorNotches[label] || 0) + 1, 0, 2) } : monster.armorNotches,
     };
     const next = { ...previous, combat: { ...previous.combat, monsters: previous.combat.monsters.map((item) => item.id === monster.id ? updated : item) } };
-    return { ...next, logs: [logEntry(next, "combat", `[피해 → ${monster.name}] 들어온 부상 ${damageForm.incoming}, AP ${armorPoints}, ${woundLabels[damageForm.part]}에 부상 ${outcome.wounds}점${outcome.notchesArmor ? `; ${label} 흠집` : ""}.`), ...next.logs] };
+    return { ...next, logs: [logEntry(next, "combat", `[피해 → ${canonicalMonsterName(monster)}] 들어온 부상 ${damageForm.incoming}, AP ${armorPoints}, ${woundLabels[damageForm.part]}에 부상 ${outcome.wounds}점${outcome.notchesArmor ? `; ${label} 흠집` : ""}.`), ...next.logs] };
   });
 
   const endCombat = () => update((previous) => {
@@ -1129,7 +1123,7 @@ function App() {
       if (monster.initiative) monsterCards.push(monster.initiative);
     }
     const playerDiscard = [...previous.playerDiscard, ...(previous.combat.playerInitiative ? [previous.combat.playerInitiative] : []), ...monsterCards];
-    const participantNames = previous.combat.monsters.map((monster) => monster.name).join(", ") || "없음";
+    const participantNames = previous.combat.monsters.map(canonicalMonsterName).join(", ") || "없음";
     const next = {
       ...previous,
       playerDiscard,
@@ -1148,7 +1142,7 @@ function App() {
     const monster: MonsterInCombat = {
       id: uid(),
       monsterId: template.id,
-      name: template.nameKo,
+      name: template.name,
       woundsTaken: 0,
       woundNotes: [],
       armorNotches: {},
@@ -1317,7 +1311,7 @@ function App() {
     if (!word) return drawn.state;
     const already = drawn.state.character.knownMinorWords.some((item) => item.suit === suit && item.key === key);
     const next = already ? drawn.state : { ...drawn.state, character: { ...drawn.state.character, knownMinorWords: [...drawn.state.character.knownMinorWords, { suit, key }] } };
-    return { ...next, logs: [logEntry(next, "magic", `[첫 비전 단어] ${cardDisplayKo(drawn.card)} → ${word.ko}${already ? " (이미 앎)" : " (아는 단어에 기록)"}. 인물 생성 뒤 새 단어를 배우려면 임무가 필요합니다.`), ...next.logs] };
+    return { ...next, logs: [logEntry(next, "magic", `[첫 비전 단어] ${cardDisplayKo(drawn.card)} → ${word.en}${already ? " (이미 앎)" : " (아는 단어에 기록)"}. 인물 생성 뒤 새 단어를 배우려면 임무가 필요합니다.`), ...next.logs] };
   });
 
   const drawMajorWord = () => update((previous) => {
@@ -1328,7 +1322,7 @@ function App() {
     const word: KnownMajorWord = { key: drawn.card.rank, reversed: drawn.card.reversed };
     const already = drawn.state.character.knownMajorWords.some((item) => item.key === word.key && item.reversed === word.reversed);
     const next = already ? drawn.state : { ...drawn.state, character: { ...drawn.state.character, knownMajorWords: [...drawn.state.character.knownMajorWords, word] } };
-    return { ...next, logs: [logEntry(next, "magic", `[첫 비전 단어] ${cardDisplayKo(drawn.card)} → ${drawn.card.reversed ? info.revKo : info.ko}${already ? " (이미 앎)" : " (아는 단어에 기록)"}. 인물 생성 뒤 새 단어를 배우려면 임무가 필요합니다.`), ...next.logs] };
+    return { ...next, logs: [logEntry(next, "magic", `[첫 비전 단어] ${cardDisplayKo(drawn.card)} → ${drawn.card.reversed ? info.revEn : info.en}${already ? " (이미 앎)" : " (아는 단어에 기록)"}. 인물 생성 뒤 새 단어를 배우려면 임무가 필요합니다.`), ...next.logs] };
   });
 
   const drawRoadFolk = () => update((previous) => {
@@ -1352,7 +1346,7 @@ function App() {
     const minorInfo = ARCANE_MINOR_WORDS[minor.suit]?.[minor.key];
     const majorInfo = ARCANE_MAJOR_WORDS[major.key];
     if (!minorInfo || !majorInfo) return;
-    const name = `${minorInfo.ko} ${major.reversed ? majorInfo.revKo : majorInfo.ko}`;
+    const name = `${minorInfo.en} ${major.reversed ? majorInfo.revEn : majorInfo.en}`;
     update((previous) => ({
       ...previous,
       character: { ...previous.character, spells: [...previous.character.spells, { id: uid(), name, effectNote: spellForm.effect.trim() }] },
@@ -1489,35 +1483,34 @@ function App() {
       <header className="topbar">
         <div>
           <h1 className="gloam-title">GLOAM</h1>
-          <p className="app-kicker">룰북 곁의 여정 장부 · v1.02 원문 준거</p>
         </div>
         <div className="top-actions">
           <span className={`integrity ${integrity.player && integrity.referee ? "ok" : "bad"}`} role="status" aria-live="polite">
-            카드 {integrity.player && integrity.referee ? "57/21 · 온전" : "장부 복구 필요"}
+            {integrity.player && integrity.referee ? "Player 57 · Referee 21" : "Deck Integrity Failed"}
           </span>
-          <button onClick={undo} disabled={undoCount === 0}>되돌리기 ({undoCount})</button>
-          <button onClick={exportSave}>장부 내려받기</button>
-          <button onClick={() => importRef.current?.click()}>장부 불러오기</button>
+          <button onClick={undo} disabled={undoCount === 0}>Undo ({undoCount})</button>
+          <button onClick={exportSave}>Export Chronicle</button>
+          <button onClick={() => importRef.current?.click()}>Import Chronicle</button>
           <input ref={importRef} type="file" accept="application/json" hidden onChange={importSave} />
-          <button className="danger" onClick={resetAll}>새 연대기</button>
+          <button className="danger" onClick={resetAll}>New Chronicle</button>
         </div>
         {saveError && <p className="save-error" role="alert">{saveError}</p>}
       </header>
 
-      <nav className="tabs" aria-label="여정 장부 갈피">
+      <nav className="tabs" aria-label="Gloam chapter index">
         {([
-          ["character", "인물 기록"],
-          ["tests", "판정과 전투"],
-          ["magic", "비술과 징조"],
-          ["map", "여정 지도와 사건"],
-          ["downtime", "괴수 도감과 막간"],
-          ["log", "연대기와 보존"],
+          ["character", "Create Your Character"],
+          ["tests", "Tests & Combat"],
+          ["magic", "Magick & Oracles"],
+          ["map", "Generating Maps & Event Deck"],
+          ["downtime", "Bestiary & Downtime"],
+          ["log", "Chronicle & Archive"],
         ] as [Tab, string][]).map(([key, label]) => (
           <button key={key} className={tab === key ? "active" : ""} aria-current={tab === key ? "page" : undefined} onClick={() => setTab(key)}>{label}</button>
         ))}
       </nav>
 
-      <main>
+      <main className={`chapter chapter-${tab}`}>
         {tab === "character" && (
           <CharacterTab
             state={state}
@@ -1638,7 +1631,7 @@ function Panel({ title, subtitle, children, className = "" }: { title: string; s
   return <section className={`panel ${className}`}><header className="panel-header"><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</header>{children}</section>;
 }
 
-const suitKo: Record<Suit, string> = { cups: "컵", wands: "완드", swords: "소드", coins: "코인" };
+const suitKo: Record<Suit, string> = { cups: "Cups", wands: "Wands", swords: "Swords", coins: "Coins" };
 const rankKo: Record<string, string> = { "0": "광대", A: "에이스", Page: "시종", Knight: "기사", Queen: "여왕", King: "왕" };
 const tarotSuitFile: Record<Suit, string> = { cups: "Cups", wands: "Wands", swords: "Swords", coins: "Pentacles" };
 const testStatusKo: Record<string, string> = { "great-success": "대성공", success: "성공", failure: "실패", "great-failure": "대실패" };
@@ -1723,7 +1716,7 @@ function CharacterTab(props: {
       <div className="form-grid four">
         <label>이름<input value={character.name} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, name: event.target.value } }))} /></label>
         <label>나이<input type="number" min={0} value={character.age} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, age: Math.max(0, Number(event.target.value)) } }))} /></label>
-        <label>천직<select value={character.vocation} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, vocation: event.target.value } }))}><option value="">고르기</option>{Object.keys(TALENTS).map((vocation) => <option key={vocation} value={vocation}>{vocationKo[vocation]}</option>)}</select></label>
+        <label>천직<select value={character.vocation} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, vocation: event.target.value } }))}><option value="">고르기</option>{Object.keys(TALENTS).map((vocation) => <option key={vocation} value={vocation}>{vocation}</option>)}</select></label>
         <label>초상화 주소<input value={character.portrait} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, portrait: event.target.value } }))} /></label>
       </div>
       <div className="stats-row">
@@ -1776,7 +1769,7 @@ function CharacterTab(props: {
     </Panel>
 
     <Panel title="재능과 성장" subtitle="자기 천직 재능은 경험치 5, 다른 천직은 10입니다. 다른 천직의 시작 재능은 배울 수 없으며 경험치 1마다 하루를 수련합니다." className="span-2">
-      <div className="talent-grid">{Object.entries(TALENTS).map(([vocation, talents]) => <div key={vocation}><h3>{vocationKo[vocation]}</h3>{talents.map((talent) => { const unlocked = character.talents.includes(talent.name); const own = vocation === ownVocation; const cost = own ? 5 : 10; const blocked = talent.starting && !own; const dedicatedMagicWorkflow = ["Magick", "Bind Magick", "Undo Magick"].includes(talent.name); const translated = talentKo[talent.name]; return <article key={talent.name} className="talent"><div><strong>{talent.starting ? "◆" : "◇"} {translated.name}</strong><p>{translated.text}</p></div>{unlocked ? dedicatedMagicWorkflow ? <span>‘비술과 징조’ 갈피에서 사용</span> : <button disabled={character.resolve < 1} onClick={() => update((previous) => { const spent = props.spendPlayerResolve(previous, 1); if (!spent) return previous; return { ...spent, logs: [logEntry(spent, "character", `[재능 발동] ${translated.name}; 플레이어 결의 −1, 심판 결의 +1. 효과 해석은 플레이 자리에 남겨 둡니다.`), ...spent.logs] }; })}>발동 · 결의 1</button> : talent.starting && own ? <button onClick={() => update((previous) => ({ ...previous, character: { ...previous.character, talents: [...previous.character.talents, talent.name] } }))}>시작 재능 기록</button> : <button disabled={blocked || character.xp < cost} onClick={() => update((previous) => ({ ...previous, day: previous.day + cost, watch: 1, character: { ...previous.character, xp: previous.character.xp - cost, talents: [...previous.character.talents, talent.name] }, logs: [logEntry(previous, "character", `[성장] ${translated.name}; 경험치 ${cost}, 수련 ${cost}일.`), ...previous.logs] }))}>{blocked ? "다른 천직의 시작 재능" : `배우기 · 경험치 ${cost}`}</button>}</article>; })}</div>)}</div>
+      <div className="talent-grid">{Object.entries(TALENTS).map(([vocation, talents]) => <div key={vocation}><h3>{vocation}</h3>{talents.map((talent) => { const unlocked = character.talents.includes(talent.name); const own = vocation === ownVocation; const cost = own ? 5 : 10; const blocked = talent.starting && !own; const dedicatedMagicWorkflow = ["Magick", "Bind Magick", "Undo Magick"].includes(talent.name); const translated = talentKo[talent.name]; return <article key={talent.name} className="talent"><div><strong>{talent.starting ? "◆" : "◇"} {talent.name}</strong><p>{translated.text}</p></div>{unlocked ? dedicatedMagicWorkflow ? <span>‘Magick & Oracles’ 갈피에서 사용</span> : <button disabled={character.resolve < 1} onClick={() => update((previous) => { const spent = props.spendPlayerResolve(previous, 1); if (!spent) return previous; return { ...spent, logs: [logEntry(spent, "character", `[Talent 발동] ${talent.name}; 플레이어 결의 −1, 심판 결의 +1. 효과 해석은 플레이 자리에 남겨 둡니다.`), ...spent.logs] }; })}>발동 · 결의 1</button> : talent.starting && own ? <button onClick={() => update((previous) => ({ ...previous, character: { ...previous.character, talents: [...previous.character.talents, talent.name] } }))}>시작 Talent 기록</button> : <button disabled={blocked || character.xp < cost} onClick={() => update((previous) => ({ ...previous, day: previous.day + cost, watch: 1, character: { ...previous.character, xp: previous.character.xp - cost, talents: [...previous.character.talents, talent.name] }, logs: [logEntry(previous, "character", `[성장] ${talent.name}; 경험치 ${cost}, 수련 ${cost}일.`), ...previous.logs] }))}>{blocked ? "다른 천직의 시작 Talent" : `배우기 · 경험치 ${cost}`}</button>}</article>; })}</div>)}</div>
       <div className="button-row">{SUITS.map((suit) => <button key={suit} disabled={character.xp < 10 || character.stats[suit] >= 6} onClick={() => update((previous) => ({ ...previous, day: previous.day + 10, watch: 1, character: { ...previous.character, xp: previous.character.xp - 10, stats: { ...previous.character.stats, [suit]: previous.character.stats[suit] + 1 } }, logs: [logEntry(previous, "character", `[성장] ${suitKo[suit]} +1; 경험치 10, 수련 10일.`), ...previous.logs] }))}>{suitKo[suit]} 올리기 · 경험치 10</button>)}</div>
     </Panel>
   </div>;
@@ -1796,7 +1789,14 @@ function TestsCombatTab(props: {
   applyDamage: () => void; combatEndNote: string; setCombatEndNote: React.Dispatch<React.SetStateAction<string>>; endCombat: () => void;
   manualFoolRecall: () => void; spendRefereeResolveOnLastTest: () => void;
 }) {
-  const { state, update } = props;
+  const { update } = props;
+  const state = useMemo(() => ({
+    ...props.state,
+    combat: {
+      ...props.state.combat,
+      monsters: props.state.combat.monsters.map((monster) => ({ ...monster, name: canonicalMonsterName(monster) })),
+    },
+  }), [props.state]);
   const test = state.test;
   const [monsterChoice, setMonsterChoice] = useState(BESTIARY[0]?.id || 1);
   return <div className="page-grid">
@@ -1812,14 +1812,14 @@ function TestsCombatTab(props: {
     </Panel>
 
     <Panel title={`전투 흐름 · ${state.combat.round}라운드`} subtitle="손패 나누기 → 숨긴 선제권 → 순서대로 공개 → 행동과 대응 → 라운드 끝. 장부는 대상·부위·서사 결과를 고르지 않습니다." className="span-2">
-      <div className="button-row"><button onClick={props.dealCombatRound}>플레이어 4장까지 · 괴수마다 3장</button><select aria-label="괴수 도감 선택" value={monsterChoice} onChange={(event) => setMonsterChoice(Number(event.target.value))}>{BESTIARY.map((monster) => <option value={monster.id} key={monster.id}>{monster.nameKo} · 능력치 {monster.stat}</option>)}</select><button onClick={() => props.addMonster(monsterChoice)}>괴수 들이기</button><button onClick={props.endCombatRound} disabled={!state.combat.active}>라운드 끝내기</button></div>
+      <div className="button-row"><button onClick={props.dealCombatRound}>플레이어 4장까지 · 괴수마다 3장</button><select aria-label="괴수 도감 선택" value={monsterChoice} onChange={(event) => setMonsterChoice(Number(event.target.value))}>{BESTIARY.map((monster) => <option value={monster.id} key={monster.id}>{monster.name} · 능력치 {monster.stat}</option>)}</select><button onClick={() => props.addMonster(monsterChoice)}>괴수 들이기</button><button onClick={props.endCombatRound} disabled={!state.combat.active}>라운드 끝내기</button></div>
       {state.combat.foolPending && <div className="notice warn" role="status">이번 라운드에 광대가 나왔습니다. 라운드 끝에 사용 중인 모든 카드를 거두고 두 덱을 다시 섞습니다.</div>}
       <div className="initiative-grid"><div><h3>플레이어 손패 · {state.combat.playerHand.length}/4</h3><div className="card-row">{state.combat.playerHand.map((card) => <div key={cardId(card)}><CardView card={card} /><div className="mini-actions"><button disabled={Boolean(state.combat.playerInitiative)} onClick={() => props.choosePlayerInitiative(cardId(card))}>선제권</button><button onClick={() => props.discardPlayerCombatCard(cardId(card))}>버리기</button></div></div>)}</div><div className="initiative-slot"><strong>선제권:</strong>{state.combat.playerInitiative ? <><CardView card={state.combat.playerInitiative} hidden={!state.combat.playerInitiativeRevealed} /><button onClick={() => update((previous) => ({ ...previous, combat: { ...previous.combat, playerInitiativeRevealed: !previous.combat.playerInitiativeRevealed } }))}>{state.combat.playerInitiativeRevealed ? "감추기" : "공개하기"}</button></> : <span>고르지 않음</span>}</div></div>
         <div><h3>행동 차례</h3><ol>{[
           ...(state.combat.playerInitiative ? [{ name: state.character.name || "플레이어", value: cardValue(state.combat.playerInitiative), revealed: state.combat.playerInitiativeRevealed }] : []),
-          ...state.combat.monsters.filter((monster) => monster.initiative).map((monster) => ({ name: monster.name, value: cardValue(monster.initiative as Card), revealed: monster.initiativeRevealed })),
+          ...state.combat.monsters.filter((monster) => monster.initiative).map((monster) => ({ name: canonicalMonsterName(monster), value: cardValue(monster.initiative as Card), revealed: monster.initiativeRevealed })),
         ].sort((a, b) => a.value - b.value).map((actor) => <li key={actor.name}>{actor.revealed ? `${actor.value} — ${actor.name}` : `? — ${actor.name}`}</li>)}</ol></div></div>
-      <div className="monster-grid">{state.combat.monsters.map((monster) => { const template = BESTIARY.find((item) => item.id === monster.monsterId); return <article className="monster-card" key={monster.id}><header><div><h3>{monster.name}</h3><p>능력치 {template?.stat} · 부상 {monster.woundsTaken}/{template?.wounds} · 이동력 {template?.speed}</p></div><button className="danger" onClick={() => props.removeMonster(monster.id)}>내보내기</button></header><p>갑옷: {template?.armorKo} · 약점: {template?.weaknessKo || "기재 없음"}</p><p>공격: {template?.attacksKo}</p><details><summary>심판 손패 · {monster.hand.length}/3</summary><div className="card-row">{monster.hand.map((card) => <div key={cardId(card)}><CardView card={card} /><div className="mini-actions"><button disabled={Boolean(monster.initiative)} onClick={() => props.chooseMonsterInitiative(monster.id, cardId(card))}>선제권</button><button disabled={!state.combat.playerInitiative} onClick={() => props.playMonsterCard(monster.id, cardId(card), true)}>공격</button><button onClick={() => props.playMonsterCard(monster.id, cardId(card), false)}>사용·버리기</button></div></div>)}</div></details><div className="initiative-slot"><strong>선제권:</strong>{monster.initiative ? <><CardView card={monster.initiative} hidden={!monster.initiativeRevealed} /><button onClick={() => update((previous) => ({ ...previous, combat: { ...previous.combat, monsters: previous.combat.monsters.map((item) => item.id === monster.id ? { ...item, initiativeRevealed: !item.initiativeRevealed } : item) } }))}>{monster.initiativeRevealed ? "감추기" : "공개하기"}</button></> : <span>고르지 않음</span>}</div><textarea placeholder="붙잡힘·사기·갑옷·위치·심판 기록" value={monster.notes} onChange={(event) => update((previous) => ({ ...previous, combat: { ...previous.combat, monsters: previous.combat.monsters.map((item) => item.id === monster.id ? { ...item, notes: event.target.value } : item) } }))} />{monster.woundNotes.length > 0 && <ul>{monster.woundNotes.map((note, index) => <li key={`${note}-${index}`}>{note}</li>)}</ul>}</article>; })}</div>
+      <div className="monster-grid">{state.combat.monsters.map((monster) => { const template = BESTIARY.find((item) => item.id === monster.monsterId); return <article className="monster-card" key={monster.id}><header><div><h3>{canonicalMonsterName(monster)}</h3><p>능력치 {template?.stat} · 부상 {monster.woundsTaken}/{template?.wounds} · 이동력 {template?.speed}</p></div><button className="danger" onClick={() => props.removeMonster(monster.id)}>내보내기</button></header><p>갑옷: {template?.armorKo} · 약점: {template?.weaknessKo || "기재 없음"}</p><p>공격: {template?.attacksKo}</p><details><summary>심판 손패 · {monster.hand.length}/3</summary><div className="card-row">{monster.hand.map((card) => <div key={cardId(card)}><CardView card={card} /><div className="mini-actions"><button disabled={Boolean(monster.initiative)} onClick={() => props.chooseMonsterInitiative(monster.id, cardId(card))}>선제권</button><button disabled={!state.combat.playerInitiative} onClick={() => props.playMonsterCard(monster.id, cardId(card), true)}>공격</button><button onClick={() => props.playMonsterCard(monster.id, cardId(card), false)}>사용·버리기</button></div></div>)}</div></details><div className="initiative-slot"><strong>선제권:</strong>{monster.initiative ? <><CardView card={monster.initiative} hidden={!monster.initiativeRevealed} /><button onClick={() => update((previous) => ({ ...previous, combat: { ...previous.combat, monsters: previous.combat.monsters.map((item) => item.id === monster.id ? { ...item, initiativeRevealed: !item.initiativeRevealed } : item) } }))}>{monster.initiativeRevealed ? "감추기" : "공개하기"}</button></> : <span>고르지 않음</span>}</div><textarea placeholder="붙잡힘·사기·갑옷·위치·심판 기록" value={monster.notes} onChange={(event) => update((previous) => ({ ...previous, combat: { ...previous.combat, monsters: previous.combat.monsters.map((item) => item.id === monster.id ? { ...item, notes: event.target.value } : item) } }))} />{monster.woundNotes.length > 0 && <ul>{monster.woundNotes.map((note, index) => <li key={`${note}-${index}`}>{note}</li>)}</ul>}</article>; })}</div>
     </Panel>
 
     <Panel title="플레이어 행동과 대응" subtitle="전투 판정은 손패와 대상의 선제권을 쓰며 밀어붙일 수 없습니다. 대항 행동은 상대 능력치를 뺍니다.">
@@ -1854,18 +1854,18 @@ function MagicOracleTab(props: {
   const { state, update } = props;
   const [knownMinorDraft, setKnownMinorDraft] = useState("Cups:A");
   const [knownMajorDraft, setKnownMajorDraft] = useState("0:false");
-  const minorOptions = state.character.knownMinorWords.map((word) => ({ value: `${word.suit}:${word.key}`, label: `${ARCANE_MINOR_WORDS[word.suit]?.[word.key]?.ko || "?"} · ${suitKo[word.suit.toLowerCase() as Suit]} ${word.key}` }));
-  const majorOptions = state.character.knownMajorWords.map((word) => { const info = ARCANE_MAJOR_WORDS[word.key]; return { value: `${word.key}:${word.reversed}`, label: `${word.reversed ? info?.revKo : info?.ko} · ${word.key}${word.reversed ? " 역방향" : ""}` }; });
+  const minorOptions = state.character.knownMinorWords.map((word) => ({ value: `${word.suit}:${word.key}`, label: `${ARCANE_MINOR_WORDS[word.suit]?.[word.key]?.en || "?"} · ${word.suit} ${word.key}` }));
+  const majorOptions = state.character.knownMajorWords.map((word) => { const info = ARCANE_MAJOR_WORDS[word.key]; return { value: `${word.key}:${word.reversed}`, label: `${word.reversed ? info?.revEn : info?.en} · ${word.key}${word.reversed ? " · 역방향" : ""}` }; });
   const addKnownMinor = () => {
     const [suit, key] = knownMinorDraft.split(":") as [KnownMinorWord["suit"], string];
     if (!ARCANE_MINOR_WORDS[suit]?.[key]) return;
-    update((previous) => previous.character.knownMinorWords.some((word) => word.suit === suit && word.key === key) ? previous : ({ ...previous, character: { ...previous.character, knownMinorWords: [...previous.character.knownMinorWords, { suit, key }] }, logs: [logEntry(previous, "magic", `[임무로 배운 단어] ${ARCANE_MINOR_WORDS[suit][key].ko}.`), ...previous.logs] }));
+    update((previous) => previous.character.knownMinorWords.some((word) => word.suit === suit && word.key === key) ? previous : ({ ...previous, character: { ...previous.character, knownMinorWords: [...previous.character.knownMinorWords, { suit, key }] }, logs: [logEntry(previous, "magic", `[임무로 배운 단어] ${ARCANE_MINOR_WORDS[suit][key].en}.`), ...previous.logs] }));
   };
   const addKnownMajor = () => {
     const [key, reversedText] = knownMajorDraft.split(":");
     const reversed = reversedText === "true";
     if (!ARCANE_MAJOR_WORDS[key]) return;
-    update((previous) => previous.character.knownMajorWords.some((word) => word.key === key && word.reversed === reversed) ? previous : ({ ...previous, character: { ...previous.character, knownMajorWords: [...previous.character.knownMajorWords, { key, reversed }] }, logs: [logEntry(previous, "magic", `[임무로 배운 단어] ${reversed ? ARCANE_MAJOR_WORDS[key].revKo : ARCANE_MAJOR_WORDS[key].ko}.`), ...previous.logs] }));
+    update((previous) => previous.character.knownMajorWords.some((word) => word.key === key && word.reversed === reversed) ? previous : ({ ...previous, character: { ...previous.character, knownMajorWords: [...previous.character.knownMajorWords, { key, reversed }] }, logs: [logEntry(previous, "magic", `[임무로 배운 단어] ${reversed ? ARCANE_MAJOR_WORDS[key].revEn : ARCANE_MAJOR_WORDS[key].en}.`), ...previous.logs] }));
   };
   const drawFromKnownWords = () => {
     if (!minorOptions.length || !majorOptions.length) return;
@@ -1889,7 +1889,7 @@ function MagicOracleTab(props: {
     <Panel title="비전 비술" subtitle="첫 주문의 두 단어는 카드로 뽑습니다. 그 뒤의 단어는 임무를 마친 뒤에만 기록합니다. 주문 효과의 해석은 심판에게 남습니다.">
       {!state.character.talents.includes("Magick") && <div className="notice warn">주문 시전에는 비술사의 시작 재능 ‘비술’이 필요합니다.</div>}
       <div className="button-row"><button onClick={props.drawMinorWord}>첫 준비 · 소 아르카나 단어 뽑기</button><button onClick={props.drawMajorWord}>첫 준비 · 대 아르카나 단어 뽑기</button><button disabled={!minorOptions.length || !majorOptions.length} onClick={drawFromKnownWords}>아는 단어에서 뽑기</button></div>
-      <details><summary>아는 단어 · 표로 확인한 임무 뒤에만 더하기</summary><div className="form-grid"><label>소 아르카나 단어<select value={knownMinorDraft} onChange={(event) => setKnownMinorDraft(event.target.value)}>{Object.entries(ARCANE_MINOR_WORDS).flatMap(([suit, words]) => Object.entries(words).map(([key, word]) => <option key={`${suit}:${key}`} value={`${suit}:${key}`}>{suitKo[suit.toLowerCase() as Suit]} {key} · {word.ko}</option>))}</select></label><button onClick={addKnownMinor}>아는 단어로 기록</button><label>대 아르카나 단어<select value={knownMajorDraft} onChange={(event) => setKnownMajorDraft(event.target.value)}>{Object.entries(ARCANE_MAJOR_WORDS).flatMap(([key, word]) => [<option key={`${key}:false`} value={`${key}:false`}>{key} · {word.ko}</option>, <option key={`${key}:true`} value={`${key}:true`}>{key} 역방향 · {word.revKo}</option>])}</select></label><button onClick={addKnownMajor}>아는 단어로 기록</button></div><ul className="history-list">{minorOptions.map((word) => <li key={word.value}>{word.label}</li>)}{majorOptions.map((word) => <li key={word.value}>{word.label}</li>)}</ul></details>
+      <details><summary>아는 단어 · 표로 확인한 임무 뒤에만 더하기</summary><div className="form-grid"><label>소 아르카나 단어<select value={knownMinorDraft} onChange={(event) => setKnownMinorDraft(event.target.value)}>{Object.entries(ARCANE_MINOR_WORDS).flatMap(([suit, words]) => Object.entries(words).map(([key, word]) => <option key={`${suit}:${key}`} value={`${suit}:${key}`}>{suit} {key} · {word.en}</option>))}</select></label><button onClick={addKnownMinor}>아는 단어로 기록</button><label>대 아르카나 단어<select value={knownMajorDraft} onChange={(event) => setKnownMajorDraft(event.target.value)}>{Object.entries(ARCANE_MAJOR_WORDS).flatMap(([key, word]) => [<option key={`${key}:false`} value={`${key}:false`}>{key} · {word.en}</option>, <option key={`${key}:true`} value={`${key}:true`}>{key} 역방향 · {word.revEn}</option>])}</select></label><button onClick={addKnownMajor}>아는 단어로 기록</button></div><ul className="history-list">{minorOptions.map((word) => <li key={word.value}>{word.label}</li>)}{majorOptions.map((word) => <li key={word.value}>{word.label}</li>)}</ul></details>
       <div className="form-grid"><label>아는 소 아르카나 단어<select value={props.spellForm.minor} onChange={(event) => props.setSpellForm((draft) => ({ ...draft, minor: event.target.value }))}><option value="">고르기</option>{minorOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label><label>아는 대 아르카나 단어<select value={props.spellForm.major} onChange={(event) => props.setSpellForm((draft) => ({ ...draft, major: event.target.value }))}><option value="">고르기</option>{majorOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label><label className="span-2">심판의 효과 기록<textarea value={props.spellForm.effect} onChange={(event) => props.setSpellForm((draft) => ({ ...draft, effect: event.target.value }))} placeholder="해석은 직접 기록합니다" /></label></div><button onClick={props.saveSpell} disabled={!props.spellForm.minor || !props.spellForm.major}>주문서에 새기기</button>
       <div className="record-list">{state.character.spells.map((spell) => <article className="compact-card" key={spell.id}><strong>{spell.name}</strong><p>{spell.effectNote || "효과 기록 없음 — 심판의 해석을 기다립니다"}</p><div className="button-row"><label>결의<input aria-label={`${spell.name}에 쓸 결의`} type="number" min={1} value={props.spellForm.resolve} onChange={(event) => props.setSpellForm((draft) => ({ ...draft, resolve: Math.max(1, Number(event.target.value)) }))} /></label><button disabled={!state.character.talents.includes("Magick") || state.character.resolve < props.spellForm.resolve} onClick={() => props.castSpell(spell, props.spellForm.resolve)}>시전 · 결의 쓰기</button><button disabled={!state.character.talents.includes("Bind Magick")} onClick={() => props.bindSpell(spell)}>물건에 봉인</button><button className="danger" aria-label={`${spell.name} 주문 지우기`} onClick={() => update((previous) => ({ ...previous, character: { ...previous.character, spells: previous.character.spells.filter((item) => item.id !== spell.id) } }))}>×</button></div></article>)}</div>
       <div className="bound-list">{state.character.boundMagic.map((binding) => <article key={binding.id}><strong>{binding.object}</strong><span>{binding.spell}</span><label>충전<input type="number" min={0} value={binding.charges} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, boundMagic: previous.character.boundMagic.map((item) => item.id === binding.id ? { ...item, charges: Math.max(0, Number(event.target.value)) } : item) } }))} /></label><button disabled={binding.charges < 1 || state.character.resolve < 1} onClick={() => update((previous) => { if (previous.character.resolve < 1 || binding.charges < 1) return previous; return { ...previous, refereeResolve: previous.refereeResolve + 1, character: { ...previous.character, resolve: previous.character.resolve - 1, boundMagic: previous.character.boundMagic.map((item) => item.id === binding.id ? { ...item, charges: item.charges - 1 } : item) }, logs: [logEntry(previous, "magic", `[봉인 주문 시전] ${binding.object}: ${binding.spell}; 충전 1회와 결의 1점을 썼습니다.`), ...previous.logs] }; })}>봉인 주문 시전</button><button className="danger" aria-label={`${binding.object} 봉인 기록 지우기`} onClick={() => update((previous) => ({ ...previous, character: { ...previous.character, boundMagic: previous.character.boundMagic.filter((item) => item.id !== binding.id) } }))}>지우기</button></article>)}</div>
@@ -1907,7 +1907,7 @@ function MagicOracleTab(props: {
     </Panel>
 
     <Panel title="마법 물품표" subtitle="참조와 카드 찾기만 돕습니다. 물품의 발동과 해석은 직접 처리합니다." className="span-2">
-      <div className="four-columns">{Object.entries(MAGICK_ITEMS).map(([suit, items]) => <details key={suit}><summary>{suitKo[suit.toLowerCase() as Suit]}</summary>{items.map((item, index) => <article className="compact-card" key={item.key}><strong>{item.key} · {MAGICK_ITEM_NAMES_KO[suit as keyof typeof MAGICK_ITEM_NAMES_KO][index]}</strong><p>{MAGICK_ITEM_TEXT_KO[suit as keyof typeof MAGICK_ITEM_TEXT_KO][index]}</p></article>)}</details>)}</div>
+      <div className="four-columns">{Object.entries(MAGICK_ITEMS).map(([suit, items]) => <details key={suit}><summary>{suit}</summary>{items.map((item, index) => <article className="compact-card" key={item.key}><strong>{item.key} · {item.name}</strong><p>{MAGICK_ITEM_TEXT_KO[suit as keyof typeof MAGICK_ITEM_TEXT_KO][index]}</p></article>)}</details>)}</div>
     </Panel>
   </div>;
 }
@@ -1966,7 +1966,7 @@ function DowntimeTab(props: {
     <Panel title="괴수 도감" subtitle="인쇄된 능력 자료만 싣습니다. 갑옷 한 부위는 AP 2이며, 약점을 이용했는지는 심판이 판정합니다." className="span-2">
       <div className="notice">심판 결의: {state.refereeResolve}. {state.combat.lastResult?.actor && <>마지막 등장인물 판정: {state.combat.lastResult.actor} {combatActionLabel(state.combat.lastResult.action)} · {state.combat.lastResult.total}/{state.combat.lastResult.target} · {testStatusKo[state.combat.lastResult.status] || state.combat.lastResult.status}.</>} <button disabled={!state.combat.lastResult || state.combat.lastResult.actor === (state.character.name || "플레이어") || state.refereeResolve < 1} onClick={props.spendRefereeResolveOnLastTest}>결의 1점 · 마지막 등장인물 판정 +1</button></div>
       <div className="form-grid"><label>플레이 자리가 고른 반응 판정 문양<select value={reactionSuit} onChange={(event) => setReactionSuit(event.target.value as Suit)}>{SUITS.map((suit) => <option key={suit} value={suit}>{suitKo[suit]}</option>)}</select></label><button onClick={() => props.startTest("등장인물·괴수 반응 판정", reactionSuit)}>반응 판정 마련</button></div>
-      <div className="bestiary-grid">{BESTIARY.map((monster) => <article key={monster.id} className="bestiary-card"><header><h3>{monster.nameKo}</h3><button onClick={() => props.addMonster(monster.id)}>전투에 들이기</button></header><p>{monster.descriptionKo}</p><dl><div><dt>능력치</dt><dd>{monster.stat}</dd></div><div><dt>부상</dt><dd>{monster.wounds}</dd></div><div><dt>이동력</dt><dd>{monsterSpeedKo(monster.speed)}</dd></div></dl><p><strong>공격:</strong> {monster.attacksKo}</p><p><strong>갑옷:</strong> {monster.armorKo}</p><p><strong>약점:</strong> {monster.weaknessKo || "기재 없음"}</p><p><strong>재능:</strong> {monster.talentsKo.join(", ") || "없음"}</p><div className="button-row"><button onClick={() => update((previous) => { const drawn = props.drawRefereeToDiscard(previous); if (!drawn.card) return previous; const total = cardValue(drawn.card) + monster.stat; const status = total >= 14 ? "success" : "failure"; const lastResult: CombatResult = { id: uid(), actor: monster.nameKo, action: "Morale Test", card: drawn.card, total, target: 14, status, greatSuccess: false, rawWounds: 0 }; return { ...drawn.state, combat: { ...drawn.state.combat, lastResult }, logs: [logEntry(drawn.state, "combat", `[사기 판정 — ${monster.nameKo}] ${cardDisplayKo(drawn.card)} + 능력치 ${monster.stat} = ${total} → ${testStatusKo[status]}${status === "failure" ? "; 괴수는 싸움을 멈추며 도주와 항복 중 무엇을 택할지는 심판이 정함" : ""}.`), ...drawn.state.logs] }; })}>사기 판정</button><button disabled={state.refereeResolve < 1} onClick={() => update((previous) => ({ ...previous, refereeResolve: Math.max(0, previous.refereeResolve - 1), logs: [logEntry(previous, "combat", `[괴수 재능] ${monster.nameKo}; 심판 결의 −1. 인쇄된 재능의 선택과 해석은 심판에게 남습니다.`), ...previous.logs] }))}>재능에 심판 결의 쓰기</button></div></article>)}</div>
+      <div className="bestiary-grid">{BESTIARY.map((monster) => <article key={monster.id} className="bestiary-card"><header><h3>{monster.name}</h3><button onClick={() => props.addMonster(monster.id)}>전투에 들이기</button></header><p>{monster.descriptionKo}</p><dl><div><dt>능력치</dt><dd>{monster.stat}</dd></div><div><dt>부상</dt><dd>{monster.wounds}</dd></div><div><dt>이동력</dt><dd>{monsterSpeedKo(monster.speed)}</dd></div></dl><p><strong>공격:</strong> {monster.attacksKo}</p><p><strong>갑옷:</strong> {monster.armorKo}</p><p><strong>약점:</strong> {monster.weaknessKo || "기재 없음"}</p><p><strong>Talents:</strong> {monster.talents.join(", ") || "없음"}</p><div className="button-row"><button onClick={() => update((previous) => { const drawn = props.drawRefereeToDiscard(previous); if (!drawn.card) return previous; const total = cardValue(drawn.card) + monster.stat; const status = total >= 14 ? "success" : "failure"; const lastResult: CombatResult = { id: uid(), actor: monster.name, action: "Morale Test", card: drawn.card, total, target: 14, status, greatSuccess: false, rawWounds: 0 }; return { ...drawn.state, combat: { ...drawn.state.combat, lastResult }, logs: [logEntry(drawn.state, "combat", `[사기 판정 — ${monster.name}] ${cardDisplayKo(drawn.card)} + 능력치 ${monster.stat} = ${total} → ${testStatusKo[status]}${status === "failure" ? "; 괴수는 싸움을 멈추며 도주와 항복 중 무엇을 택할지는 심판이 정함" : ""}.`), ...drawn.state.logs] }; })}>사기 판정</button><button disabled={state.refereeResolve < 1} onClick={() => update((previous) => ({ ...previous, refereeResolve: Math.max(0, previous.refereeResolve - 1), logs: [logEntry(previous, "combat", `[Monster Talent] ${monster.name}; 심판 결의 −1. 인쇄된 Talent의 선택과 해석은 심판에게 남습니다.`), ...previous.logs] }))}>Talent에 심판 결의 쓰기</button></div></article>)}</div>
     </Panel>
   </div>;
 }
