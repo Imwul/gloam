@@ -6,8 +6,21 @@ const root = process.cwd();
 const port = 4184;
 const url = `http://127.0.0.1:${port}/`;
 const vite = path.join(root, "node_modules", ".bin", "vite");
+const rulebookPassphrase = process.env.GLOAM_RULEBOOK_PASSPHRASE;
 let server;
 let browser;
+
+if (!rulebookPassphrase) throw new Error("GLOAM_RULEBOOK_PASSPHRASE is required for rulebook certification");
+
+async function unlockRulebook(page) {
+  const input = page.getByLabel("개인 룰북 암호");
+  await page.waitForFunction(() => Boolean(document.querySelector(".rulebook-source-text") || document.querySelector(".rulebook-unlock input[type='password']")), null, { timeout: 10000 });
+  if (await input.isVisible()) {
+    await input.fill(rulebookPassphrase);
+    await page.getByRole("button", { name: "원문 잠금 풀기", exact: true }).click();
+  }
+  await page.locator(".rulebook-source-text").first().waitFor({ state: "visible", timeout: 10000 });
+}
 
 const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
@@ -59,9 +72,9 @@ async function cacheObservedResources(page) {
 
 async function readState(page) {
   const status = await page.getByRole("status").first().textContent();
-  await page.getByRole("button", { name: "인물 기록" }).click();
+  await page.getByRole("button", { name: "Create Your Character" }).click();
   const name = await page.getByLabel("이름", { exact: true }).first().inputValue();
-  await page.getByRole("button", { name: "판정과 전투" }).click();
+  await page.getByRole("button", { name: "Tests & Combat" }).click();
   await page.waitForFunction(() => {
     const visible = [...document.querySelectorAll(".playing-card img")]
       .filter((image) => !image.closest("details:not([open])") && image.getClientRects().length);
@@ -70,7 +83,14 @@ async function readState(page) {
   const cards = await page.locator(".playing-card img").evaluateAll((images) => images
     .filter((image) => !image.closest("details:not([open])") && image.getClientRects().length)
     .map((image) => ({ src: image.getAttribute("src"), ok: image.naturalWidth > 0 })));
-  return { status, name, cards };
+  await page.getByRole("button", { name: "Rulebook", exact: true }).click();
+  await page.getByRole("dialog", { name: "통합 룰북" }).waitFor({ state: "visible", timeout: 5000 });
+  await unlockRulebook(page);
+  await page.getByLabel("인쇄 쪽").fill("31");
+  await page.getByRole("button", { name: "쪽 펼치기", exact: true }).click();
+  const rulebook = await page.locator(".rulebook-source-text").evaluate((element) => (element.textContent?.length || 0) > 100);
+  await page.getByRole("button", { name: "통합 룰북 닫기", exact: true }).click();
+  return { status, name, cards, rulebook };
 }
 
 (async () => {
@@ -85,7 +105,7 @@ async function readState(page) {
   await page.goto(url, { waitUntil: "networkidle" });
   await page.waitForFunction(() => Boolean(navigator.serviceWorker?.controller), null, { timeout: 10000 });
   await page.getByLabel("이름", { exact: true }).first().fill("WebKit 원본 중단 관문");
-  await page.getByRole("button", { name: "판정과 전투" }).click();
+  await page.getByRole("button", { name: "Tests & Combat" }).click();
   await page.getByRole("button", { name: "괴수 들이기" }).click();
   await page.getByRole("button", { name: "플레이어 4장까지 · 괴수마다 3장" }).click();
   await page.waitForTimeout(650);
@@ -112,13 +132,15 @@ async function readState(page) {
     originUnavailable,
     returnedOnline,
     originRecovery: originUnavailable.name === "WebKit 원본 중단 관문"
-      && originUnavailable.status.includes("57/21")
+      && originUnavailable.status.includes("Player 57") && originUnavailable.status.includes("Referee 21")
       && originUnavailable.cards.length > 0
-      && originUnavailable.cards.every((card) => card.ok),
+      && originUnavailable.cards.every((card) => card.ok)
+      && originUnavailable.rulebook,
     returnOnline: returnedOnline.name === originUnavailable.name
-      && returnedOnline.status.includes("57/21")
+      && returnedOnline.status.includes("Player 57") && returnedOnline.status.includes("Referee 21")
       && returnedOnline.cards.length === originUnavailable.cards.length
-      && returnedOnline.cards.every((card) => card.ok),
+      && returnedOnline.cards.every((card) => card.ok)
+      && returnedOnline.rulebook,
     errors,
   };
 

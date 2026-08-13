@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { Suspense, createContext, lazy, useContext, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import {
   ARCANE_MAJOR_WORDS,
   ARCANE_MINOR_WORDS,
@@ -48,6 +48,8 @@ import {
 } from "./rules";
 
 type Tab = "character" | "tests" | "magic" | "map" | "downtime" | "log";
+const RulebookTransplant = lazy(() => import("./rulebook/RulebookTransplant"));
+const RulebookOpenContext = createContext<(sectionId?: string) => void>(() => undefined);
 type MapType = "wilderness" | "dungeon" | "settlement";
 type WoundPart = "head" | "torso" | "leftArm" | "rightArm" | "leftLeg" | "rightLeg";
 type ArmorKey = "helmet" | "cuirass" | "gambeson" | "chainmail" | "leftGauntlet" | "rightGauntlet" | "leftGreave" | "rightGreave" | "shield";
@@ -699,6 +701,10 @@ function App() {
   const [tab, setTab] = useState<Tab>("character");
   const [newLog, setNewLog] = useState("");
   const importRef = useRef<HTMLInputElement>(null);
+  const rulebookButtonRef = useRef<HTMLButtonElement>(null);
+  const rulebookReturnFocusRef = useRef<HTMLElement | null>(null);
+  const [rulebookOpen, setRulebookOpen] = useState(false);
+  const [rulebookSectionId, setRulebookSectionId] = useState<string | undefined>();
 
   const [combatAction, setCombatAction] = useState({ action: "Attack", monsterId: "", cardId: "", modifier: 0, calledShot: false, useFool: false, rawWounds: 1, resolveCost: 1 });
   const [damageForm, setDamageForm] = useState({ target: "player", part: "torso" as WoundPart, incoming: 1, armor: "none" as ArmorKey | "none", armorLabel: "", monsterArmored: false });
@@ -723,6 +729,10 @@ function App() {
     }, 180);
     return () => window.clearTimeout(timer);
   }, [state]);
+
+  useEffect(() => {
+    if (!rulebookOpen && rulebookReturnFocusRef.current?.isConnected) rulebookReturnFocusRef.current.focus();
+  }, [rulebookOpen]);
 
   const update = (recipe: (previous: GameState) => GameState, keepUndo = true) => {
     setState((previous) => {
@@ -1478,8 +1488,23 @@ function App() {
     update(() => freshState());
   };
 
+  const openRulebook = (sectionId?: string) => {
+    rulebookReturnFocusRef.current = document.activeElement instanceof HTMLElement && document.activeElement !== document.body
+      ? document.activeElement
+      : rulebookButtonRef.current;
+    setRulebookSectionId(sectionId);
+    setRulebookOpen(true);
+  };
+
+  const closeRulebook = () => {
+    const returnTarget = rulebookReturnFocusRef.current;
+    setRulebookOpen(false);
+    window.setTimeout(() => returnTarget?.focus({ preventScroll: true }), 0);
+  };
+
   return (
-    <div className="app-shell">
+    <RulebookOpenContext.Provider value={openRulebook}>
+      <div className="app-shell">
       <header className="topbar">
         <div>
           <h1 className="gloam-title">GLOAM</h1>
@@ -1492,6 +1517,7 @@ function App() {
           <button onClick={exportSave}>Export Chronicle</button>
           <button onClick={() => importRef.current?.click()}>Import Chronicle</button>
           <input ref={importRef} type="file" accept="application/json" hidden onChange={importSave} />
+          <button ref={rulebookButtonRef} onClick={() => openRulebook()}>Rulebook</button>
           <button className="danger" onClick={resetAll}>New Chronicle</button>
         </div>
         {saveError && <p className="save-error" role="alert">{saveError}</p>}
@@ -1506,7 +1532,7 @@ function App() {
           ["downtime", "Bestiary & Downtime"],
           ["log", "Chronicle & Archive"],
         ] as [Tab, string][]).map(([key, label]) => (
-          <button key={key} className={tab === key ? "active" : ""} aria-current={tab === key ? "page" : undefined} onClick={() => setTab(key)}>{label}</button>
+          <button key={key} data-tab={key} className={tab === key ? "active" : ""} aria-current={tab === key ? "page" : undefined} onClick={() => setTab(key)}>{label}</button>
         ))}
       </nav>
 
@@ -1621,14 +1647,63 @@ function App() {
           />
         )}
       </main>
-    </div>
+        {rulebookOpen && (
+          <Suspense fallback={<div className="rulebook-loading-screen" role="status">통합 룰북을 펼치는 중입니다…</div>}>
+            <RulebookTransplant
+              initialSectionId={rulebookSectionId}
+              currentTab={tab}
+              onClose={closeRulebook}
+              onOpenRuntime={(nextTab) => {
+                setTab(nextTab);
+                setRulebookOpen(false);
+                window.requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(`.tabs button[data-tab="${nextTab}"]`)?.focus());
+              }}
+            />
+          </Suspense>
+        )}
+      </div>
+    </RulebookOpenContext.Provider>
   );
 }
 
 type Update = (recipe: (previous: GameState) => GameState, keepUndo?: boolean) => void;
 
+const PANEL_RULEBOOK_REFERENCE: Record<string, string> = {
+  "인물 장부": "create-character",
+  "삶의 행로": "lifepath",
+  "목표와 본능": "goals",
+  "친구·적·등장인물": "friend-foe",
+  "재능과 성장": "talents",
+  "소지품 장부": "equipment",
+  "부상과 갑옷": "wounds",
+  "일반 판정": "tests",
+  "플레이어 행동과 대응": "combat",
+  "부상과 갑옷 적용": "equipment-armor",
+  "전투의 끝": "combat",
+  "연금술": "alchemy",
+  "민간 비술": "folk-magick",
+  "비전 비술": "arcane-magick",
+  "징조": "oracles",
+  "지도 펼치기": "generating-maps",
+  "사건 덱": "event-deck",
+  "사건 연대기": "event-deck",
+  "괴수 도감": "bestiary",
+  "휴식과 회복": "resting",
+  "시간과 회차": "time-downtime",
+  "흥청망청 보내기": "carousing",
+  "고용인": "hirelings",
+  "길 위의 사람들": "road-folk",
+  "마법 물품표": "magic-items-weapons",
+  "두 덱의 보관함": "cards",
+  "보존 무결성": "cards",
+  "캠페인 연대기": "how-to-play",
+  "임무와 인연의 현황": "goals",
+};
+
 function Panel({ title, subtitle, children, className = "" }: { title: string; subtitle?: string; children: React.ReactNode; className?: string }) {
-  return <section className={`panel ${className}`}><header className="panel-header"><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</header>{children}</section>;
+  const openRulebook = useContext(RulebookOpenContext);
+  const referenceId = PANEL_RULEBOOK_REFERENCE[title];
+  return <section className={`panel ${className}`}><header className="panel-header"><div><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div>{referenceId && <button className="panel-rulebook-link" onClick={() => openRulebook(referenceId)}>원문</button>}</header>{children}</section>;
 }
 
 const suitKo: Record<Suit, string> = { cups: "Cups", wands: "Wands", swords: "Swords", coins: "Coins" };

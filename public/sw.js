@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'gloam-v1.0.0-20260811'
+const CACHE_VERSION = 'gloam-v1.1-private-encrypted-20260813'
 const SHELL_CACHE = `${CACHE_VERSION}-shell`
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`
 const CACHE_PREFIX = 'gloam-v'
@@ -100,6 +100,7 @@ globalThis.addEventListener('fetch', (event) => {
   const sameOrigin = url.origin === globalThis.location.origin
   const cacheableAsset = sameOrigin && (
     url.pathname.includes('/assets/')
+    || url.pathname.includes('/rulebook/')
     || url.pathname.includes('/tarot/')
     || url.pathname.endsWith('/favicon.svg')
     || request.destination === 'style'

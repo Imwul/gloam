@@ -2,6 +2,19 @@ const { chromium, firefox, webkit } = require(process.env.GLOAM_PLAYWRIGHT_MODUL
 
 const url = process.argv[2] || "http://127.0.0.1:5178/";
 const chromePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const rulebookPassphrase = process.env.GLOAM_RULEBOOK_PASSPHRASE;
+
+if (!rulebookPassphrase) throw new Error("GLOAM_RULEBOOK_PASSPHRASE is required for rulebook certification");
+
+async function unlockRulebook(page) {
+  const input = page.getByLabel("개인 룰북 암호");
+  await page.waitForFunction(() => Boolean(document.querySelector(".rulebook-source-text") || document.querySelector(".rulebook-unlock input[type='password']")), null, { timeout: 10000 });
+  if (await input.isVisible()) {
+    await input.fill(rulebookPassphrase);
+    await page.getByRole("button", { name: "원문 잠금 풀기", exact: true }).click();
+  }
+  await page.locator(".rulebook-source-text").first().waitFor({ state: "visible", timeout: 10000 });
+}
 
 async function audit(name, browserType, launchOptions = {}) {
   const browser = await browserType.launch({ headless: true, ...launchOptions });
@@ -39,6 +52,65 @@ async function audit(name, browserType, launchOptions = {}) {
       transitionDuration: getComputedStyle(element).transitionDuration,
       animationDuration: getComputedStyle(element).animationDuration,
     }));
+
+    const rulebookResourcesBefore = await page.evaluate(() => performance.getEntriesByType("resource")
+      .map((entry) => entry.name)
+      .filter((resource) => resource.includes("RulebookTransplant") || resource.includes("/rulebook/")));
+    await page.getByRole("button", { name: "Rulebook", exact: true }).click();
+    const rulebookDialog = page.getByRole("dialog", { name: "통합 룰북" });
+    await rulebookDialog.waitFor({ state: "visible" });
+    await unlockRulebook(page);
+    await page.keyboard.press("Shift+Tab");
+    const rulebookFocusTrapped = await page.evaluate(() => Boolean(document.querySelector(".rulebook-transplant")?.contains(document.activeElement)));
+    await page.locator(".rulebook-note textarea").fill(`개인 룰북 메모 · ${name} · ${viewport.label}`);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(50);
+    const rulebookFocusReturned = await page.evaluate(() => document.activeElement?.textContent?.trim() === "Rulebook");
+    await page.getByRole("button", { name: "Rulebook", exact: true }).click();
+    await rulebookDialog.waitFor({ state: "visible" });
+    await unlockRulebook(page);
+    const rulebookNotePersisted = await page.locator(".rulebook-note textarea").inputValue();
+    await page.getByLabel("원문 찾기").fill("Riposte");
+    const riposteSearchResults = await page.locator(".rulebook-search-results button").count();
+    await page.getByLabel("원문 찾기").fill("");
+    await page.getByLabel("인쇄 쪽").fill("54");
+    await page.getByRole("button", { name: "쪽 펼치기", exact: true }).click();
+    await page.getByRole("heading", { name: "Gloam v1.02 · p.54", exact: true }).waitFor({ state: "visible" });
+    const rulebookLayout = await page.evaluate(() => {
+      const dialog = document.querySelector(".rulebook-transplant");
+      const table = document.querySelector(".rulebook-source-text.table-layout");
+      return {
+        pageTitle: document.querySelector(".rulebook-source-heading h2")?.textContent || "",
+        noDocumentOverflow: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        noDialogOverflow: Boolean(dialog && dialog.scrollWidth <= dialog.clientWidth),
+        tableHasInternalScroll: Boolean(table && table.scrollWidth > table.clientWidth),
+        tableWhiteSpace: table ? getComputedStyle(table).whiteSpace : "",
+      };
+    });
+    await page.getByRole("button", { name: "쪽에 갈피 꽂기", exact: true }).click();
+    const rulebookStorage = await page.evaluate(() => {
+      const reference = JSON.parse(localStorage.getItem("gloam-rulebook-reference-v1") || "null");
+      return {
+        campaignKeyExists: localStorage.getItem("gloam_companion_v2") !== null,
+        referenceKeyExists: reference !== null,
+        bookmarks: reference?.bookmarks?.length || 0,
+        notes: Object.keys(reference?.notes || {}).length,
+      };
+    });
+    const rulebookResourcesAfter = await page.evaluate(() => performance.getEntriesByType("resource")
+      .map((entry) => entry.name)
+      .filter((resource) => resource.includes("RulebookTransplant") || resource.includes("/rulebook/")));
+    await page.getByRole("button", { name: "통합 룰북 닫기", exact: true }).click();
+    const rulebook = {
+      lazyBeforeOpen: rulebookResourcesBefore.length === 0,
+      resourcesAfterOpen: rulebookResourcesAfter,
+      riposteSearchResults,
+      notePersisted: rulebookNotePersisted.includes(`${name} · ${viewport.label}`),
+      focusReturned: rulebookFocusReturned,
+      focusTrapped: rulebookFocusTrapped,
+      layout: rulebookLayout,
+      storage: rulebookStorage,
+    };
 
     await page.getByRole("checkbox", { name: /몸통/ }).click();
     await page.getByRole("button", { name: "Bestiary & Downtime" }).click();
@@ -113,15 +185,27 @@ async function audit(name, browserType, launchOptions = {}) {
       await page.getByRole("status").waitFor({ state: "visible", timeout: 5000 });
       await page.getByRole("button", { name: "Tests & Combat" }).click();
       await page.getByRole("heading", { name: /플레이어 손패/ }).scrollIntoViewIfNeeded();
+      await page.getByRole("button", { name: "Rulebook", exact: true }).click();
+      await page.getByRole("dialog", { name: "통합 룰북" }).waitFor({ state: "visible", timeout: 5000 });
+      await unlockRulebook(page);
+      await page.getByLabel("인쇄 쪽").fill("31");
+      await page.getByRole("button", { name: "쪽 펼치기", exact: true }).click();
+      await page.getByRole("heading", { name: "Gloam v1.02 · p.31", exact: true }).waitFor({ state: "visible", timeout: 5000 });
+      const offlineRulebook = await page.evaluate(() => ({
+        title: document.querySelector(".rulebook-source-heading h2")?.textContent || "",
+        sourceLoaded: (document.querySelector(".rulebook-source-text")?.textContent?.length || 0) > 100,
+      }));
+      await page.getByRole("button", { name: "통합 룰북 닫기", exact: true }).click();
       await page.waitForTimeout(250);
-      offlineApp = await page.evaluate(() => ({
+      offlineApp = await page.evaluate((rulebook) => ({
         title: document.querySelector("h1")?.textContent || "",
         status: document.querySelector('[role="status"]')?.textContent || "",
         noHorizontalOverflow: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
         visibleCards: [...document.querySelectorAll(".playing-card img")]
           .filter((image) => !image.closest("details:not([open])") && image.getClientRects().length)
           .map((image) => ({ src: image.getAttribute("src"), ok: image.naturalWidth > 0 })),
-      }));
+        rulebook,
+      }), offlineRulebook);
     } catch (error) {
       offlineError = String(error?.message || error).split("\n")[0];
     }
@@ -147,6 +231,7 @@ async function audit(name, browserType, launchOptions = {}) {
       restSelectionSynchronized,
       navigation,
       printedRulebookVisual,
+      rulebook,
       offline: { serviceWorker, reload: offlineReload, app: offlineApp, error: offlineError, consoleErrors: consoleErrors.slice(onlineConsoleErrors.length) },
       consoleErrors: onlineConsoleErrors,
     });

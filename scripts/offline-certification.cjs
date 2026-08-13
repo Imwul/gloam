@@ -3,7 +3,20 @@ const { chromium } = require(process.env.GLOAM_PLAYWRIGHT_MODULE || "playwright"
 const url = process.argv[2] || "http://127.0.0.1:4182/";
 const chromePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const waitForAutosave = (page) => page.waitForTimeout(450);
+const rulebookPassphrase = process.env.GLOAM_RULEBOOK_PASSPHRASE;
 let activeBrowser;
+
+if (!rulebookPassphrase) throw new Error("GLOAM_RULEBOOK_PASSPHRASE is required for rulebook certification");
+
+const unlockRulebook = async (page) => {
+  const input = page.getByLabel("개인 룰북 암호");
+  await page.waitForFunction(() => Boolean(document.querySelector(".rulebook-source-text") || document.querySelector(".rulebook-unlock input[type='password']")), null, { timeout: 10000 });
+  if (await input.isVisible()) {
+    await input.fill(rulebookPassphrase);
+    await page.getByRole("button", { name: "원문 잠금 풀기", exact: true }).click();
+  }
+  await page.locator(".rulebook-source-text").first().waitFor({ state: "visible", timeout: 10000 });
+};
 
 const cacheObservedResources = (page) => page.evaluate(async () => {
   const registration = await navigator.serviceWorker.ready;
@@ -23,11 +36,11 @@ const cacheObservedResources = (page) => page.evaluate(async () => {
 
 const readVisibleState = async (page) => {
   const name = await page.getByLabel("이름", { exact: true }).first().inputValue();
-  await page.getByRole("button", { name: "연대기와 보존" }).click();
+  await page.getByRole("button", { name: "Chronicle & Archive" }).click();
   const campaign = await page.getByLabel("캠페인 이름", { exact: true }).inputValue();
   const status = await page.getByRole("status").first().textContent();
   const logText = (await page.locator(".log-list article p").allTextContents()).join("\n");
-  await page.getByRole("button", { name: "인물 기록" }).click();
+  await page.getByRole("button", { name: "Create Your Character" }).click();
   const inventory = await page.locator('input[aria-label="물품 이름"]').evaluateAll((inputs) => inputs.map((input) => input.value));
   const notes = await page.locator("main textarea").first().inputValue();
   return { name, campaign, status, logText, inventory, notes };
@@ -54,7 +67,7 @@ const readVisibleState = async (page) => {
   await seedPage.locator("main textarea").first().fill("Service Worker 설치 전 기존 캠페인");
   await seedPage.getByPlaceholder("물품 이름").fill("기존 여행 장비");
   await seedPage.getByRole("button", { name: "물품 기록" }).click();
-  await seedPage.getByRole("button", { name: "연대기와 보존" }).click();
+  await seedPage.getByRole("button", { name: "Chronicle & Archive" }).click();
   await seedPage.getByLabel("캠페인 이름", { exact: true }).fill("Gloam Offline Gate Closure");
   await seedPage.getByLabel("연대기에 적을 기록").fill("Service Worker 설치 전 기록");
   await seedPage.getByRole("button", { name: "기록 더하기" }).click();
@@ -100,7 +113,7 @@ const readVisibleState = async (page) => {
     throw new Error("Existing campaign did not survive Service Worker installation");
   }
 
-  await page.getByRole("button", { name: "판정과 전투" }).click();
+  await page.getByRole("button", { name: "Tests & Combat" }).click();
   await page.getByRole("button", { name: "괴수 들이기" }).click();
   await page.getByRole("button", { name: "플레이어 4장까지 · 괴수마다 3장" }).click();
   await page.getByRole("heading", { name: /플레이어 손패/ }).scrollIntoViewIfNeeded();
@@ -134,6 +147,13 @@ const readVisibleState = async (page) => {
   if (!cacheBeforeOffline.runtimeTarot.includes(visibleOnlineCards[0].src)) {
     throw new Error("Displayed card was not added to runtime cache");
   }
+  await page.getByRole("button", { name: "Rulebook", exact: true }).click();
+  await page.getByRole("dialog", { name: "통합 룰북" }).waitFor({ state: "visible" });
+  await unlockRulebook(page);
+  await page.getByLabel("인쇄 쪽").fill("31");
+  await page.getByRole("button", { name: "쪽 펼치기", exact: true }).click();
+  await page.getByRole("heading", { name: "Gloam v1.02 · p.31", exact: true }).waitFor({ state: "visible" });
+  await page.getByRole("button", { name: "통합 룰북 닫기", exact: true }).click();
   await waitForAutosave(page);
   offlinePhase = true;
   await context.setOffline(true);
@@ -156,21 +176,22 @@ const readVisibleState = async (page) => {
   await page.getByPlaceholder("물품 이름").fill("오프라인 횃불");
   await page.getByRole("button", { name: "물품 기록" }).click();
 
-  await page.getByRole("button", { name: "판정과 전투" }).click();
-  const endRound = page.getByRole("button", { name: "라운드 끝내기" });
-  if (await endRound.isEnabled()) await endRound.click();
+  await page.getByRole("button", { name: "Tests & Combat" }).click();
+  await page.getByRole("heading", { name: /플레이어 손패/ }).scrollIntoViewIfNeeded();
   const offlineCachedCards = await page.locator(".playing-card img").evaluateAll((images) => images
     .filter((image) => !image.closest("details:not([open])") && image.getClientRects().length)
     .map((image) => ({ src: image.src, ok: image.naturalWidth > 0 })));
+  const endRound = page.getByRole("button", { name: "라운드 끝내기" });
+  if (await endRound.isEnabled()) await endRound.click();
 
-  await page.getByRole("button", { name: "비술과 징조" }).click();
+  await page.getByRole("button", { name: "Magick & Oracles" }).click();
   await page.getByRole("button", { name: "첫 준비 · 소 아르카나 단어 뽑기" }).click();
   await page.getByRole("button", { name: "양", exact: true }).click();
 
-  await page.getByRole("button", { name: "연대기와 보존" }).click();
+  await page.getByRole("button", { name: "Chronicle & Archive" }).click();
   await page.getByLabel("연대기에 적을 기록").fill("offline-undo-probe");
   await page.getByRole("button", { name: "기록 더하기" }).click();
-  await page.getByRole("button", { name: /되돌리기/ }).click();
+  await page.getByRole("button", { name: /Undo/ }).click();
   const undoRemovedProbe = (await page.locator(".log-list").innerText()).includes("offline-undo-probe") === false;
   await page.getByLabel("연대기에 적을 기록").fill("오프라인 플레이 최종 기록");
   await page.getByRole("button", { name: "기록 더하기" }).click();
@@ -179,6 +200,13 @@ const readVisibleState = async (page) => {
   await page.reload({ waitUntil: "domcontentloaded", timeout: 10000 });
   await page.getByRole("status").waitFor({ state: "visible" });
   const offlineReloadedState = await readVisibleState(page);
+  await page.getByRole("button", { name: "Rulebook", exact: true }).click();
+  await page.getByRole("dialog", { name: "통합 룰북" }).waitFor({ state: "visible" });
+  await unlockRulebook(page);
+  await page.getByLabel("인쇄 쪽").fill("31");
+  await page.getByRole("button", { name: "쪽 펼치기", exact: true }).click();
+  const offlineRulebook = await page.locator(".rulebook-source-text").evaluate((element) => (element.textContent?.length || 0) > 100);
+  await page.getByRole("button", { name: "통합 룰북 닫기", exact: true }).click();
 
   offlinePhase = false;
   await context.setOffline(false);
@@ -194,17 +222,18 @@ const readVisibleState = async (page) => {
       && beforeInstallState.inventory.includes("기존 여행 장비"),
     warmOfflineReload: warmOfflineState.name === "오프라인 관문 아스터"
       && warmOfflineState.campaign === "Gloam Offline Gate Closure"
-      && warmOfflineState.status.includes("57/21"),
+      && warmOfflineState.status.includes("Player 57") && warmOfflineState.status.includes("Referee 21"),
     displayedCardOffline: offlineCachedCards.some((card) => card.src === visibleOnlineCards[0].src && card.ok),
+    offlineRulebook,
     offlineGameplay: offlineReloadedState.notes === "오프라인에서 이어 쓴 인물 기록"
       && offlineReloadedState.inventory.includes("오프라인 횃불")
       && offlineReloadedState.logText.includes("오프라인 플레이 최종 기록")
       && undoRemovedProbe
-      && offlineReloadedState.status.includes("57/21"),
+      && offlineReloadedState.status.includes("Player 57") && offlineReloadedState.status.includes("Referee 21"),
     returnOnline: returnedOnlineState.notes === offlineReloadedState.notes
       && returnedOnlineState.inventory.includes("오프라인 횃불")
       && returnedOnlineState.logText.includes("오프라인 플레이 최종 기록")
-      && returnedOnlineState.status.includes("57/21"),
+      && returnedOnlineState.status.includes("Player 57") && returnedOnlineState.status.includes("Referee 21"),
     evidence: {
       warmOfflineState,
       offlineReloadedState,
@@ -228,6 +257,7 @@ const readVisibleState = async (page) => {
     || !result.existingCampaignAfterInstall
     || !result.warmOfflineReload
     || !result.displayedCardOffline
+    || !result.offlineRulebook
     || !result.offlineGameplay
     || !result.returnOnline
     || result.onlineErrors.length > 0) process.exitCode = 1;

@@ -1,0 +1,9 @@
+{
+  "edition": "Gloam v1.02 Personal Rulebook Transplant",
+  "encryption": "AES-256-GCM",
+  "documents": [
+    { "id": "gloam-1.02", "title": "Gloam v1.02", "pages": 60, "firstPage": 1, "lastPage": 60 },
+    { "id": "combat-example", "title": "Gloam Combat Example", "pages": 3, "firstPage": 1, "lastPage": 3 },
+    { "id": "character-sheet", "title": "Gloam Character Sheet", "pages": 1, "firstPage": 1, "lastPage": 1 }
+  ]
+}
