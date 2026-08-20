@@ -423,8 +423,7 @@ export const cardEconomyValid = (state: GameState) => ({
   referee: validateCardZones(allRefereeLiveZones(state), createRefereeDeck(() => 0.5)),
 });
 
-// eslint-disable-next-line react-refresh/only-export-components -- shared with the release certification harness
-export const recallBothDecks = (state: GameState, reason: string): GameState => ({
+const recallBothDecks = (state: GameState, reason: string): GameState => ({
   ...state,
   playerDeck: createPlayerDeck(),
   playerDiscard: [],
@@ -592,51 +591,57 @@ const vocationFromSuit: Record<Suit, string> = {
   coins: "Cutpurse",
 };
 
-const TALENTS: Record<string, { name: string; text: string; starting?: boolean }[]> = {
+const TALENTS: Record<string, { name: string; textKo: string; starting?: boolean }[]> = {
   Herald: [
-    { name: "Disarming Presence", text: "Modify a Reaction Test by +3.", starting: true },
-    { name: "Academic", text: "Recall one fact about culture, institutions, or history, at the Referee's discretion." },
-    { name: "Duel of Wits", text: "Win an argument in the eyes of an audience; this does not necessarily change the opponent's mind." },
-    { name: "Inspire", text: "Give someone +3 to a Test; declare before the Test." },
-    { name: "Parley", text: "Calm a hostile creature with language; unavailable after combat starts." },
-    { name: "Verity & Guile", text: "Detect a lie, or make a Cups Test to make someone believe your lie." },
+    { name: "Disarming Presence", textKo: "반응 판정에 +3을 더한다.", starting: true },
+    { name: "Academic", textKo: "문화·제도·역사에 관한 사실 하나를 심판의 재량에 따라 기억해 낸다." },
+    { name: "Duel of Wits", textKo: "청중이 보는 앞에서 논쟁에 이긴다. 상대의 마음까지 반드시 바뀌는 것은 아니다." },
+    { name: "Inspire", textKo: "누군가의 판정에 +3을 준다. 판정 전에 선언해야 한다." },
+    { name: "Parley", textKo: "말이 통하는 적대적 생물을 진정시킨다. 전투가 시작된 뒤에는 쓸 수 없다." },
+    { name: "Verity & Guile", textKo: "거짓을 알아차리거나, 컵 판정으로 자신의 거짓을 믿게 한다." },
   ],
   "Knight-Errant": [
-    { name: "Sally Forth", text: "Once per combat round, perform one extra Combat Action.", starting: true },
-    { name: "Geas", text: "Command a simple task; the creature Tests to resist. Only one geas at a time." },
-    { name: "Itinerant Hospitality", text: "Find lodging and a hot meal at any manor or castle." },
-    { name: "Martial Dominance", text: "Attack a creature entering or leaving your range as a Response." },
-    { name: "Oath-sworn", text: "Actions pursuing the oath gain +3; failure brands you Oath-breaker." },
-    { name: "Trial by Combat", text: "Challenge a duel; refusal cows them and grants +3 to social Tests for one Turn." },
+    { name: "Sally Forth", textKo: "전투 라운드마다 한 번, 전투 행동을 하나 더 한다.", starting: true },
+    { name: "Geas", textKo: "단순한 임무를 명한다. 대상은 저항 판정을 하며, 한 번에 하나만 유지된다." },
+    { name: "Itinerant Hospitality", textKo: "어느 장원이나 성에서든 숙소와 따뜻한 식사를 얻는다." },
+    { name: "Martial Dominance", textKo: "자신의 사거리로 들어오거나 빠져나가는 생물을 대응으로 공격한다." },
+    { name: "Oath-sworn", textKo: "맹세를 좇는 행동에 +3을 얻는다. 실패하면 서약 파기자로 낙인찍힌다." },
+    { name: "Trial by Combat", textKo: "결투를 청한다. 거절한 상대는 위축되어 1차례 동안 사회 판정에 +3을 허용한다." },
   ],
   Mystic: [
-    { name: "Magick", text: "Begin with one two-word Arcane spell. Activate to cast the spell.", starting: true },
-    { name: "Augury", text: "Ask about a course of action; the Referee answers Weal, Woe, both, or neither." },
-    { name: "Sixth Sense", text: "Perceive magick as a faint green-purple mist." },
-    { name: "Familiar", text: "Summon one imp or cat; it vanishes after one Wound." },
-    { name: "Undo Magick", text: "Counter or dispel a Spell; powerful magick may require a Wands Test." },
-    { name: "Bind Magick", text: "Bind a Spell to an object; each Resolve adds one charge." },
+    { name: "Magick", textKo: "두 단어로 된 비전 주문 하나를 알고 시작하며, 주문을 시전할 수 있다.", starting: true },
+    { name: "Augury", textKo: "행동 방침을 물으면 심판이 길함, 흉함, 둘 다, 또는 어느 쪽도 아님으로 답한다." },
+    { name: "Sixth Sense", textKo: "비술을 희미한 녹빛과 자줏빛 안개로 감지한다." },
+    { name: "Familiar", textKo: "임프나 고양이 하나를 부른다. 부상 하나를 입으면 사라진다." },
+    { name: "Undo Magick", textKo: "주문을 상쇄하거나 해제한다. 강력한 비술은 완드 판정이 필요할 수 있다." },
+    { name: "Bind Magick", textKo: "주문을 물건에 봉한다. 결의 1점마다 충전 하나를 얻는다." },
   ],
   Cutpurse: [
-    { name: "Nimble", text: "After being targeted, swap your initiative with a card in hand.", starting: true },
-    { name: "One with the Shadows", text: "Hide in darkness with extreme skill; scent remains." },
-    { name: "Sneak-Attack", text: "Make a sudden melee attack that bypasses armor." },
-    { name: "Poisoner", text: "Brew a lethal poison that kills within an hour when ingested." },
-    { name: "Impersonate", text: "Copy a human's appearance, voice, and manner for one Watch." },
-    { name: "Split", text: "You and your friends flee without a Coins Test." },
+    { name: "Nimble", textKo: "공격 대상이 된 뒤 손패 한 장과 선제권 카드를 맞바꾼다.", starting: true },
+    { name: "One with the Shadows", textKo: "어둠 속에 숨지만 냄새까지 감출 수는 없다." },
+    { name: "Sneak-Attack", textKo: "기습 근접 공격으로 갑옷을 무시한다." },
+    { name: "Poisoner", textKo: "먹으면 한 시간 안에 죽는 치명적인 독을 만든다." },
+    { name: "Impersonate", textKo: "인간의 모습·목소리·태도를 1경점 동안 모방한다." },
+    { name: "Split", textKo: "자신과 동료들이 코인 판정 없이 달아난다." },
   ],
 };
 
+const armorAp = (name: string) => {
+  const armor = ARMOR.find((item) => item.name === name);
+  if (!armor) throw new Error(`Missing canonical armor entry: ${name}`);
+  return armor.ap;
+};
+
 const armorLimits: Record<ArmorKey, { label: string; ap: number }> = {
-  helmet: { label: "투구", ap: 2 },
-  cuirass: { label: "흉갑", ap: 3 },
-  gambeson: { label: "누비 갑옷", ap: 1 },
-  chainmail: { label: "사슬 갑옷", ap: 3 },
-  leftGauntlet: { label: "왼손 건틀릿", ap: 1 },
-  rightGauntlet: { label: "오른손 건틀릿", ap: 1 },
-  leftGreave: { label: "왼쪽 정강이받이", ap: 2 },
-  rightGreave: { label: "오른쪽 정강이받이", ap: 2 },
-  shield: { label: "방패", ap: 3 },
+  helmet: { label: "투구", ap: armorAp("Helmet") },
+  cuirass: { label: "흉갑", ap: armorAp("Cuirass") },
+  gambeson: { label: "누비 갑옷", ap: armorAp("Gambeson") },
+  chainmail: { label: "사슬 갑옷", ap: armorAp("Chainmail") },
+  leftGauntlet: { label: "왼손 건틀릿", ap: armorAp("Gauntlet L") },
+  rightGauntlet: { label: "오른손 건틀릿", ap: armorAp("Gauntlet R") },
+  leftGreave: { label: "왼쪽 정강이받이", ap: armorAp("Greave L") },
+  rightGreave: { label: "오른쪽 정강이받이", ap: armorAp("Greave R") },
+  shield: { label: "방패", ap: armorAp("Shield") },
 };
 
 const woundLabels: Record<WoundPart, string> = {
@@ -665,33 +670,6 @@ const inventoryCategoryKo: Record<InventoryItem["category"], string> = {
 };
 const contactKindKo = { friends: "친구", foes: "적", npcs: "등장인물" } as const;
 const goalStatusKo: Record<Goal["status"], string> = { active: "진행 중", completed: "완수", impossible: "불가능", discarded: "폐기" };
-
-const talentKo: Record<string, { name: string; text: string }> = {
-  "Disarming Presence": { name: "무장 해제 미소", text: "반응 판정에 +3을 더한다." },
-  Academic: { name: "학자적 지성", text: "문화·제도·역사에 관한 사실 하나를 심판의 재량에 따라 기억해 낸다." },
-  "Duel of Wits": { name: "언쟁의 달인", text: "청중이 보는 앞에서 논쟁에 이긴다. 상대의 마음까지 반드시 바뀌는 것은 아니다." },
-  Inspire: { name: "격려의 연설", text: "누군가의 판정에 +3을 준다. 판정 전에 선언해야 한다." },
-  Parley: { name: "평화적 교섭", text: "말이 통하는 적대적 생물을 진정시킨다. 전투가 시작된 뒤에는 쓸 수 없다." },
-  "Verity & Guile": { name: "진실과 기만", text: "거짓을 알아차리거나, 컵 판정으로 자신의 거짓을 믿게 한다." },
-  "Sally Forth": { name: "과감한 돌격", text: "전투 라운드마다 한 번, 전투 행동을 하나 더 한다." },
-  Geas: { name: "기아스", text: "단순한 임무를 명한다. 대상은 저항 판정을 하며, 한 번에 하나만 유지된다." },
-  "Itinerant Hospitality": { name: "유랑 기사의 환대", text: "어느 장원이나 성에서든 숙소와 따뜻한 식사를 얻는다." },
-  "Martial Dominance": { name: "전투 지배", text: "자신의 사거리로 들어오거나 빠져나가는 생물을 대응으로 공격한다." },
-  "Oath-sworn": { name: "서약", text: "맹세를 좇는 행동에 +3을 얻는다. 실패하면 서약 파기자로 낙인찍힌다." },
-  "Trial by Combat": { name: "결투 재판", text: "결투를 청한다. 거절한 상대는 위축되어 1차례 동안 사회 판정에 +3을 허용한다." },
-  Magick: { name: "비술", text: "두 단어로 된 비전 주문 하나를 알고 시작하며, 주문을 시전할 수 있다." },
-  Augury: { name: "점복", text: "행동 방침을 물으면 심판이 길함, 흉함, 둘 다, 또는 어느 쪽도 아님으로 답한다." },
-  "Sixth Sense": { name: "제6감", text: "비술을 희미한 녹빛과 자줏빛 안개로 감지한다." },
-  Familiar: { name: "사역마", text: "임프나 고양이 하나를 부른다. 부상 하나를 입으면 사라진다." },
-  "Undo Magick": { name: "비술 해제", text: "주문을 상쇄하거나 해제한다. 강력한 비술은 완드 판정이 필요할 수 있다." },
-  "Bind Magick": { name: "비술 봉인", text: "주문을 물건에 봉한다. 결의 1점마다 충전 하나를 얻는다." },
-  Nimble: { name: "민첩한 대처", text: "공격 대상이 된 뒤 손패 한 장과 선제권 카드를 맞바꾼다." },
-  "One with the Shadows": { name: "그림자와 하나", text: "어둠 속에 숨지만 냄새까지 감출 수는 없다." },
-  "Sneak-Attack": { name: "암습", text: "기습 근접 공격으로 갑옷을 무시한다." },
-  Poisoner: { name: "독제조술", text: "먹으면 한 시간 안에 죽는 치명적인 독을 만든다." },
-  Impersonate: { name: "가장", text: "인간의 모습·목소리·태도를 1경점 동안 모방한다." },
-  Split: { name: "흩어지기", text: "자신과 동료들이 코인 판정 없이 달아난다." },
-};
 
 function App() {
   const [loaded] = useState<SaveBundle>(loadBundle);
@@ -1844,7 +1822,7 @@ function CharacterTab(props: {
     </Panel>
 
     <Panel title="재능과 성장" subtitle="자기 천직 재능은 경험치 5, 다른 천직은 10입니다. 다른 천직의 시작 재능은 배울 수 없으며 경험치 1마다 하루를 수련합니다." className="span-2">
-      <div className="talent-grid">{Object.entries(TALENTS).map(([vocation, talents]) => <div key={vocation}><h3>{vocation}</h3>{talents.map((talent) => { const unlocked = character.talents.includes(talent.name); const own = vocation === ownVocation; const cost = own ? 5 : 10; const blocked = talent.starting && !own; const dedicatedMagicWorkflow = ["Magick", "Bind Magick", "Undo Magick"].includes(talent.name); const translated = talentKo[talent.name]; return <article key={talent.name} className="talent"><div><strong>{talent.starting ? "◆" : "◇"} {talent.name}</strong><p>{translated.text}</p></div>{unlocked ? dedicatedMagicWorkflow ? <span>‘Magick & Oracles’ 갈피에서 사용</span> : <button disabled={character.resolve < 1} onClick={() => update((previous) => { const spent = props.spendPlayerResolve(previous, 1); if (!spent) return previous; return { ...spent, logs: [logEntry(spent, "character", `[Talent 발동] ${talent.name}; 플레이어 결의 −1, 심판 결의 +1. 효과 해석은 플레이 자리에 남겨 둡니다.`), ...spent.logs] }; })}>발동 · 결의 1</button> : talent.starting && own ? <button onClick={() => update((previous) => ({ ...previous, character: { ...previous.character, talents: [...previous.character.talents, talent.name] } }))}>시작 Talent 기록</button> : <button disabled={blocked || character.xp < cost} onClick={() => update((previous) => ({ ...previous, day: previous.day + cost, watch: 1, character: { ...previous.character, xp: previous.character.xp - cost, talents: [...previous.character.talents, talent.name] }, logs: [logEntry(previous, "character", `[성장] ${talent.name}; 경험치 ${cost}, 수련 ${cost}일.`), ...previous.logs] }))}>{blocked ? "다른 천직의 시작 Talent" : `배우기 · 경험치 ${cost}`}</button>}</article>; })}</div>)}</div>
+      <div className="talent-grid">{Object.entries(TALENTS).map(([vocation, talents]) => <div key={vocation}><h3>{vocation}</h3>{talents.map((talent) => { const unlocked = character.talents.includes(talent.name); const own = vocation === ownVocation; const cost = own ? 5 : 10; const blocked = talent.starting && !own; const dedicatedMagicWorkflow = ["Magick", "Bind Magick", "Undo Magick"].includes(talent.name); return <article key={talent.name} className="talent"><div><strong>{talent.starting ? "◆" : "◇"} {talent.name}</strong><p>{talent.textKo}</p></div>{unlocked ? dedicatedMagicWorkflow ? <span>‘Magick & Oracles’ 갈피에서 사용</span> : <button disabled={character.resolve < 1} onClick={() => update((previous) => { const spent = props.spendPlayerResolve(previous, 1); if (!spent) return previous; return { ...spent, logs: [logEntry(spent, "character", `[Talent 발동] ${talent.name}; 플레이어 결의 −1, 심판 결의 +1. 효과 해석은 플레이 자리에 남겨 둡니다.`), ...spent.logs] }; })}>발동 · 결의 1</button> : talent.starting && own ? <button onClick={() => update((previous) => ({ ...previous, character: { ...previous.character, talents: [...previous.character.talents, talent.name] } }))}>시작 Talent 기록</button> : <button disabled={blocked || character.xp < cost} onClick={() => update((previous) => ({ ...previous, day: previous.day + cost, watch: 1, character: { ...previous.character, xp: previous.character.xp - cost, talents: [...previous.character.talents, talent.name] }, logs: [logEntry(previous, "character", `[성장] ${talent.name}; 경험치 ${cost}, 수련 ${cost}일.`), ...previous.logs] }))}>{blocked ? "다른 천직의 시작 Talent" : `배우기 · 경험치 ${cost}`}</button>}</article>; })}</div>)}</div>
       <div className="button-row">{SUITS.map((suit) => <button key={suit} disabled={character.xp < 10 || character.stats[suit] >= 6} onClick={() => update((previous) => ({ ...previous, day: previous.day + 10, watch: 1, character: { ...previous.character, xp: previous.character.xp - 10, stats: { ...previous.character.stats, [suit]: previous.character.stats[suit] + 1 } }, logs: [logEntry(previous, "character", `[성장] ${suitKo[suit]} +1; 경험치 10, 수련 10일.`), ...previous.logs] }))}>{suitKo[suit]} 올리기 · 경험치 10</button>)}</div>
     </Panel>
   </div>;

@@ -1,4 +1,4 @@
-export interface Weapon {
+interface Weapon {
   name: string;
   nameKo: string;
   wounds: number;
@@ -8,7 +8,7 @@ export interface Weapon {
   tags: string[];
 }
 
-export interface ArmorItem {
+interface ArmorItem {
   name: string;
   nameKo: string;
   ap: number;
@@ -18,13 +18,13 @@ export interface ArmorItem {
   bodyPartKo: string;
 }
 
-export interface TradeGood {
+interface TradeGood {
   name: string;
   nameKo: string;
   coins: string;
 }
 
-export interface Monster {
+interface Monster {
   id: number;
   name: string;
   nameKo: string;
@@ -811,25 +811,6 @@ export const MAGICK_ITEMS = {
   ],
 };
 
-export const MAGICK_ITEM_NAMES_KO: Record<keyof typeof MAGICK_ITEMS, string[]> = {
-  Swords: [
-    "베갈타", "다인슬레이프", "드라우그르", "디른윈", "엘프 화살", "프라가라흐", "라 스카라바",
-    "미슬토", "모랄타", "오르나", "투석구", "슈체르비에츠", "벼락", "티조나",
-  ],
-  Coins: [
-    "고통의 관", "두반", "투사체 소실의 건틀릿", "녹색 갑옷", "심재 흉갑", "공포의 투구", "훌리드스햘므르",
-    "야른글로파르", "카인헬름", "미스릴 셔츠", "팔랑기나", "침묵", "비단 사슬갑옷", "탄헬름",
-  ],
-  Cups: [
-    "바람 주머니", "브란의 뿔잔", "칼라드볼그의 칼집", "코르볼그", "쿠르소", "디른후흐의 가마솥", "귀드노의 바구니",
-    "진실의 잔", "나이팅게일 잔", "밤길잡이의 모래시계", "오드레리르", "황금 항아리", "붉은 호리병", "영혼석",
-  ],
-  Wands: [
-    "에이바르의 작은북", "암두시아스의 절규 악기", "암피온의 리라", "대드루이드의 리라", "아틀라스의 소라고둥", "엔델리온의 오카리나", "해리던의 허디거디",
-    "릴리윈의 레벡", "미노리의 하프", "롤런드의 뿔나팔", "영혼 차임", "유랑 악사의 류트", "파쇄의 나팔", "방랑자의 콘서티나",
-  ],
-};
-
 export const MAGICK_ITEM_TEXT_KO: Record<keyof typeof MAGICK_ITEMS, string[]> = {
   Swords: [
     "모랄타와 짝지어 보조 손에 들면, 모랄타의 명중을 보장하기 위해 결의를 쓸 필요가 없다.",
@@ -897,7 +878,7 @@ export const MAGICK_ITEM_TEXT_KO: Record<keyof typeof MAGICK_ITEMS, string[]> = 
   ],
 };
 
-export interface LifepathEvent {
+interface LifepathEvent {
   en: string;
   ko: string;
 }

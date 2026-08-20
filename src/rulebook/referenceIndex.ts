@@ -1,6 +1,6 @@
 export type RuntimeTab = "character" | "tests" | "magic" | "map" | "downtime" | "log";
 
-export type ReferenceKind =
+type ReferenceKind =
   | "RULE"
   | "PROCEDURE"
   | "EXCEPTIONS"
@@ -11,7 +11,7 @@ export type ReferenceKind =
   | "CONTEXT"
   | "REFERENCE";
 
-export type ReferenceGroup = "시작" | "인물" | "판정과 전투" | "비술" | "심판 자료" | "비술 물품" | "부록";
+type ReferenceGroup = "시작" | "인물" | "판정과 전투" | "비술" | "심판 자료" | "비술 물품" | "부록";
 
 export interface RulebookSection {
   id: string;

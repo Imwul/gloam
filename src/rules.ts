@@ -1,8 +1,7 @@
 export const SUITS = ["cups", "wands", "swords", "coins"] as const;
 export type Suit = (typeof SUITS)[number];
 
-export const MINOR_RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Page", "Knight", "Queen", "King"] as const;
-export type MinorRank = (typeof MINOR_RANKS)[number];
+const MINOR_RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Page", "Knight", "Queen", "King"] as const;
 
 export const MAJOR_RANKS = [
   "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI",
@@ -16,7 +15,7 @@ export interface Card {
   reversed: boolean;
 }
 
-export interface TestInput {
+interface TestInput {
   card: Card;
   stat: number;
   modifier?: number;
@@ -37,7 +36,7 @@ export interface TestResult {
   pushed: boolean;
 }
 
-export interface ArmorResult {
+interface ArmorResult {
   incoming: number;
   armorPoints: number;
   wounds: number;
@@ -66,7 +65,7 @@ export const tableKey = (card: Card): string => ({
   King: "K",
 }[card.rank] ?? card.rank);
 
-export const shuffle = <T,>(items: readonly T[], random: () => number = Math.random): T[] => {
+const shuffle = <T,>(items: readonly T[], random: () => number = Math.random): T[] => {
   const result = [...items];
   for (let index = result.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(random() * (index + 1));
@@ -211,13 +210,6 @@ export const amountResult = (rank: string): string | null => {
   if (["Page", "Knight", "Queen", "King"].includes(rank)) return "Considerable";
   if (rank === "A") return "Excessive";
   return null;
-};
-
-export const cardDisplay = (card: Card): string => {
-  const suit = card.suit ? `${card.suit[0].toUpperCase()}${card.suit.slice(1)} ` : "";
-  const orientation = card.reversed ? " · Reversed" : "";
-  const name = card.rank === "0" ? "The Fool" : `${suit}${card.rank}`;
-  return `${name}${orientation}`;
 };
 
 export const validateCardZones = (zones: readonly (readonly Card[])[], expected: readonly Card[]): boolean => {
