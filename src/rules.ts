@@ -36,6 +36,71 @@ export interface TestResult {
   pushed: boolean;
 }
 
+export interface ResolveBalances {
+  playerResolve: number;
+  refereeResolve: number;
+}
+
+const resolvePoints = (value: number): number => Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+
+// The player cap is 10. The Referee mirrors points actually gained, and has no
+// separately stated cap. Spending a player's Resolve never gives the Referee any.
+export const gainResolveBalances = (
+  playerResolve: number,
+  refereeResolve: number,
+  amount = 1,
+): ResolveBalances & { gained: number } => {
+  const player = Math.min(10, resolvePoints(playerResolve));
+  const gained = Math.min(10 - player, resolvePoints(amount));
+  return {
+    playerResolve: player + gained,
+    refereeResolve: resolvePoints(refereeResolve) + gained,
+    gained,
+  };
+};
+
+export const spendResolveBalances = (
+  playerResolve: number,
+  refereeResolve: number,
+  amount = 1,
+): ResolveBalances & { spent: number } => {
+  const player = Math.min(10, resolvePoints(playerResolve));
+  const spent = Math.min(player, resolvePoints(amount));
+  return {
+    playerResolve: player - spent,
+    refereeResolve: resolvePoints(refereeResolve),
+    spent,
+  };
+};
+
+export interface GameTime {
+  day: number;
+  watch: number;
+  turns: number;
+  rounds: number;
+}
+
+// Rulebook p. 50: Round = 10 seconds, Turn = 15 minutes, Watch = 8 hours,
+// three Watches per day. Smaller units are elapsed counts within larger ones.
+export const advanceGameTime = (time: GameTime, seconds: number): GameTime => {
+  const count = (value: number): number => Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+  const roundsPerTurn = 90;
+  const roundsPerWatch = roundsPerTurn * 32;
+  const roundsPerDay = roundsPerWatch * 3;
+  const elapsed = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds / 10)) : 0;
+  const total = (Math.max(1, count(time.day)) - 1) * roundsPerDay
+    + (Math.max(1, count(time.watch)) - 1) * roundsPerWatch
+    + count(time.turns) * roundsPerTurn + count(time.rounds) + elapsed;
+  const withinDay = total % roundsPerDay;
+  const withinWatch = withinDay % roundsPerWatch;
+  return {
+    day: Math.floor(total / roundsPerDay) + 1,
+    watch: Math.floor(withinDay / roundsPerWatch) + 1,
+    turns: Math.floor(withinWatch / roundsPerTurn),
+    rounds: withinWatch % roundsPerTurn,
+  };
+};
+
 interface ArmorResult {
   incoming: number;
   armorPoints: number;
@@ -125,7 +190,8 @@ export const dealCombatCards = (
     return hand;
   };
   const filledPlayerHand = fill(playerHand, 4);
-  const filledMonsterHands = monsterHands.map((hand) => fill(hand, 3));
+  // PCs refill to four; the Referee draws three new cards per NPC (p. 30).
+  const filledMonsterHands = monsterHands.map((hand) => fill(hand, hand.length + 3));
   return {
     deck: remaining,
     playerHand: filledPlayerHand,
@@ -160,12 +226,17 @@ export const evaluateTest = ({
   };
 };
 
-export const resolveArmor = (incoming: number, armorPoints: number): ArmorResult => ({
-  incoming: Math.max(0, incoming),
-  armorPoints: Math.max(0, armorPoints),
-  wounds: Math.max(0, incoming - armorPoints),
-  notchesArmor: incoming > armorPoints,
-});
+export const resolveArmor = (incoming: number, armorPoints: number): ArmorResult => {
+  const damage = Math.max(0, incoming);
+  const protection = Math.max(0, armorPoints);
+  return {
+    incoming: damage,
+    armorPoints: protection,
+    wounds: Math.max(0, damage - protection),
+    // Only an intact piece that blocks the blow can be notched (rulebook p. 27).
+    notchesArmor: protection > 0 && damage > protection,
+  };
+};
 
 export const effectiveArmorPoints = (printedArmorPoints: number, notches: number): number =>
   notches >= printedArmorPoints ? 0 : Math.max(0, printedArmorPoints);
@@ -177,6 +248,29 @@ export const woundedSpeed = (coins: number, woundedLegs: number): number =>
 
 export const isFatalHeadWound = (alreadyWounded: boolean, woundsAfterArmor: number): boolean =>
   woundsAfterArmor > (alreadyWounded ? 0 : 1);
+
+type RecordedWoundPart = "head" | "torso" | "leftArm" | "rightArm" | "leftLeg" | "rightLeg";
+
+// Older saves stored monster injuries only as append-only damage notes. Recover
+// their mechanical effects without changing or guessing at narrative notes.
+export const restoreMonsterInjury = (
+  notes: readonly string[],
+  woundsTaken: number,
+  woundCapacity: number,
+): { wounds: Partial<Record<RecordedWoundPart, boolean>>; dead: boolean } => {
+  const wounds: Partial<Record<RecordedWoundPart, boolean>> = {};
+  let headWounds = 0;
+  for (const note of notes) {
+    const match = /^(head|torso|leftArm|rightArm|leftLeg|rightLeg):\s*(\d+(?:\.\d+)?)\s+Wound/.exec(note);
+    if (!match) continue;
+    const count = Number(match[2]);
+    if (count <= 0) continue;
+    const part = match[1] as RecordedWoundPart;
+    wounds[part] = true;
+    if (part === "head") headWounds += count;
+  }
+  return { wounds, dead: headWounds >= 2 || woundsTaken >= woundCapacity };
+};
 
 const romanValue = (rank: string): number => {
   const values: Record<string, number> = { I: 1, V: 5, X: 10 };
@@ -229,8 +323,11 @@ export const normalizeCard = (value: unknown): Card | null => {
   if (!value || typeof value !== "object") return null;
   const raw = value as Record<string, unknown>;
   const type = raw.type;
-  const rank = typeof raw.rank === "string" ? raw.rank : typeof raw.card === "string" ? raw.card : null;
-  if ((type !== "minor" && type !== "major") || !rank) return null;
+  const savedRank = typeof raw.rank === "string" ? raw.rank : typeof raw.card === "string" ? raw.card : null;
+  if ((type !== "minor" && type !== "major") || !savedRank) return null;
+  const rank = ({ P: "Page", Kn: "Knight", Q: "Queen", K: "King", Fool: "0" } as Record<string, string>)[savedRank] ?? savedRank;
+  if (type === "minor" && !(MINOR_RANKS as readonly string[]).includes(rank)) return null;
+  if (type === "major" && rank !== "0" && !(MAJOR_RANKS as readonly string[]).includes(rank)) return null;
   const suit = raw.suit;
   if (type === "minor" && !SUITS.includes(suit as Suit)) return null;
   return {

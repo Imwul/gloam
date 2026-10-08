@@ -1,0 +1,6941 @@
+{
+  "url": "http://127.0.0.1:5190/",
+  "viewports": [
+    {
+      "width": 3440,
+      "height": 1440,
+      "screens": [
+        {
+          "tab": "play",
+          "viewport": 3440,
+          "documentWidth": 3440,
+          "scrollY": 0,
+          "shell": {
+            "x": 640,
+            "y": 0,
+            "width": 2160,
+            "height": 2292.921875
+          },
+          "main": {
+            "x": 680,
+            "y": 315.984375,
+            "width": 2080,
+            "height": 1976.9375
+          },
+          "panels": [
+            {
+              "title": "불확실할 때 판정",
+              "x": 740,
+              "y": 527.96875,
+              "width": 656,
+              "height": 686.28125
+            },
+            {
+              "title": "사건과 징조",
+              "x": 1424,
+              "y": 527.96875,
+              "width": 624.765625,
+              "height": 530.328125
+            },
+            {
+              "title": "방금 일어난 일",
+              "x": 740,
+              "y": 1242.25,
+              "width": 1308.765625,
+              "height": 158.5
+            },
+            {
+              "title": "지금 좇는 목표 3 / 3",
+              "x": 2076.765625,
+              "y": 527.96875,
+              "width": 623.234375,
+              "height": 440.640625
+            },
+            {
+              "title": "본능",
+              "x": 2076.765625,
+              "y": 988.609375,
+              "width": 623.234375,
+              "height": 460.75
+            },
+            {
+              "title": "사용할 수 있는 재능",
+              "x": 2076.765625,
+              "y": 1469.359375,
+              "width": 623.234375,
+              "height": 292.4375
+            },
+            {
+              "title": "무기와 방어",
+              "x": 2076.765625,
+              "y": 1781.796875,
+              "width": 623.234375,
+              "height": 303.125
+            },
+            {
+              "x": 2076.765625,
+              "y": 2104.921875,
+              "width": 623.234375,
+              "height": 98
+            }
+          ],
+          "navigation": {
+            "x": 641,
+            "y": 166.984375,
+            "width": 2158,
+            "height": 65
+          },
+          "drawButton": {
+            "x": 767,
+            "y": 998.453125,
+            "width": 602,
+            "height": 54
+          },
+          "eventButton": {
+            "x": 1727.375,
+            "y": 674.296875,
+            "width": 294.390625,
+            "height": 44
+          },
+          "escapedElements": []
+        },
+        {
+          "tab": "tests",
+          "viewport": 3440,
+          "documentWidth": 3440,
+          "scrollY": 0,
+          "shell": {
+            "x": 640,
+            "y": 0,
+            "width": 2160,
+            "height": 2061.046875
+          },
+          "main": {
+            "x": 680,
+            "y": 315.984375,
+            "width": 2080,
+            "height": 1745.0625
+          },
+          "panels": [
+            {
+              "title": "전투 흐름 · 1라운드",
+              "x": 740,
+              "y": 527.96875,
+              "width": 1960,
+              "height": 501.96875
+            },
+            {
+              "title": "플레이어 행동과 대응",
+              "x": 740,
+              "y": 1049.9375,
+              "width": 970,
+              "height": 494.65625
+            },
+            {
+              "title": "부상과 갑옷 적용",
+              "x": 1730,
+              "y": 1049.9375,
+              "width": 970,
+              "height": 347.859375
+            },
+            {
+              "title": "전투의 끝",
+              "x": 740,
+              "y": 1564.59375,
+              "width": 970,
+              "height": 314.453125
+            },
+            {
+              "title": "괴수 도감",
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          ],
+          "navigation": {
+            "x": 641,
+            "y": 166.984375,
+            "width": 2158,
+            "height": 65
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "character",
+          "viewport": 3440,
+          "documentWidth": 3440,
+          "scrollY": 0,
+          "shell": {
+            "x": 640,
+            "y": 0,
+            "width": 2160,
+            "height": 1440
+          },
+          "main": {
+            "x": 680,
+            "y": 315.984375,
+            "width": 2080,
+            "height": 1088.109375
+          },
+          "panels": [
+            {
+              "title": "인물 장부",
+              "x": 740,
+              "y": 655.703125,
+              "width": 1960,
+              "height": 591.453125
+            }
+          ],
+          "navigation": {
+            "x": 641,
+            "y": 166.984375,
+            "width": 2158,
+            "height": 65
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "map",
+          "viewport": 3440,
+          "documentWidth": 3440,
+          "scrollY": 0,
+          "shell": {
+            "x": 640,
+            "y": 0,
+            "width": 2160,
+            "height": 2023.53125
+          },
+          "main": {
+            "x": 680,
+            "y": 315.984375,
+            "width": 2080,
+            "height": 1707.546875
+          },
+          "panels": [
+            {
+              "title": "지도 펼치기",
+              "x": 740,
+              "y": 568.765625,
+              "width": 1960,
+              "height": 1364.765625
+            }
+          ],
+          "navigation": {
+            "x": 641,
+            "y": 166.984375,
+            "width": 2158,
+            "height": 65
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "magic",
+          "viewport": 3440,
+          "documentWidth": 3440,
+          "scrollY": 0,
+          "shell": {
+            "x": 640,
+            "y": 0,
+            "width": 2160,
+            "height": 1889.765625
+          },
+          "main": {
+            "x": 680,
+            "y": 315.984375,
+            "width": 2080,
+            "height": 1573.78125
+          },
+          "panels": [
+            {
+              "title": "민간 비술",
+              "x": 740,
+              "y": 527.96875,
+              "width": 970,
+              "height": 450.09375
+            },
+            {
+              "title": "비전 비술",
+              "x": 1730,
+              "y": 527.96875,
+              "width": 970,
+              "height": 639.96875
+            },
+            {
+              "title": "연금술",
+              "x": 740,
+              "y": 1187.9375,
+              "width": 970,
+              "height": 408.5
+            },
+            {
+              "title": "마법 물품표",
+              "x": 740,
+              "y": 1616.4375,
+              "width": 1960,
+              "height": 183.328125
+            }
+          ],
+          "navigation": {
+            "x": 641,
+            "y": 166.984375,
+            "width": 2158,
+            "height": 65
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "downtime",
+          "viewport": 3440,
+          "documentWidth": 3440,
+          "scrollY": 0,
+          "shell": {
+            "x": 640,
+            "y": 0,
+            "width": 2160,
+            "height": 1770.078125
+          },
+          "main": {
+            "x": 680,
+            "y": 315.984375,
+            "width": 2080,
+            "height": 1454.09375
+          },
+          "panels": [
+            {
+              "title": "시간과 회차",
+              "x": 740,
+              "y": 527.96875,
+              "width": 970,
+              "height": 572.578125
+            },
+            {
+              "title": "휴식과 회복",
+              "x": 1730,
+              "y": 527.96875,
+              "width": 970,
+              "height": 369.296875
+            },
+            {
+              "title": "흥청망청 보내기",
+              "x": 740,
+              "y": 1120.546875,
+              "width": 970,
+              "height": 236.890625
+            },
+            {
+              "title": "고용인",
+              "x": 1730,
+              "y": 1120.546875,
+              "width": 970,
+              "height": 333.828125
+            },
+            {
+              "title": "길 위의 사람들",
+              "x": 740,
+              "y": 1474.375,
+              "width": 970,
+              "height": 205.703125
+            }
+          ],
+          "navigation": {
+            "x": 641,
+            "y": 166.984375,
+            "width": 2158,
+            "height": 65
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        }
+      ],
+      "rules": {
+        "x": 1260,
+        "y": 213.96875,
+        "width": 920,
+        "height": 1012.0625,
+        "bottom": 1226.03125,
+        "readingWidth": 678,
+        "readingHeight": 792,
+        "readingScroll": 789,
+        "readingClient": 789
+      }
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "screens": [
+        {
+          "tab": "play",
+          "viewport": 1920,
+          "documentWidth": 1920,
+          "scrollY": 0,
+          "shell": {
+            "x": 160,
+            "y": 0,
+            "width": 1600,
+            "height": 2065.296875
+          },
+          "main": {
+            "x": 292,
+            "y": 289.984375,
+            "width": 1336,
+            "height": 1775.3125
+          },
+          "panels": [
+            {
+              "title": "불확실할 때 판정",
+              "x": 316,
+              "y": 465.5625,
+              "width": 787.015625,
+              "height": 501.53125
+            },
+            {
+              "title": "사건과 징조",
+              "x": 316,
+              "y": 987.09375,
+              "width": 787.015625,
+              "height": 505.46875
+            },
+            {
+              "title": "방금 일어난 일",
+              "x": 316,
+              "y": 1512.5625,
+              "width": 787.015625,
+              "height": 145.390625
+            },
+            {
+              "title": "지금 좇는 목표 3 / 3",
+              "x": 1127.015625,
+              "y": 465.5625,
+              "width": 476.96875,
+              "height": 398.390625
+            },
+            {
+              "title": "본능",
+              "x": 1127.015625,
+              "y": 883.953125,
+              "width": 476.96875,
+              "height": 409.78125
+            },
+            {
+              "title": "사용할 수 있는 재능",
+              "x": 1127.015625,
+              "y": 1313.734375,
+              "width": 476.96875,
+              "height": 265.796875
+            },
+            {
+              "title": "무기와 방어",
+              "x": 1127.015625,
+              "y": 1599.53125,
+              "width": 476.96875,
+              "height": 285.765625
+            },
+            {
+              "x": 1127.015625,
+              "y": 1905.296875,
+              "width": 476.96875,
+              "height": 90
+            }
+          ],
+          "navigation": {
+            "x": 161,
+            "y": 154.984375,
+            "width": 1598,
+            "height": 59
+          },
+          "drawButton": {
+            "x": 339,
+            "y": 795.84375,
+            "width": 144.84375,
+            "height": 46.25
+          },
+          "eventButton": {
+            "x": 700.5,
+            "y": 1125.78125,
+            "width": 379.515625,
+            "height": 43
+          },
+          "escapedElements": []
+        },
+        {
+          "tab": "tests",
+          "viewport": 1920,
+          "documentWidth": 1920,
+          "scrollY": 0,
+          "shell": {
+            "x": 160,
+            "y": 0,
+            "width": 1600,
+            "height": 1995.515625
+          },
+          "main": {
+            "x": 292,
+            "y": 289.984375,
+            "width": 1336,
+            "height": 1705.53125
+          },
+          "panels": [
+            {
+              "title": "전투 흐름 · 1라운드",
+              "x": 316,
+              "y": 465.5625,
+              "width": 1288,
+              "height": 488.90625
+            },
+            {
+              "title": "플레이어 행동과 대응",
+              "x": 316,
+              "y": 974.46875,
+              "width": 634,
+              "height": 535.71875
+            },
+            {
+              "title": "부상과 갑옷 적용",
+              "x": 970,
+              "y": 974.46875,
+              "width": 634,
+              "height": 338.921875
+            },
+            {
+              "title": "전투의 끝",
+              "x": 316,
+              "y": 1530.1875,
+              "width": 634,
+              "height": 303.328125
+            },
+            {
+              "title": "괴수 도감",
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          ],
+          "navigation": {
+            "x": 161,
+            "y": 154.984375,
+            "width": 1598,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "character",
+          "viewport": 1920,
+          "documentWidth": 1920,
+          "scrollY": 0,
+          "shell": {
+            "x": 160,
+            "y": 0,
+            "width": 1600,
+            "height": 1310.875
+          },
+          "main": {
+            "x": 292,
+            "y": 289.984375,
+            "width": 1336,
+            "height": 1020.890625
+          },
+          "panels": [
+            {
+              "title": "인물 장부",
+              "x": 316,
+              "y": 592.359375,
+              "width": 1288,
+              "height": 582.515625
+            }
+          ],
+          "navigation": {
+            "x": 161,
+            "y": 154.984375,
+            "width": 1598,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "map",
+          "viewport": 1920,
+          "documentWidth": 1920,
+          "scrollY": 0,
+          "shell": {
+            "x": 160,
+            "y": 0,
+            "width": 1600,
+            "height": 1919.6875
+          },
+          "main": {
+            "x": 292,
+            "y": 289.984375,
+            "width": 1336,
+            "height": 1629.703125
+          },
+          "panels": [
+            {
+              "title": "지도 펼치기",
+              "x": 316,
+              "y": 506.359375,
+              "width": 1288,
+              "height": 1343.328125
+            }
+          ],
+          "navigation": {
+            "x": 161,
+            "y": 154.984375,
+            "width": 1598,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "magic",
+          "viewport": 1920,
+          "documentWidth": 1920,
+          "scrollY": 0,
+          "shell": {
+            "x": 160,
+            "y": 0,
+            "width": 1600,
+            "height": 1779.609375
+          },
+          "main": {
+            "x": 292,
+            "y": 289.984375,
+            "width": 1336,
+            "height": 1489.625
+          },
+          "panels": [
+            {
+              "title": "민간 비술",
+              "x": 316,
+              "y": 465.5625,
+              "width": 634,
+              "height": 441.15625
+            },
+            {
+              "title": "비전 비술",
+              "x": 970,
+              "y": 465.5625,
+              "width": 634,
+              "height": 629.15625
+            },
+            {
+              "title": "연금술",
+              "x": 316,
+              "y": 1114.71875,
+              "width": 634,
+              "height": 399.5625
+            },
+            {
+              "title": "마법 물품표",
+              "x": 316,
+              "y": 1534.28125,
+              "width": 1288,
+              "height": 175.328125
+            }
+          ],
+          "navigation": {
+            "x": 161,
+            "y": 154.984375,
+            "width": 1598,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "downtime",
+          "viewport": 1920,
+          "documentWidth": 1920,
+          "scrollY": 0,
+          "shell": {
+            "x": 160,
+            "y": 0,
+            "width": 1600,
+            "height": 1655.796875
+          },
+          "main": {
+            "x": 292,
+            "y": 289.984375,
+            "width": 1336,
+            "height": 1365.8125
+          },
+          "panels": [
+            {
+              "title": "시간과 회차",
+              "x": 316,
+              "y": 465.5625,
+              "width": 634,
+              "height": 562.703125
+            },
+            {
+              "title": "휴식과 회복",
+              "x": 970,
+              "y": 465.5625,
+              "width": 634,
+              "height": 360.359375
+            },
+            {
+              "title": "흥청망청 보내기",
+              "x": 316,
+              "y": 1048.265625,
+              "width": 634,
+              "height": 227.953125
+            },
+            {
+              "title": "고용인",
+              "x": 970,
+              "y": 1048.265625,
+              "width": 634,
+              "height": 320.765625
+            },
+            {
+              "title": "길 위의 사람들",
+              "x": 316,
+              "y": 1389.03125,
+              "width": 634,
+              "height": 196.765625
+            }
+          ],
+          "navigation": {
+            "x": 161,
+            "y": 154.984375,
+            "width": 1598,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        }
+      ],
+      "rules": {
+        "x": 500,
+        "y": 134.5625,
+        "width": 920,
+        "height": 810.875,
+        "bottom": 945.4375,
+        "readingWidth": 678,
+        "readingHeight": 594,
+        "readingScroll": 591,
+        "readingClient": 591
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "screens": [
+        {
+          "tab": "play",
+          "viewport": 1440,
+          "documentWidth": 1440,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 2065.296875
+          },
+          "main": {
+            "x": 52,
+            "y": 289.984375,
+            "width": 1336,
+            "height": 1775.3125
+          },
+          "panels": [
+            {
+              "title": "불확실할 때 판정",
+              "x": 76,
+              "y": 465.5625,
+              "width": 787.015625,
+              "height": 501.53125
+            },
+            {
+              "title": "사건과 징조",
+              "x": 76,
+              "y": 987.09375,
+              "width": 787.015625,
+              "height": 505.46875
+            },
+            {
+              "title": "방금 일어난 일",
+              "x": 76,
+              "y": 1512.5625,
+              "width": 787.015625,
+              "height": 145.390625
+            },
+            {
+              "title": "지금 좇는 목표 3 / 3",
+              "x": 887.015625,
+              "y": 465.5625,
+              "width": 476.96875,
+              "height": 398.390625
+            },
+            {
+              "title": "본능",
+              "x": 887.015625,
+              "y": 883.953125,
+              "width": 476.96875,
+              "height": 409.78125
+            },
+            {
+              "title": "사용할 수 있는 재능",
+              "x": 887.015625,
+              "y": 1313.734375,
+              "width": 476.96875,
+              "height": 265.796875
+            },
+            {
+              "title": "무기와 방어",
+              "x": 887.015625,
+              "y": 1599.53125,
+              "width": 476.96875,
+              "height": 285.765625
+            },
+            {
+              "x": 887.015625,
+              "y": 1905.296875,
+              "width": 476.96875,
+              "height": 90
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 154.984375,
+            "width": 1438,
+            "height": 59
+          },
+          "drawButton": {
+            "x": 99,
+            "y": 795.84375,
+            "width": 144.84375,
+            "height": 46.25
+          },
+          "eventButton": {
+            "x": 460.5,
+            "y": 1125.78125,
+            "width": 379.515625,
+            "height": 43
+          },
+          "escapedElements": []
+        },
+        {
+          "tab": "tests",
+          "viewport": 1440,
+          "documentWidth": 1440,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 1995.515625
+          },
+          "main": {
+            "x": 52,
+            "y": 289.984375,
+            "width": 1336,
+            "height": 1705.53125
+          },
+          "panels": [
+            {
+              "title": "전투 흐름 · 1라운드",
+              "x": 76,
+              "y": 465.5625,
+              "width": 1288,
+              "height": 488.90625
+            },
+            {
+              "title": "플레이어 행동과 대응",
+              "x": 76,
+              "y": 974.46875,
+              "width": 634,
+              "height": 535.71875
+            },
+            {
+              "title": "부상과 갑옷 적용",
+              "x": 730,
+              "y": 974.46875,
+              "width": 634,
+              "height": 338.921875
+            },
+            {
+              "title": "전투의 끝",
+              "x": 76,
+              "y": 1530.1875,
+              "width": 634,
+              "height": 303.328125
+            },
+            {
+              "title": "괴수 도감",
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 154.984375,
+            "width": 1438,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "character",
+          "viewport": 1440,
+          "documentWidth": 1440,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 1310.875
+          },
+          "main": {
+            "x": 52,
+            "y": 289.984375,
+            "width": 1336,
+            "height": 1020.890625
+          },
+          "panels": [
+            {
+              "title": "인물 장부",
+              "x": 76,
+              "y": 592.359375,
+              "width": 1288,
+              "height": 582.515625
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 154.984375,
+            "width": 1438,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "map",
+          "viewport": 1440,
+          "documentWidth": 1440,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 1919.6875
+          },
+          "main": {
+            "x": 52,
+            "y": 289.984375,
+            "width": 1336,
+            "height": 1629.703125
+          },
+          "panels": [
+            {
+              "title": "지도 펼치기",
+              "x": 76,
+              "y": 506.359375,
+              "width": 1288,
+              "height": 1343.328125
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 154.984375,
+            "width": 1438,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "magic",
+          "viewport": 1440,
+          "documentWidth": 1440,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 1779.609375
+          },
+          "main": {
+            "x": 52,
+            "y": 289.984375,
+            "width": 1336,
+            "height": 1489.625
+          },
+          "panels": [
+            {
+              "title": "민간 비술",
+              "x": 76,
+              "y": 465.5625,
+              "width": 634,
+              "height": 441.15625
+            },
+            {
+              "title": "비전 비술",
+              "x": 730,
+              "y": 465.5625,
+              "width": 634,
+              "height": 629.15625
+            },
+            {
+              "title": "연금술",
+              "x": 76,
+              "y": 1114.71875,
+              "width": 634,
+              "height": 399.5625
+            },
+            {
+              "title": "마법 물품표",
+              "x": 76,
+              "y": 1534.28125,
+              "width": 1288,
+              "height": 175.328125
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 154.984375,
+            "width": 1438,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "downtime",
+          "viewport": 1440,
+          "documentWidth": 1440,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 1655.796875
+          },
+          "main": {
+            "x": 52,
+            "y": 289.984375,
+            "width": 1336,
+            "height": 1365.8125
+          },
+          "panels": [
+            {
+              "title": "시간과 회차",
+              "x": 76,
+              "y": 465.5625,
+              "width": 634,
+              "height": 562.703125
+            },
+            {
+              "title": "휴식과 회복",
+              "x": 730,
+              "y": 465.5625,
+              "width": 634,
+              "height": 360.359375
+            },
+            {
+              "title": "흥청망청 보내기",
+              "x": 76,
+              "y": 1048.265625,
+              "width": 634,
+              "height": 227.953125
+            },
+            {
+              "title": "고용인",
+              "x": 730,
+              "y": 1048.265625,
+              "width": 634,
+              "height": 320.765625
+            },
+            {
+              "title": "길 위의 사람들",
+              "x": 76,
+              "y": 1389.03125,
+              "width": 634,
+              "height": 196.765625
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 154.984375,
+            "width": 1438,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        }
+      ],
+      "rules": {
+        "x": 260,
+        "y": 94.0625,
+        "width": 920,
+        "height": 711.875,
+        "bottom": 805.9375,
+        "readingWidth": 678,
+        "readingHeight": 495,
+        "readingScroll": 492,
+        "readingClient": 492
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "screens": [
+        {
+          "tab": "play",
+          "viewport": 768,
+          "documentWidth": 768,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 768,
+            "height": 2470.203125
+          },
+          "main": {
+            "x": 1,
+            "y": 263.1875,
+            "width": 766,
+            "height": 2207.015625
+          },
+          "panels": [
+            {
+              "title": "불확실할 때 판정",
+              "x": 25,
+              "y": 420.265625,
+              "width": 718,
+              "height": 493.53125
+            },
+            {
+              "title": "사건과 징조",
+              "x": 25,
+              "y": 933.796875,
+              "width": 718,
+              "height": 497.46875
+            },
+            {
+              "title": "방금 일어난 일",
+              "x": 25,
+              "y": 1451.265625,
+              "width": 718,
+              "height": 137.390625
+            },
+            {
+              "title": "지금 좇는 목표 3 / 3",
+              "x": 25,
+              "y": 1606.65625,
+              "width": 351,
+              "height": 401.78125
+            },
+            {
+              "title": "본능",
+              "x": 392,
+              "y": 1606.65625,
+              "width": 351,
+              "height": 401.78125
+            },
+            {
+              "title": "사용할 수 있는 재능",
+              "x": 25,
+              "y": 2024.4375,
+              "width": 351,
+              "height": 277.765625
+            },
+            {
+              "title": "무기와 방어",
+              "x": 392,
+              "y": 2024.4375,
+              "width": 351,
+              "height": 277.765625
+            },
+            {
+              "x": 25,
+              "y": 2318.203125,
+              "width": 351,
+              "height": 82
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 128.1875,
+            "width": 766,
+            "height": 59
+          },
+          "drawButton": {
+            "x": 44,
+            "y": 746.546875,
+            "width": 144.84375,
+            "height": 46.25
+          },
+          "eventButton": {
+            "x": 375,
+            "y": 1068.484375,
+            "width": 349,
+            "height": 43
+          },
+          "escapedElements": []
+        },
+        {
+          "tab": "tests",
+          "viewport": 768,
+          "documentWidth": 768,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 768,
+            "height": 2377.140625
+          },
+          "main": {
+            "x": 1,
+            "y": 263.1875,
+            "width": 766,
+            "height": 2113.953125
+          },
+          "panels": [
+            {
+              "title": "전투 흐름 · 1라운드",
+              "x": 25,
+              "y": 420.265625,
+              "width": 718,
+              "height": 580.90625
+            },
+            {
+              "title": "플레이어 행동과 대응",
+              "x": 25,
+              "y": 1021.171875,
+              "width": 718,
+              "height": 527.71875
+            },
+            {
+              "title": "부상과 갑옷 적용",
+              "x": 25,
+              "y": 1568.890625,
+              "width": 718,
+              "height": 330.921875
+            },
+            {
+              "title": "전투의 끝",
+              "x": 25,
+              "y": 1919.8125,
+              "width": 718,
+              "height": 295.328125
+            },
+            {
+              "title": "괴수 도감",
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 128.1875,
+            "width": 766,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "character",
+          "viewport": 768,
+          "documentWidth": 768,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 768,
+            "height": 1425.953125
+          },
+          "main": {
+            "x": 1,
+            "y": 263.1875,
+            "width": 766,
+            "height": 1162.765625
+          },
+          "panels": [
+            {
+              "title": "인물 장부",
+              "x": 25,
+              "y": 547.0625,
+              "width": 718,
+              "height": 742.890625
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 128.1875,
+            "width": 766,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "map",
+          "viewport": 768,
+          "documentWidth": 768,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 768,
+            "height": 2443.1875
+          },
+          "main": {
+            "x": 1,
+            "y": 263.1875,
+            "width": 766,
+            "height": 2180
+          },
+          "panels": [
+            {
+              "title": "지도 펼치기",
+              "x": 25,
+              "y": 481.859375,
+              "width": 718,
+              "height": 1891.328125
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 128.1875,
+            "width": 766,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "magic",
+          "viewport": 768,
+          "documentWidth": 768,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 768,
+            "height": 2220.46875
+          },
+          "main": {
+            "x": 1,
+            "y": 263.1875,
+            "width": 766,
+            "height": 1957.28125
+          },
+          "panels": [
+            {
+              "title": "민간 비술",
+              "x": 25,
+              "y": 420.265625,
+              "width": 718,
+              "height": 433.15625
+            },
+            {
+              "title": "비전 비술",
+              "x": 25,
+              "y": 873.421875,
+              "width": 718,
+              "height": 621.15625
+            },
+            {
+              "title": "연금술",
+              "x": 25,
+              "y": 1514.578125,
+              "width": 718,
+              "height": 391.5625
+            },
+            {
+              "title": "마법 물품표",
+              "x": 25,
+              "y": 1926.140625,
+              "width": 718,
+              "height": 224.328125
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 128.1875,
+            "width": 766,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "downtime",
+          "viewport": 768,
+          "documentWidth": 768,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 768,
+            "height": 2198.8125
+          },
+          "main": {
+            "x": 1,
+            "y": 263.1875,
+            "width": 766,
+            "height": 1935.625
+          },
+          "panels": [
+            {
+              "title": "시간과 회차",
+              "x": 25,
+              "y": 420.265625,
+              "width": 718,
+              "height": 554.703125
+            },
+            {
+              "title": "휴식과 회복",
+              "x": 25,
+              "y": 994.96875,
+              "width": 718,
+              "height": 352.359375
+            },
+            {
+              "title": "흥청망청 보내기",
+              "x": 25,
+              "y": 1367.328125,
+              "width": 718,
+              "height": 219.953125
+            },
+            {
+              "title": "고용인",
+              "x": 25,
+              "y": 1607.28125,
+              "width": 718,
+              "height": 312.765625
+            },
+            {
+              "title": "길 위의 사람들",
+              "x": 25,
+              "y": 1940.046875,
+              "width": 718,
+              "height": 188.765625
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 128.1875,
+            "width": 766,
+            "height": 59
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        }
+      ],
+      "rules": {
+        "x": 24,
+        "y": 121.96875,
+        "width": 720,
+        "height": 780.0625,
+        "bottom": 902.03125,
+        "readingWidth": 528,
+        "readingHeight": 563.1875,
+        "readingScroll": 560,
+        "readingClient": 560
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "screens": [
+        {
+          "tab": "play",
+          "viewport": 390,
+          "documentWidth": 390,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 3137.515625
+          },
+          "main": {
+            "x": 1,
+            "y": 216.28125,
+            "width": 388,
+            "height": 2921.234375
+          },
+          "panels": [
+            {
+              "title": "불확실할 때 판정",
+              "x": 15,
+              "y": 352.828125,
+              "width": 360,
+              "height": 587.3125
+            },
+            {
+              "title": "사건과 징조",
+              "x": 15,
+              "y": 956.140625,
+              "width": 360,
+              "height": 489.859375
+            },
+            {
+              "title": "방금 일어난 일",
+              "x": 15,
+              "y": 1462,
+              "width": 360,
+              "height": 135.390625
+            },
+            {
+              "title": "지금 좇는 목표 3 / 3",
+              "x": 15,
+              "y": 1615.390625,
+              "width": 360,
+              "height": 388.390625
+            },
+            {
+              "title": "본능",
+              "x": 15,
+              "y": 2019.78125,
+              "width": 360,
+              "height": 399.78125
+            },
+            {
+              "title": "사용할 수 있는 재능",
+              "x": 15,
+              "y": 2435.5625,
+              "width": 360,
+              "height": 254.1875
+            },
+            {
+              "title": "무기와 방어",
+              "x": 15,
+              "y": 2705.75,
+              "width": 360,
+              "height": 275.765625
+            },
+            {
+              "x": 15,
+              "y": 2997.515625,
+              "width": 360,
+              "height": 80
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 87.796875,
+            "width": 388,
+            "height": 54
+          },
+          "drawButton": {
+            "x": 33,
+            "y": 746.546875,
+            "width": 138.265625,
+            "height": 46
+          },
+          "eventButton": {
+            "x": 186,
+            "y": 1088.21875,
+            "width": 171,
+            "height": 43
+          },
+          "escapedElements": []
+        },
+        {
+          "tab": "tests",
+          "viewport": 390,
+          "documentWidth": 390,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 2882.578125
+          },
+          "main": {
+            "x": 1,
+            "y": 216.28125,
+            "width": 388,
+            "height": 2666.296875
+          },
+          "panels": [
+            {
+              "title": "전투 흐름 · 1라운드",
+              "x": 15,
+              "y": 352.828125,
+              "width": 360,
+              "height": 699.328125
+            },
+            {
+              "title": "플레이어 행동과 대응",
+              "x": 15,
+              "y": 1072.15625,
+              "width": 360,
+              "height": 812.75
+            },
+            {
+              "title": "부상과 갑옷 적용",
+              "x": 15,
+              "y": 1904.90625,
+              "width": 360,
+              "height": 511.953125
+            },
+            {
+              "title": "전투의 끝",
+              "x": 15,
+              "y": 2436.859375,
+              "width": 360,
+              "height": 293.71875
+            },
+            {
+              "title": "괴수 도감",
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 87.796875,
+            "width": 388,
+            "height": 54
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "character",
+          "viewport": 390,
+          "documentWidth": 390,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 1660.5
+          },
+          "main": {
+            "x": 1,
+            "y": 216.28125,
+            "width": 388,
+            "height": 1444.21875
+          },
+          "panels": [
+            {
+              "title": "인물 장부",
+              "x": 15,
+              "y": 544.421875,
+              "width": 360,
+              "height": 990.078125
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 87.796875,
+            "width": 388,
+            "height": 54
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "map",
+          "viewport": 390,
+          "documentWidth": 390,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 2899.109375
+          },
+          "main": {
+            "x": 1,
+            "y": 216.28125,
+            "width": 388,
+            "height": 2682.828125
+          },
+          "panels": [
+            {
+              "title": "지도 펼치기",
+              "x": 15,
+              "y": 435.21875,
+              "width": 360,
+              "height": 2403.890625
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 87.796875,
+            "width": 388,
+            "height": 54
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "magic",
+          "viewport": 390,
+          "documentWidth": 390,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 2965.96875
+          },
+          "main": {
+            "x": 1,
+            "y": 216.28125,
+            "width": 388,
+            "height": 2749.6875
+          },
+          "panels": [
+            {
+              "title": "민간 비술",
+              "x": 15,
+              "y": 352.828125,
+              "width": 360,
+              "height": 614.1875
+            },
+            {
+              "title": "비전 비술",
+              "x": 15,
+              "y": 987.015625,
+              "width": 360,
+              "height": 871.390625
+            },
+            {
+              "title": "연금술",
+              "x": 15,
+              "y": 1878.40625,
+              "width": 360,
+              "height": 649.796875
+            },
+            {
+              "title": "마법 물품표",
+              "x": 15,
+              "y": 2548.203125,
+              "width": 360,
+              "height": 357.765625
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 87.796875,
+            "width": 388,
+            "height": 54
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "downtime",
+          "viewport": 390,
+          "documentWidth": 390,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 2398.53125
+          },
+          "main": {
+            "x": 1,
+            "y": 216.28125,
+            "width": 388,
+            "height": 2182.25
+          },
+          "panels": [
+            {
+              "title": "시간과 회차",
+              "x": 15,
+              "y": 352.828125,
+              "width": 360,
+              "height": 574.140625
+            },
+            {
+              "title": "휴식과 회복",
+              "x": 15,
+              "y": 946.96875,
+              "width": 360,
+              "height": 479.796875
+            },
+            {
+              "title": "흥청망청 보내기",
+              "x": 15,
+              "y": 1446.765625,
+              "width": 360,
+              "height": 258.578125
+            },
+            {
+              "title": "고용인",
+              "x": 15,
+              "y": 1725.34375,
+              "width": 360,
+              "height": 384.984375
+            },
+            {
+              "title": "길 위의 사람들",
+              "x": 15,
+              "y": 2130.328125,
+              "width": 360,
+              "height": 208.203125
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 87.796875,
+            "width": 388,
+            "height": 54
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        }
+      ],
+      "rules": {
+        "x": 10,
+        "y": 25.3125,
+        "width": 370,
+        "height": 793.359375,
+        "bottom": 818.671875,
+        "readingWidth": 368,
+        "readingHeight": 594.40625,
+        "readingScroll": 591,
+        "readingClient": 591
+      }
+    },
+    {
+      "width": 340,
+      "height": 844,
+      "screens": [
+        {
+          "tab": "play",
+          "viewport": 340,
+          "documentWidth": 340,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 340,
+            "height": 3244.6875
+          },
+          "main": {
+            "x": 1,
+            "y": 216.28125,
+            "width": 338,
+            "height": 3028.40625
+          },
+          "panels": [
+            {
+              "title": "불확실할 때 판정",
+              "x": 15,
+              "y": 352.828125,
+              "width": 310,
+              "height": 587.3125
+            },
+            {
+              "title": "사건과 징조",
+              "x": 15,
+              "y": 956.140625,
+              "width": 310,
+              "height": 576.640625
+            },
+            {
+              "title": "방금 일어난 일",
+              "x": 15,
+              "y": 1548.78125,
+              "width": 310,
+              "height": 135.390625
+            },
+            {
+              "title": "지금 좇는 목표 3 / 3",
+              "x": 15,
+              "y": 1702.171875,
+              "width": 310,
+              "height": 388.390625
+            },
+            {
+              "title": "본능",
+              "x": 15,
+              "y": 2106.5625,
+              "width": 310,
+              "height": 420.171875
+            },
+            {
+              "title": "사용할 수 있는 재능",
+              "x": 15,
+              "y": 2542.734375,
+              "width": 310,
+              "height": 254.1875
+            },
+            {
+              "title": "무기와 방어",
+              "x": 15,
+              "y": 2812.921875,
+              "width": 310,
+              "height": 275.765625
+            },
+            {
+              "x": 15,
+              "y": 3104.6875,
+              "width": 310,
+              "height": 80
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 87.796875,
+            "width": 338,
+            "height": 54
+          },
+          "drawButton": {
+            "x": 33,
+            "y": 746.546875,
+            "width": 138.265625,
+            "height": 46
+          },
+          "eventButton": {
+            "x": 161,
+            "y": 1088.21875,
+            "width": 146,
+            "height": 43
+          },
+          "escapedElements": []
+        },
+        {
+          "tab": "tests",
+          "viewport": 340,
+          "documentWidth": 340,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 340,
+            "height": 2975.453125
+          },
+          "main": {
+            "x": 1,
+            "y": 216.28125,
+            "width": 338,
+            "height": 2759.171875
+          },
+          "panels": [
+            {
+              "title": "전투 흐름 · 1라운드",
+              "x": 15,
+              "y": 352.828125,
+              "width": 310,
+              "height": 699.328125
+            },
+            {
+              "title": "플레이어 행동과 대응",
+              "x": 15,
+              "y": 1072.15625,
+              "width": 310,
+              "height": 884.1875
+            },
+            {
+              "title": "부상과 갑옷 적용",
+              "x": 15,
+              "y": 1976.34375,
+              "width": 310,
+              "height": 533.390625
+            },
+            {
+              "title": "전투의 끝",
+              "x": 15,
+              "y": 2529.734375,
+              "width": 310,
+              "height": 293.71875
+            },
+            {
+              "title": "괴수 도감",
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 87.796875,
+            "width": 338,
+            "height": 54
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "character",
+          "viewport": 340,
+          "documentWidth": 340,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 340,
+            "height": 1752.734375
+          },
+          "main": {
+            "x": 1,
+            "y": 216.28125,
+            "width": 338,
+            "height": 1536.453125
+          },
+          "panels": [
+            {
+              "title": "인물 장부",
+              "x": 15,
+              "y": 565.21875,
+              "width": 310,
+              "height": 1061.515625
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 87.796875,
+            "width": 338,
+            "height": 54
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "map",
+          "viewport": 340,
+          "documentWidth": 340,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 340,
+            "height": 2920.546875
+          },
+          "main": {
+            "x": 1,
+            "y": 216.28125,
+            "width": 338,
+            "height": 2704.265625
+          },
+          "panels": [
+            {
+              "title": "지도 펼치기",
+              "x": 15,
+              "y": 435.21875,
+              "width": 310,
+              "height": 2425.328125
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 87.796875,
+            "width": 338,
+            "height": 54
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "magic",
+          "viewport": 340,
+          "documentWidth": 340,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 340,
+            "height": 3008.203125
+          },
+          "main": {
+            "x": 1,
+            "y": 216.28125,
+            "width": 338,
+            "height": 2791.921875
+          },
+          "panels": [
+            {
+              "title": "민간 비술",
+              "x": 15,
+              "y": 352.828125,
+              "width": 310,
+              "height": 614.1875
+            },
+            {
+              "title": "비전 비술",
+              "x": 15,
+              "y": 987.015625,
+              "width": 310,
+              "height": 892.1875
+            },
+            {
+              "title": "연금술",
+              "x": 15,
+              "y": 1899.203125,
+              "width": 310,
+              "height": 671.234375
+            },
+            {
+              "title": "마법 물품표",
+              "x": 15,
+              "y": 2590.4375,
+              "width": 310,
+              "height": 357.765625
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 87.796875,
+            "width": 338,
+            "height": 54
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        },
+        {
+          "tab": "downtime",
+          "viewport": 340,
+          "documentWidth": 340,
+          "scrollY": 0,
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 340,
+            "height": 2419.96875
+          },
+          "main": {
+            "x": 1,
+            "y": 216.28125,
+            "width": 338,
+            "height": 2203.6875
+          },
+          "panels": [
+            {
+              "title": "시간과 회차",
+              "x": 15,
+              "y": 352.828125,
+              "width": 310,
+              "height": 574.140625
+            },
+            {
+              "title": "휴식과 회복",
+              "x": 15,
+              "y": 946.96875,
+              "width": 310,
+              "height": 479.796875
+            },
+            {
+              "title": "흥청망청 보내기",
+              "x": 15,
+              "y": 1446.765625,
+              "width": 310,
+              "height": 258.578125
+            },
+            {
+              "title": "고용인",
+              "x": 15,
+              "y": 1725.34375,
+              "width": 310,
+              "height": 406.421875
+            },
+            {
+              "title": "길 위의 사람들",
+              "x": 15,
+              "y": 2151.765625,
+              "width": 310,
+              "height": 208.203125
+            }
+          ],
+          "navigation": {
+            "x": 1,
+            "y": 87.796875,
+            "width": 338,
+            "height": 54
+          },
+          "drawButton": null,
+          "eventButton": null,
+          "escapedElements": []
+        }
+      ],
+      "rules": {
+        "x": 10,
+        "y": 25.3125,
+        "width": 320,
+        "height": 793.359375,
+        "bottom": 818.671875,
+        "readingWidth": 318,
+        "readingHeight": 665.171875,
+        "readingScroll": 662,
+        "readingClient": 662
+      }
+    }
+  ],
+  "checks": [
+    {
+      "name": "3440px play: no document horizontal overflow",
+      "passed": true,
+      "detail": 3440
+    },
+    {
+      "name": "3440px play: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "3440px play: content shell has bounded reading width",
+      "passed": true,
+      "detail": 2160
+    },
+    {
+      "name": "3440px play: shell is centered",
+      "passed": true
+    },
+    {
+      "name": "3440px tests: no document horizontal overflow",
+      "passed": true,
+      "detail": 3440
+    },
+    {
+      "name": "3440px tests: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "3440px tests: content shell has bounded reading width",
+      "passed": true,
+      "detail": 2160
+    },
+    {
+      "name": "3440px tests: shell is centered",
+      "passed": true
+    },
+    {
+      "name": "3440px character: no document horizontal overflow",
+      "passed": true,
+      "detail": 3440
+    },
+    {
+      "name": "3440px character: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "3440px character: content shell has bounded reading width",
+      "passed": true,
+      "detail": 2160
+    },
+    {
+      "name": "3440px character: shell is centered",
+      "passed": true
+    },
+    {
+      "name": "3440px map: no document horizontal overflow",
+      "passed": true,
+      "detail": 3440
+    },
+    {
+      "name": "3440px map: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "3440px map: content shell has bounded reading width",
+      "passed": true,
+      "detail": 2160
+    },
+    {
+      "name": "3440px map: shell is centered",
+      "passed": true
+    },
+    {
+      "name": "3440px magic: no document horizontal overflow",
+      "passed": true,
+      "detail": 3440
+    },
+    {
+      "name": "3440px magic: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "3440px magic: content shell has bounded reading width",
+      "passed": true,
+      "detail": 2160
+    },
+    {
+      "name": "3440px magic: shell is centered",
+      "passed": true
+    },
+    {
+      "name": "3440px downtime: no document horizontal overflow",
+      "passed": true,
+      "detail": 3440
+    },
+    {
+      "name": "3440px downtime: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "3440px downtime: content shell has bounded reading width",
+      "passed": true,
+      "detail": 2160
+    },
+    {
+      "name": "3440px downtime: shell is centered",
+      "passed": true
+    },
+    {
+      "name": "3440px rules: search receives focus",
+      "passed": true
+    },
+    {
+      "name": "3440px rules: background scroll is locked",
+      "passed": true
+    },
+    {
+      "name": "3440px rules: combat response search succeeds",
+      "passed": true
+    },
+    {
+      "name": "3440px rules: dialog fits viewport",
+      "passed": true,
+      "detail": {
+        "x": 1260,
+        "y": 213.96875,
+        "width": 920,
+        "height": 1012.0625,
+        "bottom": 1226.03125,
+        "readingWidth": 678,
+        "readingHeight": 792,
+        "readingScroll": 789,
+        "readingClient": 789
+      }
+    },
+    {
+      "name": "3440px rules: no document horizontal overflow",
+      "passed": true
+    },
+    {
+      "name": "3440px rules: narrow navigation can scroll to final topic",
+      "passed": true
+    },
+    {
+      "name": "3440px rules: forward focus is trapped",
+      "passed": true
+    },
+    {
+      "name": "3440px rules: keyboard focus remains visible",
+      "passed": true
+    },
+    {
+      "name": "3440px rules: Escape closes drawer",
+      "passed": true
+    },
+    {
+      "name": "3440px rules: trigger regains focus",
+      "passed": true
+    },
+    {
+      "name": "3440px rules: background scroll is restored",
+      "passed": true
+    },
+    {
+      "name": "1920px play: no document horizontal overflow",
+      "passed": true,
+      "detail": 1920
+    },
+    {
+      "name": "1920px play: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "1920px play: content shell has bounded reading width",
+      "passed": true,
+      "detail": 1600
+    },
+    {
+      "name": "1920px play: shell is centered",
+      "passed": true
+    },
+    {
+      "name": "1920px tests: no document horizontal overflow",
+      "passed": true,
+      "detail": 1920
+    },
+    {
+      "name": "1920px tests: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "1920px tests: content shell has bounded reading width",
+      "passed": true,
+      "detail": 1600
+    },
+    {
+      "name": "1920px tests: shell is centered",
+      "passed": true
+    },
+    {
+      "name": "1920px character: no document horizontal overflow",
+      "passed": true,
+      "detail": 1920
+    },
+    {
+      "name": "1920px character: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "1920px character: content shell has bounded reading width",
+      "passed": true,
+      "detail": 1600
+    },
+    {
+      "name": "1920px character: shell is centered",
+      "passed": true
+    },
+    {
+      "name": "1920px map: no document horizontal overflow",
+      "passed": true,
+      "detail": 1920
+    },
+    {
+      "name": "1920px map: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "1920px map: content shell has bounded reading width",
+      "passed": true,
+      "detail": 1600
+    },
+    {
+      "name": "1920px map: shell is centered",
+      "passed": true
+    },
+    {
+      "name": "1920px magic: no document horizontal overflow",
+      "passed": true,
+      "detail": 1920
+    },
+    {
+      "name": "1920px magic: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "1920px magic: content shell has bounded reading width",
+      "passed": true,
+      "detail": 1600
+    },
+    {
+      "name": "1920px magic: shell is centered",
+      "passed": true
+    },
+    {
+      "name": "1920px downtime: no document horizontal overflow",
+      "passed": true,
+      "detail": 1920
+    },
+    {
+      "name": "1920px downtime: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "1920px downtime: content shell has bounded reading width",
+      "passed": true,
+      "detail": 1600
+    },
+    {
+      "name": "1920px downtime: shell is centered",
+      "passed": true
+    },
+    {
+      "name": "1920px rules: search receives focus",
+      "passed": true
+    },
+    {
+      "name": "1920px rules: background scroll is locked",
+      "passed": true
+    },
+    {
+      "name": "1920px rules: combat response search succeeds",
+      "passed": true
+    },
+    {
+      "name": "1920px rules: dialog fits viewport",
+      "passed": true,
+      "detail": {
+        "x": 500,
+        "y": 134.5625,
+        "width": 920,
+        "height": 810.875,
+        "bottom": 945.4375,
+        "readingWidth": 678,
+        "readingHeight": 594,
+        "readingScroll": 591,
+        "readingClient": 591
+      }
+    },
+    {
+      "name": "1920px rules: no document horizontal overflow",
+      "passed": true
+    },
+    {
+      "name": "1920px rules: narrow navigation can scroll to final topic",
+      "passed": true
+    },
+    {
+      "name": "1920px rules: forward focus is trapped",
+      "passed": true
+    },
+    {
+      "name": "1920px rules: keyboard focus remains visible",
+      "passed": true
+    },
+    {
+      "name": "1920px rules: Escape closes drawer",
+      "passed": true
+    },
+    {
+      "name": "1920px rules: trigger regains focus",
+      "passed": true
+    },
+    {
+      "name": "1920px rules: background scroll is restored",
+      "passed": true
+    },
+    {
+      "name": "1440px play: no document horizontal overflow",
+      "passed": true,
+      "detail": 1440
+    },
+    {
+      "name": "1440px play: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "1440px tests: no document horizontal overflow",
+      "passed": true,
+      "detail": 1440
+    },
+    {
+      "name": "1440px tests: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "1440px character: no document horizontal overflow",
+      "passed": true,
+      "detail": 1440
+    },
+    {
+      "name": "1440px character: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "1440px map: no document horizontal overflow",
+      "passed": true,
+      "detail": 1440
+    },
+    {
+      "name": "1440px map: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "1440px magic: no document horizontal overflow",
+      "passed": true,
+      "detail": 1440
+    },
+    {
+      "name": "1440px magic: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "1440px downtime: no document horizontal overflow",
+      "passed": true,
+      "detail": 1440
+    },
+    {
+      "name": "1440px downtime: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "1440px rules: search receives focus",
+      "passed": true
+    },
+    {
+      "name": "1440px rules: background scroll is locked",
+      "passed": true
+    },
+    {
+      "name": "1440px rules: combat response search succeeds",
+      "passed": true
+    },
+    {
+      "name": "1440px rules: dialog fits viewport",
+      "passed": true,
+      "detail": {
+        "x": 260,
+        "y": 94.0625,
+        "width": 920,
+        "height": 711.875,
+        "bottom": 805.9375,
+        "readingWidth": 678,
+        "readingHeight": 495,
+        "readingScroll": 492,
+        "readingClient": 492
+      }
+    },
+    {
+      "name": "1440px rules: no document horizontal overflow",
+      "passed": true
+    },
+    {
+      "name": "1440px rules: narrow navigation can scroll to final topic",
+      "passed": true
+    },
+    {
+      "name": "1440px rules: forward focus is trapped",
+      "passed": true
+    },
+    {
+      "name": "1440px rules: keyboard focus remains visible",
+      "passed": true
+    },
+    {
+      "name": "1440px rules: Escape closes drawer",
+      "passed": true
+    },
+    {
+      "name": "1440px rules: trigger regains focus",
+      "passed": true
+    },
+    {
+      "name": "1440px rules: background scroll is restored",
+      "passed": true
+    },
+    {
+      "name": "768px play: no document horizontal overflow",
+      "passed": true,
+      "detail": 768
+    },
+    {
+      "name": "768px play: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "768px tests: no document horizontal overflow",
+      "passed": true,
+      "detail": 768
+    },
+    {
+      "name": "768px tests: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "768px character: no document horizontal overflow",
+      "passed": true,
+      "detail": 768
+    },
+    {
+      "name": "768px character: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "768px map: no document horizontal overflow",
+      "passed": true,
+      "detail": 768
+    },
+    {
+      "name": "768px map: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "768px magic: no document horizontal overflow",
+      "passed": true,
+      "detail": 768
+    },
+    {
+      "name": "768px magic: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "768px downtime: no document horizontal overflow",
+      "passed": true,
+      "detail": 768
+    },
+    {
+      "name": "768px downtime: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "768px rules: search receives focus",
+      "passed": true
+    },
+    {
+      "name": "768px rules: background scroll is locked",
+      "passed": true
+    },
+    {
+      "name": "768px rules: combat response search succeeds",
+      "passed": true
+    },
+    {
+      "name": "768px rules: dialog fits viewport",
+      "passed": true,
+      "detail": {
+        "x": 24,
+        "y": 121.96875,
+        "width": 720,
+        "height": 780.0625,
+        "bottom": 902.03125,
+        "readingWidth": 528,
+        "readingHeight": 563.1875,
+        "readingScroll": 560,
+        "readingClient": 560
+      }
+    },
+    {
+      "name": "768px rules: no document horizontal overflow",
+      "passed": true
+    },
+    {
+      "name": "768px rules: narrow navigation can scroll to final topic",
+      "passed": true
+    },
+    {
+      "name": "768px rules: forward focus is trapped",
+      "passed": true
+    },
+    {
+      "name": "768px rules: keyboard focus remains visible",
+      "passed": true
+    },
+    {
+      "name": "768px rules: Escape closes drawer",
+      "passed": true
+    },
+    {
+      "name": "768px rules: trigger regains focus",
+      "passed": true
+    },
+    {
+      "name": "768px rules: background scroll is restored",
+      "passed": true
+    },
+    {
+      "name": "390px play: no document horizontal overflow",
+      "passed": true,
+      "detail": 390
+    },
+    {
+      "name": "390px play: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "390px tests: no document horizontal overflow",
+      "passed": true,
+      "detail": 390
+    },
+    {
+      "name": "390px tests: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "390px character: no document horizontal overflow",
+      "passed": true,
+      "detail": 390
+    },
+    {
+      "name": "390px character: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "390px map: no document horizontal overflow",
+      "passed": true,
+      "detail": 390
+    },
+    {
+      "name": "390px map: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "390px magic: no document horizontal overflow",
+      "passed": true,
+      "detail": 390
+    },
+    {
+      "name": "390px magic: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "390px downtime: no document horizontal overflow",
+      "passed": true,
+      "detail": 390
+    },
+    {
+      "name": "390px downtime: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "390px rules: search receives focus",
+      "passed": true
+    },
+    {
+      "name": "390px rules: background scroll is locked",
+      "passed": true
+    },
+    {
+      "name": "390px rules: combat response search succeeds",
+      "passed": true
+    },
+    {
+      "name": "390px rules: dialog fits viewport",
+      "passed": true,
+      "detail": {
+        "x": 10,
+        "y": 25.3125,
+        "width": 370,
+        "height": 793.359375,
+        "bottom": 818.671875,
+        "readingWidth": 368,
+        "readingHeight": 594.40625,
+        "readingScroll": 591,
+        "readingClient": 591
+      }
+    },
+    {
+      "name": "390px rules: no document horizontal overflow",
+      "passed": true
+    },
+    {
+      "name": "390px rules: narrow navigation can scroll to final topic",
+      "passed": true
+    },
+    {
+      "name": "390px rules: forward focus is trapped",
+      "passed": true
+    },
+    {
+      "name": "390px rules: keyboard focus remains visible",
+      "passed": true
+    },
+    {
+      "name": "390px rules: Escape closes drawer",
+      "passed": true
+    },
+    {
+      "name": "390px rules: trigger regains focus",
+      "passed": true
+    },
+    {
+      "name": "390px rules: background scroll is restored",
+      "passed": true
+    },
+    {
+      "name": "340px play: no document horizontal overflow",
+      "passed": true,
+      "detail": 340
+    },
+    {
+      "name": "340px play: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "340px tests: no document horizontal overflow",
+      "passed": true,
+      "detail": 340
+    },
+    {
+      "name": "340px tests: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "340px character: no document horizontal overflow",
+      "passed": true,
+      "detail": 340
+    },
+    {
+      "name": "340px character: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "340px map: no document horizontal overflow",
+      "passed": true,
+      "detail": 340
+    },
+    {
+      "name": "340px map: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "340px magic: no document horizontal overflow",
+      "passed": true,
+      "detail": 340
+    },
+    {
+      "name": "340px magic: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "340px downtime: no document horizontal overflow",
+      "passed": true,
+      "detail": 340
+    },
+    {
+      "name": "340px downtime: navigation begins at top",
+      "passed": true
+    },
+    {
+      "name": "340px rules: search receives focus",
+      "passed": true
+    },
+    {
+      "name": "340px rules: background scroll is locked",
+      "passed": true
+    },
+    {
+      "name": "340px rules: combat response search succeeds",
+      "passed": true
+    },
+    {
+      "name": "340px rules: dialog fits viewport",
+      "passed": true,
+      "detail": {
+        "x": 10,
+        "y": 25.3125,
+        "width": 320,
+        "height": 793.359375,
+        "bottom": 818.671875,
+        "readingWidth": 318,
+        "readingHeight": 665.171875,
+        "readingScroll": 662,
+        "readingClient": 662
+      }
+    },
+    {
+      "name": "340px rules: no document horizontal overflow",
+      "passed": true
+    },
+    {
+      "name": "340px rules: narrow navigation can scroll to final topic",
+      "passed": true
+    },
+    {
+      "name": "340px rules: forward focus is trapped",
+      "passed": true
+    },
+    {
+      "name": "340px rules: keyboard focus remains visible",
+      "passed": true
+    },
+    {
+      "name": "340px rules: Escape closes drawer",
+      "passed": true
+    },
+    {
+      "name": "340px rules: trigger regains focus",
+      "passed": true
+    },
+    {
+      "name": "340px rules: background scroll is restored",
+      "passed": true
+    },
+    {
+      "name": "3440px combat: objective field is bounded",
+      "passed": true,
+      "detail": 900
+    },
+    {
+      "name": "3440px combat: short monster selector is bounded",
+      "passed": true,
+      "detail": 420
+    },
+    {
+      "name": "No browser runtime errors",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "failures": [],
+  "browserErrors": [],
+  "contrast": [
+    {
+      "text": "규칙 찾기 /",
+      "class": "rules-trigger",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(57, 48, 36)",
+      "background": [
+        237,
+        227,
+        204
+      ],
+      "ratio": 10.15,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "I플레이",
+      "class": "active",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        236,
+        225,
+        198
+      ],
+      "ratio": 12.08,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "II전투",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(217, 206, 180)",
+      "background": [
+        38,
+        37,
+        31
+      ],
+      "ratio": 9.83,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "III인물",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(217, 206, 180)",
+      "background": [
+        38,
+        37,
+        31
+      ],
+      "ratio": 9.83,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "IV탐사",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(217, 206, 180)",
+      "background": [
+        38,
+        37,
+        31
+      ],
+      "ratio": 9.83,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "V비술",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(217, 206, 180)",
+      "background": [
+        38,
+        37,
+        31
+      ],
+      "ratio": 9.83,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "VI휴식 · 정산",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(217, 206, 180)",
+      "background": [
+        38,
+        37,
+        31
+      ],
+      "ratio": 9.83,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "안개숲의 길",
+      "class": "eyebrow",
+      "fontSize": 9,
+      "weight": 650,
+      "color": "rgb(121, 100, 71)",
+      "background": [
+        239,
+        231,
+        214
+      ],
+      "ratio": 4.58,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "불확실할 때 판정",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(240, 228, 201)",
+      "background": [
+        37,
+        37,
+        31
+      ],
+      "ratio": 12.21,
+      "minimum": 3,
+      "screen": "play"
+    },
+    {
+      "text": "판정 규칙 ↗",
+      "class": "play-rule-link",
+      "fontSize": 12,
+      "weight": 600,
+      "color": "rgb(226, 202, 153)",
+      "background": [
+        37,
+        37,
+        31
+      ],
+      "ratio": 9.64,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "좋은 장비, 충분한 시간, 훌륭한 계획으로 가능한 일은 그대로 해냅니다.",
+      "class": "play-hint",
+      "fontSize": 12,
+      "weight": 400,
+      "color": "rgb(196, 184, 153)",
+      "background": [
+        37,
+        37,
+        31
+      ],
+      "ratio": 7.82,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "Cups1판단 · 배움 · 돌봄",
+      "class": "play-suit selected",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(42, 36, 25)",
+      "background": [
+        226,
+        210,
+        173
+      ],
+      "ratio": 10.3,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "판단 · 배움 · 돌봄",
+      "class": "",
+      "fontSize": 10,
+      "weight": 400,
+      "color": "rgb(84, 74, 52)",
+      "background": [
+        226,
+        210,
+        173
+      ],
+      "ratio": 5.84,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "Wands2의지 · 신비 · 비술",
+      "class": "play-suit",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(231, 220, 194)",
+      "background": [
+        47,
+        48,
+        40
+      ],
+      "ratio": 9.79,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "의지 · 신비 · 비술",
+      "class": "",
+      "fontSize": 10,
+      "weight": 400,
+      "color": "rgb(196, 184, 153)",
+      "background": [
+        47,
+        48,
+        40
+      ],
+      "ratio": 6.77,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "Swords4힘 · 용기 · 인내",
+      "class": "play-suit",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(231, 220, 194)",
+      "background": [
+        47,
+        48,
+        40
+      ],
+      "ratio": 9.79,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "힘 · 용기 · 인내",
+      "class": "",
+      "fontSize": 10,
+      "weight": 400,
+      "color": "rgb(196, 184, 153)",
+      "background": [
+        47,
+        48,
+        40
+      ],
+      "ratio": 6.77,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "Coins3민첩 · 은밀함 · 재화",
+      "class": "play-suit",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(231, 220, 194)",
+      "background": [
+        47,
+        48,
+        40
+      ],
+      "ratio": 9.79,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "민첩 · 은밀함 · 재화",
+      "class": "",
+      "fontSize": 10,
+      "weight": 400,
+      "color": "rgb(196, 184, 153)",
+      "background": [
+        47,
+        48,
+        40
+      ],
+      "ratio": 6.77,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "판정 카드 뽑기 →",
+      "class": "play-primary",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(37, 33, 25)",
+      "background": [
+        232,
+        221,
+        191
+      ],
+      "ratio": 11.85,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "반응 판정 준비",
+      "class": "play-rule-link",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(226, 202, 153)",
+      "background": [
+        37,
+        37,
+        31
+      ],
+      "ratio": 9.64,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "결의 ↗",
+      "class": "play-rule-link",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(226, 202, 153)",
+      "background": [
+        37,
+        37,
+        31
+      ],
+      "ratio": 9.64,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "전투 행동·대응 ↗",
+      "class": "play-rule-link",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(226, 202, 153)",
+      "background": [
+        37,
+        37,
+        31
+      ],
+      "ratio": 9.64,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "비술 도구 →",
+      "class": "play-rule-link",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(226, 202, 153)",
+      "background": [
+        37,
+        37,
+        31
+      ],
+      "ratio": 9.64,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "사건과 징조",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 13.25,
+      "minimum": 3,
+      "screen": "play"
+    },
+    {
+      "text": "지도 열기 →",
+      "class": "play-rule-link",
+      "fontSize": 12,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 11.1,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "현재 환경야외던전정착지",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "야외던전정착지",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "사건 카드 뽑기",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(238, 225, 189)",
+      "background": [
+        55,
+        49,
+        37
+      ],
+      "ratio": 9.91,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "소음, 새 장소, 오래 머무름, 극적인 순간에 사건을 뽑습니다.",
+      "class": "play-hint",
+      "fontSize": 12,
+      "weight": 400,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "예 / 아니오",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "양 · 규모",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "행동 + 주제",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "차례 +1 · 15분",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "경점 +1 · 8시간",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "세계에 물어볼 질문을 먼저 정하고, 필요한 표를 고르세요.",
+      "class": "play-hint",
+      "fontSize": 12,
+      "weight": 400,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        233,
+        222,
+        198
+      ],
+      "ratio": 5.04,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "사건을 뽑는 시점 ↗",
+      "class": "play-rule-link",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 11.1,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "징조 표 ↗",
+      "class": "play-rule-link",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 11.1,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "이동과 지도 ↗",
+      "class": "play-rule-link",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 11.1,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "방금 일어난 일",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        239,
+        231,
+        214
+      ],
+      "ratio": 12.77,
+      "minimum": 3,
+      "screen": "play"
+    },
+    {
+      "text": "전체 기록 →",
+      "class": "play-rule-link",
+      "fontSize": 12,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        239,
+        231,
+        214
+      ],
+      "ratio": 10.7,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "판정과 사건, 목표 변화가 여기에 기록됩니다.",
+      "class": "play-hint",
+      "fontSize": 12,
+      "weight": 400,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        239,
+        231,
+        214
+      ],
+      "ratio": 5.47,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "지금 좇는 목표 3 / 3",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 12.79,
+      "minimum": 3,
+      "screen": "play"
+    },
+    {
+      "text": "3 / 3",
+      "class": "",
+      "fontSize": 12,
+      "weight": 730,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 5.47,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "목표 규칙 ↗",
+      "class": "play-rule-link",
+      "fontSize": 12,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 10.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "영주에게 빼앗긴 가족의 방앗간을 되찾는다.",
+      "class": "",
+      "fontSize": 14,
+      "weight": 400,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 12.79,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "완수 · 다음 세션 +1",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "불가능 · 결의 +1",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "낡은 다리를 고쳐 마을의 길을 다시 잇는다.",
+      "class": "",
+      "fontSize": 14,
+      "weight": 400,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 12.79,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "완수 · 다음 세션 +1",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "불가능 · 결의 +1",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "사라진 언니를 찾아 수도원에서 데려온다.",
+      "class": "",
+      "fontSize": 14,
+      "weight": 400,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 12.79,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "완수 · 다음 세션 +1",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "불가능 · 결의 +1",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "본능",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 12.79,
+      "minimum": 3,
+      "screen": "play"
+    },
+    {
+      "text": "발동 조건 ↗",
+      "class": "play-rule-link",
+      "fontSize": 12,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 10.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "문제를 일으키거나 이야기를 의미 있게 바꿨을 때 결의를 얻습니다.",
+      "class": "play-hint",
+      "fontSize": 12,
+      "weight": 400,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 5.47,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "위험이 보이면 검을 뽑는다.",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 12.79,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "문제·이야기 변화 · +1",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "아이를 만나면 먼저 돕는다.",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 12.79,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "문제·이야기 변화 · +1",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "귀족의 약속을 믿지 않는다.",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 12.79,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "문제·이야기 변화 · +1",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "사용할 수 있는 재능",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 12.79,
+      "minimum": 3,
+      "screen": "play"
+    },
+    {
+      "text": "재능 규칙 ↗",
+      "class": "play-rule-link",
+      "fontSize": 12,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 10.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "전투 라운드마다 한 번, 전투 행동을 하나 더 한다.",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 12.79,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "전투 열기 →",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "무기와 방어",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 12.79,
+      "minimum": 3,
+      "screen": "play"
+    },
+    {
+      "text": "장비 관리 →",
+      "class": "play-rule-link",
+      "fontSize": 12,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 10.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "소지품 5 / 13칸",
+      "class": "play-hint",
+      "fontSize": 12,
+      "weight": 400,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 5.47,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "갑옷·흠집 ↗",
+      "class": "play-rule-link",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 10.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "무기 표 ↗",
+      "class": "play-rule-link",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        241,
+        231,
+        209
+      ],
+      "ratio": 10.71,
+      "minimum": 4.5,
+      "screen": "play"
+    },
+    {
+      "text": "↶ 되돌리기",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(57, 48, 36)",
+      "background": [
+        237,
+        227,
+        204
+      ],
+      "ratio": 10.15,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "규칙 찾기 /",
+      "class": "rules-trigger",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(57, 48, 36)",
+      "background": [
+        237,
+        227,
+        204
+      ],
+      "ratio": 10.15,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "I플레이",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(206, 195, 171)",
+      "background": [
+        50,
+        49,
+        41
+      ],
+      "ratio": 7.49,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "II전투",
+      "class": "active",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(48, 46, 38)",
+      "background": [
+        203,
+        194,
+        168
+      ],
+      "ratio": 7.65,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "III인물",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(217, 206, 180)",
+      "background": [
+        38,
+        37,
+        31
+      ],
+      "ratio": 9.83,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "IV탐사",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(217, 206, 180)",
+      "background": [
+        38,
+        37,
+        31
+      ],
+      "ratio": 9.83,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "V비술",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(217, 206, 180)",
+      "background": [
+        38,
+        37,
+        31
+      ],
+      "ratio": 9.83,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "VI휴식 · 정산",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(217, 206, 180)",
+      "background": [
+        38,
+        37,
+        31
+      ],
+      "ratio": 9.83,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "안개숲의 길",
+      "class": "eyebrow",
+      "fontSize": 9,
+      "weight": 650,
+      "color": "rgb(121, 100, 71)",
+      "background": [
+        239,
+        231,
+        214
+      ],
+      "ratio": 4.58,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "전투 흐름 · 1라운드",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(240, 228, 201)",
+      "background": [
+        37,
+        37,
+        31
+      ],
+      "ratio": 12.21,
+      "minimum": 3,
+      "screen": "active-combat"
+    },
+    {
+      "text": "손패와 선제권을 준비하고 낮은 값부터 행동합니다. 전투에는 단순 살상 외의 목표를 정하세요.",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(196, 184, 153)",
+      "background": [
+        37,
+        37,
+        31
+      ],
+      "ratio": 7.82,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "이번 전투에서 이루려는 일",
+      "class": "combat-objective",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(196, 184, 153)",
+      "background": [
+        37,
+        37,
+        31
+      ],
+      "ratio": 7.82,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(41, 37, 29)",
+      "background": [
+        239,
+        227,
+        199
+      ],
+      "ratio": 11.97,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "행동 · 대응 ↓",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(232, 207, 158)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 8.28,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "피해 적용 ↓",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(232, 207, 158)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 8.28,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "Bandit · 능력치 2Banshee · 능력치 3Barghest · 능력치 2Basilisk · 능력치 3Blood Asp · 능력치 8Clurichaun ·",
+      "class": "",
+      "fontSize": 15,
+      "weight": 400,
+      "color": "rgb(41, 37, 29)",
+      "background": [
+        239,
+        227,
+        199
+      ],
+      "ratio": 11.97,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "괴수 들이기",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "라운드 끝내기",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "선제권",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "행동 선택",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "버리기",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "선제권",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "행동 선택",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "버리기",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "선제권",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "행동 선택",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "버리기",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "선제권",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "행동 선택",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "버리기",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "능력치 2 · 부상 0/2 · 이동력 2",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(42, 38, 30)",
+      "background": [
+        238,
+        228,
+        206
+      ],
+      "ratio": 11.92,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "내보내기",
+      "class": "danger",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(42, 38, 30)",
+      "background": [
+        226,
+        211,
+        179
+      ],
+      "ratio": 10.19,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "갑옷: 투구, 흉갑 (AP 2) · 약점: 기재 없음",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(42, 38, 30)",
+      "background": [
+        238,
+        228,
+        206
+      ],
+      "ratio": 11.92,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "공격: 검/활 1점 (사거리 1/6칸)",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(42, 38, 30)",
+      "background": [
+        238,
+        228,
+        206
+      ],
+      "ratio": 11.92,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "이 공격의 기본 부상",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(102, 88, 64)",
+      "background": [
+        238,
+        228,
+        206
+      ],
+      "ratio": 5.48,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(41, 37, 29)",
+      "background": [
+        246,
+        237,
+        216
+      ],
+      "ratio": 13.09,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "플레이어 행동과 대응",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 13.25,
+      "minimum": 3,
+      "screen": "active-combat"
+    },
+    {
+      "text": "전투 판정은 손패와 대상의 선제권을 쓰며 밀어붙일 수 없습니다. 대항 행동은 상대 능력치를 뺍니다.",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "규칙 ↗",
+      "class": "panel-rulebook-link",
+      "fontSize": 12,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 11.1,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "행동공격주문 시전무기 꺼내기·넣기도주붙잡기이동밀치기던지기회피반격조준 공격 막기",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "공격주문 시전무기 꺼내기·넣기도주붙잡기이동밀치기던지기회피반격조준 공격 막기",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "대상고르기Bandit",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "고르기Bandit",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "카드고르기Wands 4 · 역방향Wands 에이스Swords 5 · 역방향Cups 에이스",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "고르기Wands 4 · 역방향Wands 에이스Swords 5 · 역방향Cups 에이스",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "수정치",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "무기 부상",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "조준 공격 · 상대 능력치 차감",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "광대 +3",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "Sally Forth · 추가 행동 · 결의1",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "부상과 갑옷 적용",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 13.25,
+      "minimum": 3,
+      "screen": "active-combat"
+    },
+    {
+      "text": "갑옷 AP를 빼고, 타격이 AP를 넘으면 갑옷에 흠집을 냅니다. 신체 부위는 직접 고릅니다.",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "규칙 ↗",
+      "class": "panel-rulebook-link",
+      "fontSize": 12,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 11.1,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "대상플레이어Bandit",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "플레이어Bandit",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "신체 부위머리몸통왼팔오른팔왼다리오른다리",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "머리몸통왼팔오른팔왼다리오른다리",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "들어온 부상",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "플레이어 갑옷없음 · AP 0투구 · AP 2흉갑 · AP 3누비 갑옷 · AP 1사슬 갑옷 · AP 3왼손 건틀릿 · AP 1오른손 건틀릿 · AP 1왼쪽 정강",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "없음 · AP 0투구 · AP 2흉갑 · AP 3누비 갑옷 · AP 1사슬 갑옷 · AP 3왼손 건틀릿 · AP 1오른손 건틀릿 · AP 1왼쪽 정강이받이 · A",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "피해 적용",
+      "class": "",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "전투의 끝",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 13.25,
+      "minimum": 3,
+      "screen": "active-combat"
+    },
+    {
+      "text": "전투 목표의 결과와 다음 장면을 기록하세요.",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "규칙 ↗",
+      "class": "panel-rulebook-link",
+      "fontSize": 12,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 11.1,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "전투 끝내기",
+      "class": "danger",
+      "fontSize": 15,
+      "weight": 600,
+      "color": "rgb(134, 61, 52)",
+      "background": [
+        240,
+        223,
+        211
+      ],
+      "ratio": 5.93,
+      "minimum": 4.5,
+      "screen": "active-combat"
+    },
+    {
+      "text": "↶ 되돌리기",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(57, 48, 36)",
+      "background": [
+        237,
+        227,
+        204
+      ],
+      "ratio": 10.15,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "규칙 찾기 /",
+      "class": "rules-trigger",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(57, 48, 36)",
+      "background": [
+        237,
+        227,
+        204
+      ],
+      "ratio": 10.15,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "I플레이",
+      "class": "",
+      "fontSize": 16,
+      "weight": 600,
+      "color": "rgb(217, 206, 180)",
+      "background": [
+        38,
+        37,
+        31
+      ],
+      "ratio": 9.83,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "II전투",
+      "class": "active",
+      "fontSize": 16,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        236,
+        225,
+        198
+      ],
+      "ratio": 12.08,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "III인물",
+      "class": "",
+      "fontSize": 16,
+      "weight": 600,
+      "color": "rgb(217, 206, 180)",
+      "background": [
+        38,
+        37,
+        31
+      ],
+      "ratio": 9.83,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "IV탐사",
+      "class": "",
+      "fontSize": 16,
+      "weight": 600,
+      "color": "rgb(217, 206, 180)",
+      "background": [
+        38,
+        37,
+        31
+      ],
+      "ratio": 9.83,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "V비술",
+      "class": "",
+      "fontSize": 16,
+      "weight": 600,
+      "color": "rgb(217, 206, 180)",
+      "background": [
+        38,
+        37,
+        31
+      ],
+      "ratio": 9.83,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "VI휴식 · 정산",
+      "class": "",
+      "fontSize": 16,
+      "weight": 600,
+      "color": "rgb(217, 206, 180)",
+      "background": [
+        38,
+        37,
+        31
+      ],
+      "ratio": 9.83,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "안개숲의 길",
+      "class": "eyebrow",
+      "fontSize": 9,
+      "weight": 650,
+      "color": "rgb(121, 100, 71)",
+      "background": [
+        239,
+        231,
+        214
+      ],
+      "ratio": 4.58,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "전투 흐름 · 1라운드",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(240, 228, 201)",
+      "background": [
+        37,
+        37,
+        31
+      ],
+      "ratio": 12.21,
+      "minimum": 3,
+      "screen": "rules"
+    },
+    {
+      "text": "손패와 선제권을 준비하고 낮은 값부터 행동합니다. 전투에는 단순 살상 외의 목표를 정하세요.",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(196, 184, 153)",
+      "background": [
+        37,
+        37,
+        31
+      ],
+      "ratio": 7.82,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "이번 전투에서 이루려는 일",
+      "class": "combat-objective",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(196, 184, 153)",
+      "background": [
+        37,
+        37,
+        31
+      ],
+      "ratio": 7.82,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(41, 37, 29)",
+      "background": [
+        239,
+        227,
+        199
+      ],
+      "ratio": 11.97,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "행동 · 대응 ↓",
+      "class": "",
+      "fontSize": 17,
+      "weight": 600,
+      "color": "rgb(232, 207, 158)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 8.28,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "피해 적용 ↓",
+      "class": "",
+      "fontSize": 17,
+      "weight": 600,
+      "color": "rgb(232, 207, 158)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 8.28,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "Bandit · 능력치 2Banshee · 능력치 3Barghest · 능력치 2Basilisk · 능력치 3Blood Asp · 능력치 8Clurichaun ·",
+      "class": "",
+      "fontSize": 17,
+      "weight": 400,
+      "color": "rgb(41, 37, 29)",
+      "background": [
+        239,
+        227,
+        199
+      ],
+      "ratio": 11.97,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "괴수 들이기",
+      "class": "",
+      "fontSize": 17,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "라운드 끝내기",
+      "class": "",
+      "fontSize": 17,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "선제권",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "행동 선택",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "버리기",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "선제권",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "행동 선택",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "버리기",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "선제권",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "행동 선택",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "버리기",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "선제권",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "행동 선택",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "버리기",
+      "class": "",
+      "fontSize": 11,
+      "weight": 600,
+      "color": "rgb(232, 220, 192)",
+      "background": [
+        52,
+        52,
+        43
+      ],
+      "ratio": 9.23,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "능력치 2 · 부상 0/2 · 이동력 2",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(42, 38, 30)",
+      "background": [
+        238,
+        228,
+        206
+      ],
+      "ratio": 11.92,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "내보내기",
+      "class": "danger",
+      "fontSize": 17,
+      "weight": 600,
+      "color": "rgb(42, 38, 30)",
+      "background": [
+        226,
+        211,
+        179
+      ],
+      "ratio": 10.19,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "갑옷: 투구, 흉갑 (AP 2) · 약점: 기재 없음",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(42, 38, 30)",
+      "background": [
+        238,
+        228,
+        206
+      ],
+      "ratio": 11.92,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "공격: 검/활 1점 (사거리 1/6칸)",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(42, 38, 30)",
+      "background": [
+        238,
+        228,
+        206
+      ],
+      "ratio": 11.92,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "이 공격의 기본 부상",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(102, 88, 64)",
+      "background": [
+        238,
+        228,
+        206
+      ],
+      "ratio": 5.48,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(41, 37, 29)",
+      "background": [
+        246,
+        237,
+        216
+      ],
+      "ratio": 13.09,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "플레이어 행동과 대응",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 13.25,
+      "minimum": 3,
+      "screen": "rules"
+    },
+    {
+      "text": "전투 판정은 손패와 대상의 선제권을 쓰며 밀어붙일 수 없습니다. 대항 행동은 상대 능력치를 뺍니다.",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "규칙 ↗",
+      "class": "panel-rulebook-link",
+      "fontSize": 12,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 11.1,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "행동공격주문 시전무기 꺼내기·넣기도주붙잡기이동밀치기던지기회피반격조준 공격 막기",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "공격주문 시전무기 꺼내기·넣기도주붙잡기이동밀치기던지기회피반격조준 공격 막기",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "대상고르기Bandit",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "고르기Bandit",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "카드고르기Wands 4 · 역방향Wands 에이스Swords 5 · 역방향Cups 에이스",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "고르기Wands 4 · 역방향Wands 에이스Swords 5 · 역방향Cups 에이스",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "수정치",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "무기 부상",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "조준 공격 · 상대 능력치 차감",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "광대 +3",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "Sally Forth · 추가 행동 · 결의1",
+      "class": "",
+      "fontSize": 17,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "부상과 갑옷 적용",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 13.25,
+      "minimum": 3,
+      "screen": "rules"
+    },
+    {
+      "text": "갑옷 AP를 빼고, 타격이 AP를 넘으면 갑옷에 흠집을 냅니다. 신체 부위는 직접 고릅니다.",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "규칙 ↗",
+      "class": "panel-rulebook-link",
+      "fontSize": 12,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 11.1,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "대상플레이어Bandit",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "플레이어Bandit",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "신체 부위머리몸통왼팔오른팔왼다리오른다리",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "머리몸통왼팔오른팔왼다리오른다리",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "들어온 부상",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "플레이어 갑옷없음 · AP 0투구 · AP 2흉갑 · AP 3누비 갑옷 · AP 1사슬 갑옷 · AP 3왼손 건틀릿 · AP 1오른손 건틀릿 · AP 1왼쪽 정강",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "없음 · AP 0투구 · AP 2흉갑 · AP 3누비 갑옷 · AP 1사슬 갑옷 · AP 3왼손 건틀릿 · AP 1오른손 건틀릿 · AP 1왼쪽 정강이받이 · A",
+      "class": "",
+      "fontSize": 13,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "피해 적용",
+      "class": "",
+      "fontSize": 17,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "전투의 끝",
+      "class": "",
+      "fontSize": 22,
+      "weight": 730,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 13.25,
+      "minimum": 3,
+      "screen": "rules"
+    },
+    {
+      "text": "전투 목표의 결과와 다음 장면을 기록하세요.",
+      "class": "",
+      "fontSize": 13,
+      "weight": 400,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 5.67,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "규칙 ↗",
+      "class": "panel-rulebook-link",
+      "fontSize": 12,
+      "weight": 600,
+      "color": "rgb(52, 48, 37)",
+      "background": [
+        243,
+        235,
+        218
+      ],
+      "ratio": 11.1,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "전투 끝내기",
+      "class": "danger",
+      "fontSize": 17,
+      "weight": 600,
+      "color": "rgb(134, 61, 52)",
+      "background": [
+        240,
+        223,
+        211
+      ],
+      "ratio": 5.93,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "규칙 빠른 참조",
+      "class": "",
+      "fontSize": 26,
+      "weight": 650,
+      "color": "rgb(234, 223, 190)",
+      "background": [
+        41,
+        39,
+        31
+      ],
+      "ratio": 11.25,
+      "minimum": 3,
+      "screen": "rules"
+    },
+    {
+      "text": "",
+      "class": "",
+      "fontSize": 15,
+      "weight": 550,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        250,
+        244,
+        231
+      ],
+      "ratio": 14.33,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "일반 판정p.8",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.8",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "전투 순서와 행동p.30–31",
+      "class": "active",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(243, 228, 192)",
+      "background": [
+        63,
+        54,
+        38
+      ],
+      "ratio": 9.43,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.30–31",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(231, 213, 168)",
+      "background": [
+        63,
+        54,
+        38
+      ],
+      "ratio": 8.2,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "갑옷과 피해 적용p.27, 31–32",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.27, 31–32",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "부상 효과p.32",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.32",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "결의p.34",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.34",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "덱과 광대p.7, 30",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.7, 30",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "사건을 뽑는 때p.42–43",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.42–43",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "징조p.54–55",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.54–55",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "목표와 본능p.22–23",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.22–23",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "친구와 적p.24",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.24",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "휴식과 회복p.35",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.35",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "세션 정산과 성장p.35, 50",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.35, 50",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "시간 단위p.40, 50",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.40, 50",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "장비와 구매p.25–29",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.25–29",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "반응과 사기p.44",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.44",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "괴수 운용p.44–48",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.44–48",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "비전 비술p.20, 38–39",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.20, 38–39",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "민간 비술p.37",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.37",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "연금술p.36",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.36",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "고용인p.52",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.52",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "흥청망청 보내기p.51",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.51",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "인물 생성 순서p.9–25",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.9–25",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "지도 만들기p.40–41",
+      "class": "",
+      "fontSize": 13,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "p.40–41",
+      "class": "",
+      "fontSize": 10,
+      "weight": 600,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "플레이어는 손패 4장까지 보충하고 심판은 적마다 3장을 뽑습니다. 선제권 한 장을 뒷면으로 놓고 0부터 14까지 낮은 순서로 행동합니다. 그 카드 값은 자신을 공",
+      "class": "",
+      "fontSize": 17,
+      "weight": 400,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "행동마다 손패를 사용합니다. 전투 판정은 상대 선제권이 목표치이며 밀어붙일 수 없습니다. 조준·붙잡기·밀치기·도주·회피·반격·적에게 영향을 주는 주문은 상대 능력",
+      "class": "",
+      "fontSize": 17,
+      "weight": 400,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 12.55,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "원문 룰북 펼치기 ↗",
+      "class": "",
+      "fontSize": 17,
+      "weight": 600,
+      "color": "rgb(37, 35, 29)",
+      "background": [
+        246,
+        239,
+        223
+      ],
+      "ratio": 13.71,
+      "minimum": 4.5,
+      "screen": "rules"
+    },
+    {
+      "text": "플레이용 요약입니다. 상황의 해석과 서사적 결과는 심판이 정합니다.",
+      "class": "",
+      "fontSize": 12,
+      "weight": 400,
+      "color": "rgb(98, 91, 77)",
+      "background": [
+        240,
+        229,
+        203
+      ],
+      "ratio": 5.37,
+      "minimum": 4.5,
+      "screen": "rules"
+    }
+  ],
+  "activeCombatGeometry": {
+    "objective": {
+      "x": 767,
+      "y": 672.09375,
+      "width": 900,
+      "height": 42
+    },
+    "monsterSelect": {
+      "x": 1024.484375,
+      "y": 844.6875,
+      "width": 420,
+      "height": 42
+    }
+  },
+  "contrastWarnings": []
+}

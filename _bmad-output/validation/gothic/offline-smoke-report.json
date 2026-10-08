@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "checks": [
+    "production shell registered andcontrolled",
+    "cached offline reload",
+    "stored campaign unchanged",
+    "offlinequickrules search",
+    "sixsectionnavigation",
+    "no browserpageerrors"
+  ],
+  "limitations": "Unvisited card images and encrypted source unlock are outside this smoke test."
+}

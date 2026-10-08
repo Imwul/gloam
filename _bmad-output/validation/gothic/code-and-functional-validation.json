@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-08",
+  "productionBuild": {
+    "passed": true,
+    "tool": "TypeScript and Vite 8.0.16",
+    "modules": 24
+  },
+  "lint": {
+    "passed": true,
+    "tool": "ESLint"
+  },
+  "unitTests": {
+    "passed": 31,
+    "files": 3,
+    "tool": "Vitest 4.1.10"
+  },
+  "browser": {
+    "gothicVisual": 165,
+    "playExperience": 128,
+    "foolBoundary": 54,
+    "productionOfflineSmoke": 6
+  },
+  "actualHumanStudy": false,
+  "notes": [
+    "Tests used isolated browser profiles and did not modify the user campaign.",
+    "Offline smoke covers visited assets, stored campaign, rule search and section navigation. Unvisited tarot images and encrypted-source unlock are outside the smoke."
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "checkedAtUtc": "2026-10-08T04:47:22.239313+00:00",
+  "validatedUrl": "http://127.0.0.1:5190",
+  "browserChecksPassed": 128,
+  "vitestTestsPassed": 31,
+  "build": "passed after final CSS edit",
+  "lint": "passed for unchanged TypeScript",
+  "sourceFiles": [
+    {
+      "path": "src/App.tsx",
+      "sha256": "99855b9ad44909e1639081c0150ce924cb6d4e7c58a63ce62958c61da8745002",
+      "testedMirrorIdentical": true
+    },
+    {
+      "path": "src/certification.test.ts",
+      "sha256": "27f729bd9f152ad6933e57167bee8cdcec3e8f5ed1fcbcd0d7f0ef3b348caef2",
+      "testedMirrorIdentical": true
+    },
+    {
+      "path": "src/gameData.ts",
+      "sha256": "eab4878d5accbc98e8ec17cf2a471b567f30c79e1e6351db8738ee0433ac851c",
+      "testedMirrorIdentical": true
+    },
+    {
+      "path": "src/index.css",
+      "sha256": "70ff714da2ca993ac4ad356df14519fd84850d6c82b93fb598ad5d7b1b04637a",
+      "testedMirrorIdentical": true
+    },
+    {
+      "path": "src/main.tsx",
+      "sha256": "08ffb8f85b767a16cad8e8eed4898cce8f8b591aa978cb89f6c7968d8c32a45f",
+      "testedMirrorIdentical": true
+    },
+    {
+      "path": "src/play/PlayTable.tsx",
+      "sha256": "e3b6739b80a13ce708c881aa115f0bc4a4b16bc5099ae6df26708043bb986bb4",
+      "testedMirrorIdentical": true
+    },
+    {
+      "path": "src/play/QuickRules.tsx",
+      "sha256": "607114b95637cf806ab4012b6b62c2411fa2cb533898f1b4efc5fc208171c282",
+      "testedMirrorIdentical": true
+    },
+    {
+      "path": "src/rulebook/RulebookTransplant.tsx",
+      "sha256": "39f0217d4bdfa8a94df48f57ed4bc4df4faa923f999113f25567ef4248fb4945",
+      "testedMirrorIdentical": true
+    },
+    {
+      "path": "src/rulebook/referenceIndex.test.ts",
+      "sha256": "294ae844e415b720eddfed25122bd851ad23d11e8135246355e1e741a01e5e59",
+      "testedMirrorIdentical": true
+    },
+    {
+      "path": "src/rulebook/referenceIndex.ts",
+      "sha256": "fea88e35a092ed43c04f70e329dc5be5b63e3acf57cec14101ab9538ef6dc4d3",
+      "testedMirrorIdentical": true
+    },
+    {
+      "path": "src/rules.test.ts",
+      "sha256": "fbfa4f4485025364bbbde10c762eabb8a8443a62e7062ff1591a0dde3fc04917",
+      "testedMirrorIdentical": true
+    },
+    {
+      "path": "src/rules.ts",
+      "sha256": "df86c82e2152a72dfbb4001c2ba373290851f7423b9d62fa73d967a54c96a253",
+      "testedMirrorIdentical": true
+    }
+  ],
+  "certificationScript": {
+    "path": "scripts/play-experience-certification.cjs",
+    "sha256": "16e00bf6559e392a691fdfcb3ec84370ba0a87dcda77626334355fbf63d87ea6"
+  },
+  "dependencyLockSha256": "c339d3483c32808405fbc41a1ad79fe284a7398bb08df5a6cd59450ab0abfac3",
+  "validationEnvironment": "Source-identical local mirror /tmp/gloam-live, using npm ci dependencies from the identical lockfile in /tmp/gloam-runtime; original public assets linked. Used because iCloud node_modules hydration stalled. Source edits are in the original workspace.",
+  "offlineSmokeChecksPassed": 6,
+  "foolBoundaryChecksPassed": 54,
+  "browserChecksTotal": 182,
+  "certificationScripts": [
+    {
+      "path": "scripts/play-experience-certification.cjs",
+      "sha256": "16e00bf6559e392a691fdfcb3ec84370ba0a87dcda77626334355fbf63d87ea6"
+    },
+    {
+      "path": "scripts/fool-boundary-certification.cjs",
+      "sha256": "4487aa85c480e2e1ce1dc34394bf2fff0f000d08cb1c639298b65a2338309edb"
+    },
+    {
+      "path": "scripts/offline-play-smoke.cjs",
+      "sha256": "853a5446693c27a7d18025b231d986d8f47c9ea771a0f7241f7527d90998d6d2"
+    }
+  ]
+}

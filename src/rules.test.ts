@@ -15,8 +15,10 @@ import {
   WILDERNESS_EVENTS,
 } from "./gameData";
 import {
+  advanceGameTime,
   amountResult,
   cardId,
+  cardValue,
   carryingCapacity,
   createPlayerDeck,
   createRefereeDeck,
@@ -24,10 +26,13 @@ import {
   drawCard,
   effectiveArmorPoints,
   evaluateTest,
+  gainResolveBalances,
   isFatalHeadWound,
   normalizeCard,
   oracleSequenceToken,
   resolveArmor,
+  restoreMonsterInjury,
+  spendResolveBalances,
   validateCardZones,
   woundedSpeed,
   yesNoResult,
@@ -66,11 +71,32 @@ describe("Player and Referee decks", () => {
     expect(validateCardZones([dealt.deck, dealt.playerHand, dealt.monsterHands[0]], createPlayerDeck(() => 0.5))).toBe(true);
   });
 
+  it("retains unspent cards, refills PCs to four, and draws three additional cards for each NPC", () => {
+    const fullDeck = createPlayerDeck(() => 0.5);
+    const existingPlayer = fullDeck.slice(0, 3);
+    const existingMonster = fullDeck.slice(3, 5);
+    const dealt = dealCombatCards(fullDeck.slice(5), existingPlayer, [existingMonster], () => 0.75);
+    expect(dealt.playerHand).toHaveLength(4);
+    expect(dealt.monsterHands[0]).toHaveLength(5);
+    expect(dealt.monsterHands[0].slice(0, 2)).toEqual(existingMonster);
+    expect(dealt.deck).toHaveLength(48);
+    expect(validateCardZones([dealt.deck, dealt.playerHand, dealt.monsterHands[0]], fullDeck)).toBe(true);
+  });
+
   it("normalizes legacy card fields for save migration", () => {
     expect(normalizeCard({ type: "minor", suit: "cups", card: "Q", reversed: true })).toEqual({
-      type: "minor", suit: "cups", rank: "Q", reversed: true,
+      type: "minor", suit: "cups", rank: "Queen", reversed: true,
     });
     expect(normalizeCard({ type: "minor", suit: "stars", card: "Q" })).toBeNull();
+    for (const [rank, value] of [["P", 11], ["Kn", 12], ["Q", 13], ["K", 14]] as const) {
+      const card = normalizeCard({ type: "minor", suit: "swords", card: rank });
+      expect(card).not.toBeNull();
+      expect(cardValue(card!)).toBe(value);
+    }
+    expect(normalizeCard({ type: "major", card: "Fool" })?.rank).toBe("0");
+    expect(normalizeCard({ type: "minor", suit: "cups", rank: "15" })).toBeNull();
+    expect(normalizeCard({ type: "minor", suit: "cups", rank: "0" })).toBeNull();
+    expect(normalizeCard({ type: "major", rank: "XXII" })).toBeNull();
   });
 });
 
@@ -91,9 +117,59 @@ describe("Character, Tests, and inventory math", () => {
     expect(evaluateTest({ card: { type: "major", rank: "0", reversed: false }, stat: 4, testSuit: "coins" })).toMatchObject({ total: 4, status: "failure" });
   });
 
+  it("allows Help and Resolve before evaluating the first-card suit, but never grants Great Success after a Push", () => {
+    expect(evaluateTest({ card: minor("cups", "7"), stat: 3, help: 4, testSuit: "cups" }).status).toBe("great-success");
+    expect(evaluateTest({ card: minor("swords", "10"), stat: 3, modifier: 1, testSuit: "swords" }).status).toBe("great-success");
+    expect(evaluateTest({ card: minor("cups", "7"), pushedCard: minor("cups", "7"), stat: 3, testSuit: "cups" })).toMatchObject({ total: 17, status: "success", greatSuccess: false });
+  });
+
   it("subtracts the opponent Stat on Opposed Tests", () => {
     const result = evaluateTest({ card: minor("wands", "7"), stat: 3, opposedPenalty: 4, target: 7, testSuit: "swords" });
     expect(result).toMatchObject({ total: 6, status: "failure" });
+  });
+});
+
+describe("Resolve economy (rulebook p. 34)", () => {
+  it("mirrors actual player gains to the Referee while respecting the player's cap", () => {
+    expect(gainResolveBalances(3, 12)).toEqual({ playerResolve: 4, refereeResolve: 13, gained: 1 });
+    expect(gainResolveBalances(9, 4, 3)).toEqual({ playerResolve: 10, refereeResolve: 5, gained: 1 });
+    expect(gainResolveBalances(10, 4)).toEqual({ playerResolve: 10, refereeResolve: 4, gained: 0 });
+  });
+
+  it("spends the player's points without increasing the Referee's balance", () => {
+    expect(spendResolveBalances(5, 7, 3)).toEqual({ playerResolve: 2, refereeResolve: 7, spent: 3 });
+    expect(spendResolveBalances(1, 7, 3)).toEqual({ playerResolve: 0, refereeResolve: 7, spent: 1 });
+    expect(spendResolveBalances(0, 7)).toEqual({ playerResolve: 0, refereeResolve: 7, spent: 0 });
+  });
+
+  it("cannot turn negative amounts into reversed gains or spending", () => {
+    expect(gainResolveBalances(5, 7, -2)).toEqual({ playerResolve: 5, refereeResolve: 7, gained: 0 });
+    expect(spendResolveBalances(5, 7, -2)).toEqual({ playerResolve: 5, refereeResolve: 7, spent: 0 });
+  });
+});
+
+describe("Adventure time (rulebook p. 50)", () => {
+  it("carries ninety ten-second Rounds into a fifteen-minute Turn", () => {
+    expect(advanceGameTime({ day: 1, watch: 1, turns: 0, rounds: 89 }, 10)).toEqual({ day: 1, watch: 1, turns: 1, rounds: 0 });
+    expect(advanceGameTime({ day: 1, watch: 1, turns: 0, rounds: 4 }, 900)).toEqual({ day: 1, watch: 1, turns: 1, rounds: 4 });
+  });
+
+  it("carries thirty-two Turns into a Watch and three Watches into the next day", () => {
+    expect(advanceGameTime({ day: 1, watch: 2, turns: 31, rounds: 89 }, 10)).toEqual({ day: 1, watch: 3, turns: 0, rounds: 0 });
+    expect(advanceGameTime({ day: 7, watch: 3, turns: 31, rounds: 89 }, 10)).toEqual({ day: 8, watch: 1, turns: 0, rounds: 0 });
+    expect(advanceGameTime({ day: 2, watch: 3, turns: 2, rounds: 7 }, 28800)).toEqual({ day: 3, watch: 1, turns: 2, rounds: 7 });
+  });
+
+  it("normalizes prior overflow and supports multi-day elapsed time without discarding smaller units", () => {
+    expect(advanceGameTime({ day: 1, watch: 4, turns: 32, rounds: 90 }, 0)).toEqual({ day: 2, watch: 2, turns: 1, rounds: 0 });
+    expect(advanceGameTime({ day: 2, watch: 2, turns: 5, rounds: 8 }, 86400 * 2 + 40)).toEqual({ day: 4, watch: 2, turns: 5, rounds: 12 });
+  });
+
+  it("never reverses time and only records complete ten-second Rounds", () => {
+    const time = { day: 1, watch: 1, turns: 0, rounds: 0 };
+    expect(advanceGameTime(time, -10)).toEqual(time);
+    expect(advanceGameTime(time, 19)).toEqual({ ...time, rounds: 1 });
+    expect(advanceGameTime({ day: 0, watch: 0, turns: -1, rounds: -1 }, Number.NaN)).toEqual(time);
   });
 });
 
@@ -114,6 +190,25 @@ describe("Combat Example reproduction", () => {
     expect(isFatalHeadWound(false, 1)).toBe(false);
     expect(isFatalHeadWound(false, 2)).toBe(true);
     expect(isFatalHeadWound(true, 1)).toBe(true);
+  });
+
+  it("only notches intact armor when the blow exceeds its full AP", () => {
+    expect(resolveArmor(2, 2)).toMatchObject({ wounds: 0, notchesArmor: false });
+    expect(resolveArmor(1, 2)).toMatchObject({ wounds: 0, notchesArmor: false });
+    expect(resolveArmor(3, 0)).toMatchObject({ wounds: 3, notchesArmor: false });
+    expect(resolveArmor(3, effectiveArmorPoints(2, 2))).toMatchObject({ wounds: 3, notchesArmor: false });
+    expect(resolveArmor(3, -1)).toMatchObject({ armorPoints: 0, wounds: 3, notchesArmor: false });
+    expect(resolveArmor(-1, 2)).toMatchObject({ incoming: 0, wounds: 0, notchesArmor: false });
+  });
+
+  it("restores location effects from legacy monster damage notes without treating absorbed hits as Wounds", () => {
+    expect(restoreMonsterInjury(["leftLeg: 1 Wound(s)", "torso: 2 Wound(s)", "head: 0 Wound(s)", "narrative note"], 3, 6)).toEqual({
+      wounds: { leftLeg: true, torso: true }, dead: false,
+    });
+    expect(restoreMonsterInjury(["head: 1 Wound(s)", "head: 1 Wound(s)"], 2, 6)).toMatchObject({ wounds: { head: true }, dead: true });
+    expect(restoreMonsterInjury(["head: 2 Wound(s)"], 2, 6).dead).toBe(true);
+    expect(restoreMonsterInjury(["torso: 6 Wound(s)"], 6, 6).dead).toBe(true);
+    expect(restoreMonsterInjury(["leftArm: -1 Wound(s)", "tail: 1 Wound(s)"], 0, 6)).toEqual({ wounds: {}, dead: false });
   });
 });
 

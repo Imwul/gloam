@@ -1,0 +1,345 @@
+{
+  "url": "http://127.0.0.1:5190/",
+  "completed": [
+    "play: navigation returns to page top",
+    "1440px play: no document horizontal overflow",
+    "tests: navigation returns to page top",
+    "1440px tests: no document horizontal overflow",
+    "character: navigation returns to page top",
+    "1440px character: no document horizontal overflow",
+    "map: navigation returns to page top",
+    "1440px map: no document horizontal overflow",
+    "magic: navigation returns to page top",
+    "1440px magic: no document horizontal overflow",
+    "downtime: navigation returns to page top",
+    "1440px downtime: no document horizontal overflow",
+    "play: navigation returns to page top",
+    "play: navigation returns to page top",
+    "768px play: no document horizontal overflow",
+    "tests: navigation returns to page top",
+    "768px tests: no document horizontal overflow",
+    "character: navigation returns to page top",
+    "768px character: no document horizontal overflow",
+    "map: navigation returns to page top",
+    "768px map: no document horizontal overflow",
+    "magic: navigation returns to page top",
+    "768px magic: no document horizontal overflow",
+    "downtime: navigation returns to page top",
+    "768px downtime: no document horizontal overflow",
+    "play: navigation returns to page top",
+    "play: navigation returns to page top",
+    "390px play: no document horizontal overflow",
+    "tests: navigation returns to page top",
+    "390px tests: no document horizontal overflow",
+    "character: navigation returns to page top",
+    "390px character: no document horizontal overflow",
+    "map: navigation returns to page top",
+    "390px map: no document horizontal overflow",
+    "magic: navigation returns to page top",
+    "390px magic: no document horizontal overflow",
+    "downtime: navigation returns to page top",
+    "390px downtime: no document horizontal overflow",
+    "play: navigation returns to page top",
+    "play: navigation returns to page top",
+    "340px play: no document horizontal overflow",
+    "tests: navigation returns to page top",
+    "340px tests: no document horizontal overflow",
+    "character: navigation returns to page top",
+    "340px character: no document horizontal overflow",
+    "map: navigation returns to page top",
+    "340px map: no document horizontal overflow",
+    "magic: navigation returns to page top",
+    "340px magic: no document horizontal overflow",
+    "downtime: navigation returns to page top",
+    "340px downtime: no document horizontal overflow",
+    "play: navigation returns to page top",
+    "phone rule drawer focuses search",
+    "phone rule drawer locks background scroll",
+    "rule search finds combat response procedure",
+    "combat summary is readable immediately",
+    "rule drawer traps forward keyboard focus",
+    "Escape closes rule drawer",
+    "rule drawer restores trigger focus",
+    "rule drawer restores page scroll",
+    "archive menu selection closes flyout",
+    "ordinary Test uses card+Stat against14",
+    "failed Push grants player and referee Resolve",
+    "Resolve improves result without feeding referee",
+    "Goal completion grants both Resolve and updates Goal",
+    "meaningful Instinct grants both Resolve",
+    "Friend aid consumes only player Resolve",
+    "Event draw is available directly from Play",
+    "Action/Subject oracle draws both correct decks",
+    "ordinary play preserves both unique card economies",
+    "Disarming Presence prepares reaction+3 and spends only player Resolve",
+    "Disarming Presence actually changes reaction result2+2+3=7",
+    "Disarming Presence cannot charge repeatedly for one reaction",
+    "tests: navigation returns to page top",
+    "phone hand action opens destination below sticky navigation",
+    "phone hand action moves keyboard focus into action panel",
+    "official Giant called-shot computes7+3−4=6",
+    "official late Resolve makes attack hit",
+    "phone result handoff reveals damage below sticky navigation",
+    "phone result handoff moves keyboard focus into damage panel",
+    "damage handoff preserves target and weapon result",
+    "unarmored torso damage records location and2 Wounds",
+    "heavy hit applies AP2, one notch and lasting leg wound",
+    "Giant leg wound visibly reduces speed4→2",
+    "armor damage stays local to the struck body part",
+    "Nimble swaps Initiative with hand without feeding referee",
+    "combat actions, wounds and Nimble preserve unique cards",
+    "export contains complete version2 campaign state",
+    "import restores complete active combat state",
+    "imported save preserves both unique card economies",
+    "reload restores armor notch, leg Wound and swapped Initiative",
+    "reload preserves both unique card economies",
+    "tests: navigation returns to page top",
+    "tests: navigation returns to page top",
+    "active mobile combat has no horizontal overflow",
+    "tests: navigation returns to page top",
+    "magic: navigation returns to page top",
+    "spell: combat magic route opens combat",
+    "spell: preparing cast consumes no Resolve, charge or hand",
+    "spell: route prepares Cast a Spell",
+    "spell: cast spends one hand card and the correct resources",
+    "spell: cast preserves both unique card economies",
+    "magic: navigation returns to page top",
+    "undo: combat magic route opens combat",
+    "undo: preparing cast consumes no Resolve, charge or hand",
+    "undo: route prepares Cast a Spell",
+    "undo: cast spends one hand card and the correct resources",
+    "undo: cast preserves both unique card economies",
+    "magic: navigation returns to page top",
+    "bound: combat magic route opens combat",
+    "bound: preparing cast consumes no Resolve, charge or hand",
+    "bound: route prepares Cast a Spell",
+    "bound: cast spends one hand card and the correct resources",
+    "bound: cast preserves both unique card economies",
+    "tests: navigation returns to page top",
+    "magic: navigation returns to page top",
+    "anyone may cast a bound object without the Magick Talent",
+    "bound object without Talent still spends hand, charge and Resolve",
+    "downtime: navigation returns to page top",
+    "healing requires sleep location and meal",
+    "one full night heals chosen Wound and advances day",
+    "session start grants both Resolve exactly once",
+    "session settlement awards at most3XP and cannot repeat",
+    "play: navigation returns to page top",
+    "downtime Goal completion defers Resolve to next session",
+    "downtime: navigation returns to page top",
+    "next session awards start and pending Goal Resolve once",
+    "all user scenarios complete without browser exceptions"
+  ],
+  "measurements": [
+    {
+      "width": 1440,
+      "panels": [
+        {
+          "title": "불확실할 때 판정",
+          "top": 466,
+          "height": 502
+        },
+        {
+          "title": "사건과 징조",
+          "top": 987,
+          "height": 505
+        },
+        {
+          "title": "방금 일어난 일",
+          "top": 1513,
+          "height": 145
+        },
+        {
+          "title": "지금 좇는 목표 3 / 3",
+          "top": 466,
+          "height": 398
+        },
+        {
+          "title": "본능",
+          "top": 884,
+          "height": 234
+        },
+        {
+          "title": "사용할 수 있는 재능",
+          "top": 1138,
+          "height": 266
+        },
+        {
+          "title": "무기와 방어",
+          "top": 1424,
+          "height": 227
+        },
+        {
+          "top": 1671,
+          "height": 90
+        }
+      ],
+      "drawButtonTop": 796
+    },
+    {
+      "width": 768,
+      "panels": [
+        {
+          "title": "불확실할 때 판정",
+          "top": 420,
+          "height": 494
+        },
+        {
+          "title": "사건과 징조",
+          "top": 934,
+          "height": 497
+        },
+        {
+          "title": "방금 일어난 일",
+          "top": 1451,
+          "height": 137
+        },
+        {
+          "title": "지금 좇는 목표 3 / 3",
+          "top": 1607,
+          "height": 390
+        },
+        {
+          "title": "본능",
+          "top": 1607,
+          "height": 390
+        },
+        {
+          "title": "사용할 수 있는 재능",
+          "top": 2013,
+          "height": 258
+        },
+        {
+          "title": "무기와 방어",
+          "top": 2013,
+          "height": 258
+        },
+        {
+          "top": 2287,
+          "height": 82
+        }
+      ],
+      "drawButtonTop": 747
+    },
+    {
+      "width": 390,
+      "panels": [
+        {
+          "title": "불확실할 때 판정",
+          "top": 353,
+          "height": 587
+        },
+        {
+          "title": "사건과 징조",
+          "top": 956,
+          "height": 490
+        },
+        {
+          "title": "방금 일어난 일",
+          "top": 1462,
+          "height": 135
+        },
+        {
+          "title": "지금 좇는 목표 3 / 3",
+          "top": 1615,
+          "height": 388
+        },
+        {
+          "title": "본능",
+          "top": 2020,
+          "height": 224
+        },
+        {
+          "title": "사용할 수 있는 재능",
+          "top": 2260,
+          "height": 254
+        },
+        {
+          "title": "무기와 방어",
+          "top": 2530,
+          "height": 217
+        },
+        {
+          "top": 2763,
+          "height": 80
+        }
+      ],
+      "drawButtonTop": 747
+    },
+    {
+      "width": 340,
+      "panels": [
+        {
+          "title": "불확실할 때 판정",
+          "top": 353,
+          "height": 587
+        },
+        {
+          "title": "사건과 징조",
+          "top": 956,
+          "height": 577
+        },
+        {
+          "title": "방금 일어난 일",
+          "top": 1549,
+          "height": 135
+        },
+        {
+          "title": "지금 좇는 목표 3 / 3",
+          "top": 1702,
+          "height": 388
+        },
+        {
+          "title": "본능",
+          "top": 2107,
+          "height": 245
+        },
+        {
+          "title": "사용할 수 있는 재능",
+          "top": 2367,
+          "height": 275
+        },
+        {
+          "title": "무기와 방어",
+          "top": 2658,
+          "height": 217
+        },
+        {
+          "top": 2891,
+          "height": 80
+        }
+      ],
+      "drawButtonTop": 747
+    }
+  ],
+  "screenshots": [
+    "/tmp/gloam-review/gothic-functional/1440-play.png",
+    "/tmp/gloam-review/gothic-functional/1440-tests.png",
+    "/tmp/gloam-review/gothic-functional/1440-character.png",
+    "/tmp/gloam-review/gothic-functional/1440-map.png",
+    "/tmp/gloam-review/gothic-functional/1440-magic.png",
+    "/tmp/gloam-review/gothic-functional/1440-downtime.png",
+    "/tmp/gloam-review/gothic-functional/768-play.png",
+    "/tmp/gloam-review/gothic-functional/768-tests.png",
+    "/tmp/gloam-review/gothic-functional/768-character.png",
+    "/tmp/gloam-review/gothic-functional/768-map.png",
+    "/tmp/gloam-review/gothic-functional/768-magic.png",
+    "/tmp/gloam-review/gothic-functional/768-downtime.png",
+    "/tmp/gloam-review/gothic-functional/390-play.png",
+    "/tmp/gloam-review/gothic-functional/390-tests.png",
+    "/tmp/gloam-review/gothic-functional/390-character.png",
+    "/tmp/gloam-review/gothic-functional/390-map.png",
+    "/tmp/gloam-review/gothic-functional/390-magic.png",
+    "/tmp/gloam-review/gothic-functional/390-downtime.png",
+    "/tmp/gloam-review/gothic-functional/340-play.png",
+    "/tmp/gloam-review/gothic-functional/340-tests.png",
+    "/tmp/gloam-review/gothic-functional/340-character.png",
+    "/tmp/gloam-review/gothic-functional/340-map.png",
+    "/tmp/gloam-review/gothic-functional/340-magic.png",
+    "/tmp/gloam-review/gothic-functional/340-downtime.png",
+    "/tmp/gloam-review/gothic-functional/phone-quick-combat.png",
+    "/tmp/gloam-review/gothic-functional/desktop-combat-results.png",
+    "/tmp/gloam-review/gothic-functional/phone-active-combat.png"
+  ],
+  "pageErrors": []
+}

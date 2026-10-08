@@ -885,47 +885,47 @@ interface LifepathEvent {
 
 export const LIFEPATH_EVENTS: { [suit: string]: { [cardRange: string]: LifepathEvent } } = {
   Cups: {
-    "A-2": { en: "Had a brief romantic relationship", ko: "짧고 강렬한 로맨스 관계를 맺음" },
-    "3-4": { en: "Fell out of favor with a group of people", ko: "어떤 집단이나 군중으로부터 신뢰를 잃고 눈 밖에 남" },
-    "5-6": { en: "Passed up an alluring opportunity", ko: "매우 매력적이고 유혹적인 일생일대의 기회를 스쳐 보냄" },
-    "7-8": { en: "Disillusioned of a previously-held belief", ko: "오랫동안 굳게 믿어왔던 가치관이나 사상에 환멸을 느낌" },
-    "9-10": { en: "Lived in a far-off land", ko: "고향과 완전히 단절된 아주 먼 타국 땅에서 거주함" },
-    "P": { en: "Pursued an ambition", ko: "가슴 깊이 품은 거대한 야망을 향해 헌신적으로 매진함" },
-    "Kn": { en: "Were in a long-term relationship", ko: "평생에 걸친 장기적이고 진지한 관계를 이어감" },
-    "Q": { en: "Took care of someone", ko: "아프거나 불우한 누군가를 정성껏 보살피며 지냄" },
-    "K": { en: "Mentored in the arts by a patron", ko: "예술이나 기술 분야의 든든한 후원자를 만나 사사받음" }
+    "A-2": { en: "Had a brief romantic relationship", ko: "짧은 연애 관계를 맺음" },
+    "3-4": { en: "Fell out of favor with a group of people", ko: "어떤 집단의 눈 밖에 남" },
+    "5-6": { en: "Passed up an alluring opportunity", ko: "매력적인 기회를 놓침" },
+    "7-8": { en: "Disillusioned of a previously-held belief", ko: "이전에 품었던 믿음에 환멸을 느낌" },
+    "9-10": { en: "Lived in a far-off land", ko: "먼 땅에서 살았음" },
+    "P": { en: "Pursued an ambition", ko: "야망을 추구함" },
+    "Kn": { en: "Were in a long-term relationship", ko: "오랜 관계를 맺고 지냄" },
+    "Q": { en: "Took care of someone", ko: "누군가를 돌봄" },
+    "K": { en: "Mentored in the arts by a patron", ko: "후원자에게 예술을 사사받음" }
   },
   Swords: {
-    "A-2": { en: "Realized a difficult truth", ko: "뼈아프고 받아들이기 힘든 잔혹한 진실을 목격하고 깨달음" },
-    "3-4": { en: "Mourned the loss of someone close to you", ko: "곁에 있던 매우 소중하고 가까운 사람의 죽음을 애도함" },
-    "5-6": { en: "Fled from a dangerous situation", ko: "끔찍한 위험이나 참화가 닥친 구역에서 목숨 걸고 탈출함" },
-    "7-8": { en: "Imprisoned for a crime", ko: "억울하거나 실제 지은 범죄로 인해 감옥에 투옥됨" },
-    "9-10": { en: "Betrayed by a friend", ko: "가장 믿었던 가까운 동료나 친구에게 배신당함" },
-    "P": { en: "Made a terrible mistake that cost you", ko: "돌이킬 수 없는 뼈아픈 실수로 막대한 대가를 치름" },
-    "Kn": { en: "Killed someone", ko: "싸움 끝에 누군가의 목숨을 빼앗아 손에 피를 묻힘" },
-    "Q": { en: "Withdrew from life for a time", ko: "세상과 인연을 끊고 한동안 어두운 곳에 은둔하며 지냄" },
-    "K": { en: "Embarked on an intense intellectual study", ko: "지독하게 몰입하는 치열한 학술적/지적 탐구를 완수함" }
+    "A-2": { en: "Realized a difficult truth", ko: "받아들이기 힘든 진실을 깨달음" },
+    "3-4": { en: "Mourned the loss of someone close to you", ko: "가까운 사람을 잃고 애도함" },
+    "5-6": { en: "Fled from a dangerous situation", ko: "위험한 상황에서 달아남" },
+    "7-8": { en: "Imprisoned for a crime", ko: "범죄로 투옥됨" },
+    "9-10": { en: "Betrayed by a friend", ko: "친구에게 배신당함" },
+    "P": { en: "Made a terrible mistake that cost you", ko: "큰 실수를 저질러 대가를 치름" },
+    "Kn": { en: "Killed someone", ko: "누군가를 죽임" },
+    "Q": { en: "Withdrew from life for a time", ko: "한동안 세상에서 물러나 지냄" },
+    "K": { en: "Embarked on an intense intellectual study", ko: "집중적인 지적 탐구에 착수함" }
   },
   Wands: {
-    "A-2": { en: "Learned a new skill or language", ko: "생소한 외국어나 완전히 새로운 이색 기술을 습득함" },
-    "3-4": { en: "Went on a journey to a distant land", ko: "머나먼 미지의 땅으로 모험 가득한 기나긴 여정을 다녀옴" },
-    "5-6": { en: "Joined a group or guild", ko: "장인 길드나 비밀 결사 같은 조직에 정식 가입함" },
-    "7-8": { en: "Overcame an obstacle", ko: "불가능해 보였던 거대한 난관이나 두려움을 극복해냄" },
-    "9-10": { en: "Received an unexpected burden", ko: "원치 않는 뜻밖의 무거운 짐이나 임무를 떠맡게 됨" },
-    "P": { en: "Went on an adventure or quest", ko: "신비로운 모험이나 숭고한 퀘스트를 수행하러 떠남" },
-    "Kn": { en: "Saved a village from disaster", ko: "자연재해나 몬스터의 위협으로부터 마을 전체를 구해냄" },
-    "Q": { en: "Started a new career", ko: "과거의 삶을 청산하고 완전히 새로운 커리어를 개척함" },
-    "K": { en: "Achieved a position of authority", ko: "집단의 존경을 받아 강력한 권위와 권력의 자리에 오름" }
+    "A-2": { en: "Learned a new skill or language", ko: "새로운 기술이나 언어를 배움" },
+    "3-4": { en: "Went on a journey to a distant land", ko: "먼 땅으로 여행을 떠남" },
+    "5-6": { en: "Joined a group or guild", ko: "집단이나 길드에 가입함" },
+    "7-8": { en: "Overcame an obstacle", ko: "장애물을 극복함" },
+    "9-10": { en: "Received an unexpected burden", ko: "뜻밖의 부담을 떠맡음" },
+    "P": { en: "Went on an adventure or quest", ko: "모험이나 퀘스트를 떠남" },
+    "Kn": { en: "Saved a village from disaster", ko: "재난에서 마을을 구함" },
+    "Q": { en: "Started a new career", ko: "새로운 직업을 시작함" },
+    "K": { en: "Achieved a position of authority", ko: "권위를 가진 자리에 오름" }
   },
   Coins: {
-    "A-2": { en: "Worked long, hard days in a difficult job", ko: "척박하고 힘겨운 노동 환경에서 기나긴 하루를 묵묵히 버팀" },
-    "3-4": { en: "Apprenticed a trade under a skilled teacher", ko: "일류 기술자 밑에서 도제 계약을 맺고 기술을 사사받음" },
-    "5-6": { en: "Lost everything and became a vagabond", ko: "전 재산을 유실하고 완전히 빈털터리 방랑자 신세로 전락함" },
-    "7-8": { en: "Mastered a craft or skill", ko: "특정 공예 기술이나 수련 분야를 마스터해 독자 영역을 개척함" },
-    "9-10": { en: "Achieved an affluent lifestyle", ko: "큰 재물을 모아 여유롭고 호화로운 삶을 잠시 누림" },
-    "P": { en: "Studied at a prestigious academy", ko: "명성 높은 명문 아카데미나 학술 기관에 입학해 공부함" },
-    "Kn": { en: "Oversaw operation of a business", ko: "상업 거래망이나 핵심 비즈니스를 직접 총괄하여 운영함" },
-    "Q": { en: "Raised a child", ko: "아이를 품에 안고 헌신적으로 길러냄" },
-    "K": { en: "Spent time in a noble court", ko: "화려하지만 암투가 가득한 귀족 궁정에서 오랜 세월을 지냄" }
+    "A-2": { en: "Worked long, hard days in a difficult job", ko: "힘든 일로 길고 고된 나날을 보냄" },
+    "3-4": { en: "Apprenticed a trade under a skilled teacher", ko: "숙련된 스승 밑에서 일을 배움" },
+    "5-6": { en: "Lost everything and became a vagabond", ko: "모든 것을 잃고 방랑자가 됨" },
+    "7-8": { en: "Mastered a craft or skill", ko: "공예나 기술을 숙달함" },
+    "9-10": { en: "Achieved an affluent lifestyle", ko: "풍족한 삶을 누리게 됨" },
+    "P": { en: "Studied at a prestigious academy", ko: "명문 교육기관에서 공부함" },
+    "Kn": { en: "Oversaw operation of a business", ko: "사업 운영을 관리함" },
+    "Q": { en: "Raised a child", ko: "아이를 기름" },
+    "K": { en: "Spent time in a noble court", ko: "귀족 궁정에서 지냄" }
   }
 };

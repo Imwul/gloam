@@ -131,12 +131,13 @@ const documentLabel: Record<SourceDocument["id"], string> = {
 };
 
 const runtimeLabel: Record<RuntimeTab, string> = {
-  character: "Create Your Character",
-  tests: "Tests & Combat",
-  magic: "Magick & Oracles",
-  map: "Generating Maps & Event Deck",
-  downtime: "Bestiary & Downtime",
-  log: "Chronicle & Archive",
+  play: "플레이",
+  character: "인물",
+  tests: "전투",
+  magic: "비술",
+  map: "탐사",
+  downtime: "휴식 · 정산",
+  log: "모험 기록",
 };
 
 const pageKey = (documentId: SourceDocument["id"], page: number) => `page:${documentId}:${page}`;

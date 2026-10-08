@@ -1,0 +1,155 @@
+{
+  "date": "2026-10-08",
+  "workspace": "/Users/imwul/Library/Mobile Documents/com~apple~CloudDocs/gloam-apo",
+  "testWorkspace": "/tmp/gloam-live",
+  "reason": "Local mirror avoids iCloud file hydration stalls; this manifest verifies tested code against the working project.",
+  "files": [
+    {
+      "path": "index.html",
+      "bytes": 636,
+      "sha256": "9330417e325db1770cafeba4a75733da60aa128c779e66a84671cd75c5a8fd6f",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "package.json",
+      "bytes": 886,
+      "sha256": "ee55177d835c51f278f5195900a17d2eae5d8ed1a17bae592c8f5232fff2d070",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "public/ornaments/gloam-vine.svg",
+      "bytes": 444,
+      "sha256": "2c88722939d43cfdfe88e2b97efa89bd9dca3102922d21d92a0bbbc3a4ec1520",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "public/sw.js",
+      "bytes": 4810,
+      "sha256": "19307e793e60fa2145a7ad5360a770b5369ca146d177d691091be13cf12e4743",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "src/App.tsx",
+      "bytes": 175432,
+      "sha256": "b92d57f600c812a0caf3fa6fc263a1cf265b661663f46fc649a8ae6001f9a575",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "src/certification.test.ts",
+      "bytes": 13494,
+      "sha256": "27f729bd9f152ad6933e57167bee8cdcec3e8f5ed1fcbcd0d7f0ef3b348caef2",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "src/gameData.ts",
+      "bytes": 58450,
+      "sha256": "eab4878d5accbc98e8ec17cf2a471b567f30c79e1e6351db8738ee0433ac851c",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "src/index.css",
+      "bytes": 48859,
+      "sha256": "7505ced5e71feef27fa70ab3a9e0848c14556a6fcdac3c7caa92dd91c276438d",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "src/main.tsx",
+      "bytes": 1208,
+      "sha256": "08ffb8f85b767a16cad8e8eed4898cce8f8b591aa978cb89f6c7968d8c32a45f",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "src/play/GothicMarks.tsx",
+      "bytes": 2675,
+      "sha256": "7c3018c7dca93abd5432d2fda2808860bade80ee8027c309b84b8e5fa79f28f5",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "src/play/PlayTable.tsx",
+      "bytes": 25204,
+      "sha256": "1be1453176d5f369ed526830b2741513dc725208e872f95018abbd6ce647af0b",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "src/play/QuickRules.tsx",
+      "bytes": 17491,
+      "sha256": "607114b95637cf806ab4012b6b62c2411fa2cb533898f1b4efc5fc208171c282",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "src/rulebook/RulebookTransplant.tsx",
+      "bytes": 25519,
+      "sha256": "39f0217d4bdfa8a94df48f57ed4bc4df4faa923f999113f25567ef4248fb4945",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "src/rulebook/referenceIndex.test.ts",
+      "bytes": 3243,
+      "sha256": "294ae844e415b720eddfed25122bd851ad23d11e8135246355e1e741a01e5e59",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "src/rulebook/referenceIndex.ts",
+      "bytes": 26908,
+      "sha256": "fea88e35a092ed43c04f70e329dc5be5b63e3acf57cec14101ab9538ef6dc4d3",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "src/rules.test.ts",
+      "bytes": 12893,
+      "sha256": "fbfa4f4485025364bbbde10c762eabb8a8443a62e7062ff1591a0dde3fc04917",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "src/rules.ts",
+      "bytes": 11575,
+      "sha256": "df86c82e2152a72dfbb4001c2ba373290851f7423b9d62fa73d967a54c96a253",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "tsconfig.app.json",
+      "bytes": 617,
+      "sha256": "b1eac9ba6cd1c01d59ebca159805e052c798d9d4ab904680b79ce3e306ea0bbd",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "tsconfig.json",
+      "bytes": 119,
+      "sha256": "770b4140bbb581e2dfd9ea9946ffc9c75a1d86ba7d2db5f77c83e37cbdf9d808",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "tsconfig.node.json",
+      "bytes": 591,
+      "sha256": "90a22c920cbc14624fb4658b58f15c875abf3234224f3933f211849c3ada3242",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "vite.config.ts",
+      "bytes": 502,
+      "sha256": "bad3e87e66bb7df84c26765663d3d3f7a7cf5d4c29846e50e5ec5fded9ba4d7e",
+      "testedMirrorMatches": true
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 108528,
+      "sha256": "c339d3483c32808405fbc41a1ad79fe284a7398bb08df5a6cd59450ab0abfac3",
+      "installedLockMatches": true
+    },
+    {
+      "path": "scripts/gothic-visual-certification.cjs",
+      "bytes": 11505,
+      "sha256": "8a383febcf86c884946fb8d99a050b6400ff8be40c4d7b911e07cb1558a166c3"
+    },
+    {
+      "path": "src/assets/fonts/1492-Quadrata-Lim.ttf",
+      "bytes": 69888,
+      "sha256": "2068ce4471017416cdc83246f16d8485672e14a022f3bbb96a0a03fd54cc51fc"
+    },
+    {
+      "path": "src/assets/fonts/Hahmlet-Variable.woff2",
+      "bytes": 662996,
+      "sha256": "9f1d660c266f9226bb43f17b4efc0bd3c0a975c727f8cc3dade0aceb7cd400a6"
+    }
+  ]
+}

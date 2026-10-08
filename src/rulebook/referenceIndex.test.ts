@@ -44,7 +44,7 @@ describe("Gloam personal rulebook transplant", () => {
   });
 
   it("keeps section pages, cross-links, tables, and runtime consumers resolvable", () => {
-    const validTabs = new Set(["character", "tests", "magic", "map", "downtime", "log"]);
+    const validTabs = new Set(["play", "character", "tests", "magic", "map", "downtime", "log"]);
     for (const section of RULEBOOK_SECTIONS) {
       const document = documents.get(section.documentId);
       expect(document, section.id).toBeDefined();
