@@ -27,6 +27,7 @@
   --accent-2:#343025;
   --gold:#815842;
   --danger:#863d34;
+  --control-height:44px;
   --serif:Hahmlet,Georgia,serif
 }
 
@@ -95,6 +96,17 @@ input,select,textarea {
   border-radius: 0;
   background: #faf4e7;
   color: var(--ink);
+}
+
+input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=hidden]),select:not([multiple]) {
+  height:var(--control-height);
+  min-height:var(--control-height);
+  line-height:1.4;
+}
+
+/* The native popup appearance paints shorter controls on macOS despite their box height. */
+select:not([multiple]) {
+  appearance:menulist-button;
 }
 
 textarea {
@@ -1059,11 +1071,6 @@ details:not([open])>*:not(summary) {
   font-size:13px
 }
 
-.play-suit-top>span:first-child {
-  color:#80533c;
-  font-size:19px
-}
-
 .play-suit-top strong {
   margin-left:auto;
   font-size:23px;
@@ -1818,10 +1825,6 @@ details:not([open])>*:not(summary) {
     font-size:12px
   }
 
-  .play-suit-top>span:first-child {
-    display:none
-  }
-
   .form-grid.four,.four-columns,.talent-grid,.bestiary-grid,.monster-grid {
     grid-template-columns:repeat(2,minmax(0,1fr))
   }
@@ -1860,10 +1863,6 @@ details:not([open])>*:not(summary) {
 
   .play-suit-top {
     font-size:14px
-  }
-
-  .play-suit-top>span:first-child {
-    display:block
   }
 
   .page-grid {
@@ -2475,7 +2474,7 @@ details:not([open])>*:not(summary) {
   color: var(--accent);
 }
 
-/* Gothic print language: original line ornaments, ink and warm paper. */
+/* Gothic print language: typography, ink and warm paper. */
 body {
   background-color: #1d1d1a;
   background-image: repeating-linear-gradient(112deg, transparent 0 10px, #c6ad7810 10px 11px);
@@ -2483,8 +2482,6 @@ body {
 :root { --serif: Hahmlet, Georgia, serif; --focus: #864334; }
 h2, h3, summary { font-family: var(--serif); }
 h2, h3 { letter-spacing: -.045em; }
-.gothic-mark { display: block; flex-shrink: 0; }
-.brand-sigil { width: 72px; height: 92px; color: #383024; }
 .brand-wordmark { display: grid; }
 .brand-imprint { font-family: Georgia, serif; font-size: 9px; letter-spacing: .18em; color: #66573e; }
 .brand-caption { font-family: var(--serif); font-size: 11px; letter-spacing: .03em; color: #5d503b; }
@@ -2498,14 +2495,11 @@ h2, h3 { letter-spacing: -.045em; }
 .table-status { border-bottom: 3px double #aa9877; }
 .chapter-title { display: block; font-family: Gloam, Georgia, serif; font-size: 46px; line-height: 1.2; font-weight: 400; color: #29271f; }
 .chapter-heading .eyebrow { display: block; margin-bottom: 2px; color: #796447; font-size: 9px; }
-.chapter-ornament { width: 220px; height: 36px; color: #615136; margin-inline: auto; opacity: .85; }
 .chapter-heading > .text-button { align-self: end; font-size: 12px; color: #7b3c30; }
 .panel-header, .play-panel-head { padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .panel-header h2, .play-panel-head h2 { font-size: 22px; font-weight: 730; }
 .panel-header p, .play-hint, .quick-reading p { max-width: 65ch; }
 .play-character > .panel { background: #f1e7d1; }
-.play-character .play-panel-head { position: relative; }
-.play-character .play-panel-head::after { content: "✧"; position: absolute; left: -5px; bottom: -10px; background: #f1e7d1; padding-right: 7px; color: #8b593d; font-size: 14px; }
 .play-goal-list p::before { font-family: Georgia, serif; font-size: 13px; color: #804135; }
 .play-test, .combat-hands-panel {
   --ink: #f0e4c9;
@@ -2534,8 +2528,6 @@ h2, h3 { letter-spacing: -.045em; }
 .play-test .play-suit.selected { background: #e2d2ad; color: #2a2419; border: 2px solid #f0ddb2; }
 .play-test .play-suit.selected small { color: #544a34; }
 .play-suit-top { gap: 6px; }
-.suit-engraving { width: 25px; height: 31px; color: #d0b980; }
-.play-suit.selected .suit-engraving { color: #7c4430; }
 .play-test .play-test-result { background: #34362a; border-color: #8b8a68; color: #eee6ce; }
 .play-test .play-test-result strong, .play-test .play-test-result .play-test-math { color: #efe4c9; }
 .play-test .play-health { color: #d8c69b; }
@@ -2576,18 +2568,15 @@ button, input, select, textarea, p, label, h2, h3 { word-break: keep-all; overfl
 
 @media (max-width: 820px) {
   .topbar { padding: 17px 24px; }
-  .brand-sigil { width: 54px; height: 70px; }
   .gloam-title { font-size: 52px; }
   .brand-imprint { font-size: 7px; letter-spacing: .1em; }
   .brand-caption { font-size: 10px; }
-  .chapter-ornament { width: 150px; }
   .chapter-title { font-size: 38px; }
   .chapter-heading h2 { font-size: 18px; }
 }
 @media (max-width: 540px) {
   .topbar { padding: 12px 14px; gap: 10px; }
   .brand { gap: 8px; }
-  .brand-sigil { width: 30px; height: 48px; }
   .brand-imprint { display: none; }
   .brand-caption { font-size: 8px; }
   .gloam-title { font-size: 40px; margin: 0 0 2px; }
@@ -2600,20 +2589,16 @@ button, input, select, textarea, p, label, h2, h3 { word-break: keep-all; overfl
   .chapter-heading h2 { font-size: 15px; }
   .chapter-heading .eyebrow { font-size: 8px; }
   .chapter-title { font-size: 35px; }
-  .chapter-ornament { display: none; }
   .chapter-heading > .text-button { font-size: 10px; align-self: center; }
   .panel { border-radius: 0; }
   .play-test .play-panel-head h2 { font-size: 19px; }
   .play-test .play-panel-head .play-rule-link { font-size: 10px; }
   .play-test .play-suit { min-height: 76px; }
-  .suit-engraving { width: 23px; height: 28px; }
   .play-suit-top { font-size: 12px; gap: 4px; }
   .play-suit-top strong { font-size: 23px; }
   .quick-dialog { box-shadow: 0 0 0 3px #2b251b; }
 }
 
-.topbar { position: relative; }
-.topbar::after { content: ""; position: absolute; height: 13px; bottom: 3px; left: 28px; right: 28px; background: #625032; mask: url('/ornaments/gloam-vine.svg') repeat-x center / 240px 24px; opacity: .7; pointer-events: none; }
 .play-test input, .play-test select, .play-test textarea { --ink: #29251d; }
 .play-test :focus-visible, .combat-hands-panel :focus-visible { outline: 3px solid #e7c489; outline-offset: 3px; }
 .combat-hands-panel .monster-card :focus-visible { outline-color: #864334; }
@@ -2642,7 +2627,6 @@ button, input, select, textarea, p, label, h2, h3 { word-break: keep-all; overfl
   .play-test .play-panel-head .play-rule-link { font-size: 11px; }
   .play-options .form-grid { grid-template-columns: 1fr; }
   .chapter-title { font-size: 64px; }
-  .chapter-ornament { width: 340px; }
   .table-status strong { font-size: 29px; }
   .status-character strong { font-size: 20px; }
   body { font-size: 17px; }
@@ -2652,7 +2636,6 @@ button, input, select, textarea, p, label, h2, h3 { word-break: keep-all; overfl
   .play-suit-top { font-size: 16px; }
   .play-suit-top strong { font-size: 30px; }
   .play-suit small { font-size: 12px; }
-  .suit-engraving { width: 30px; height: 40px; }
   .play-character .play-panel-head h2 { font-size: 25px; }
   .play-test-result, .play-exploration-result { flex-wrap: wrap; }
   .play-draw-line .play-primary { min-height: 54px; font-size: 16px; }

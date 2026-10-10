@@ -22,7 +22,6 @@ import {
   WILDERNESS_EVENTS_KO,
 } from "./gameData";
 import PlayTable from "./play/PlayTable";
-import GothicMark from "./play/GothicMarks";
 import QuickRules from "./play/QuickRules";
 import {
   advanceGameTime,
@@ -1674,7 +1673,7 @@ function App() {
       <div className="app-shell">
       <a className="skip-link" href="#play-content">본문으로 건너뛰기</a>
       <header className="topbar">
-        <div className="brand"><GothicMark kind="tower" className="brand-sigil" /><div className="brand-wordmark"><span className="brand-imprint">A FANTASY TAROT ROLEPLAYING GAME</span><h1 className="gloam-title">Gloam</h1><span className="brand-caption">모험의 곁에 두는 도구</span></div></div>
+        <div className="brand"><div className="brand-wordmark"><span className="brand-imprint">A FANTASY TAROT ROLEPLAYING GAME</span><h1 className="gloam-title">Gloam</h1><span className="brand-caption">모험의 곁에 두는 도구</span></div></div>
         <div className="top-actions">
           <button onClick={undo} disabled={undoCount === 0} aria-label={`되돌리기 · ${undoCount}개`}>↶ 되돌리기</button>
           <button ref={rulebookButtonRef} className="rules-trigger" onClick={() => setQuickRule("tests")}>규칙 찾기 <kbd>/</kbd></button>
@@ -1701,7 +1700,7 @@ function App() {
         <span className="autosave" role="status">{saveError ? "저장 오류" : "● 자동 저장"}</span>
       </div>
       <main id="play-content" className={`chapter chapter-${tab}`}>
-        <div className="chapter-heading"><div><span className="eyebrow">{state.campaignName || "THE ADVENTURER’S TABLE"}</span><span className="chapter-title" aria-hidden="true">{({ play: "Play", tests: "Combat", character: "Character", map: "Exploration", magic: "Magick", downtime: "Downtime", log: "Chronicle" } as Record<Tab, string>)[tab]}</span><h2>{({ play: "다음 행동을 이야기하세요", tests: "전투", character: "인물 기록", map: "탐사와 지도", magic: "비술", downtime: "휴식과 세션 정산", log: "모험 기록" } as Record<Tab, string>)[tab]}</h2></div><GothicMark kind="divider" className="chapter-ornament" /><button className="text-button" onClick={() => setQuickRule(({ play: "tests", tests: "combat", character: "create-character", map: "generating-maps", magic: "arcane-magick", downtime: "resting", log: "goals" } as Record<Tab, string>)[tab])}>이 화면의 규칙 ↗</button></div>
+        <div className="chapter-heading"><div><span className="eyebrow">{state.campaignName || "THE ADVENTURER’S TABLE"}</span><span className="chapter-title" aria-hidden="true">{({ play: "Play", tests: "Combat", character: "Character", map: "Exploration", magic: "Magick", downtime: "Downtime", log: "Chronicle" } as Record<Tab, string>)[tab]}</span><h2>{({ play: "다음 행동을 이야기하세요", tests: "전투", character: "인물 기록", map: "탐사와 지도", magic: "비술", downtime: "휴식과 세션 정산", log: "모험 기록" } as Record<Tab, string>)[tab]}</h2></div><button className="text-button" onClick={() => setQuickRule(({ play: "tests", tests: "combat", character: "create-character", map: "generating-maps", magic: "arcane-magick", downtime: "resting", log: "goals" } as Record<Tab, string>)[tab])}>이 화면의 규칙 ↗</button></div>
         {tab === "play" && <PlayTable state={state} update={update} talents={Object.values(TALENTS).flat().filter(talent => state.character.talents.includes(talent.name))}
           onRollTest={rollTest} onPushTest={pushTest} onBoostTest={spendResolveOnTest}
           onNewTest={() => update(previous => ({ ...previous, test: { ...emptyTest(), suit: previous.test.suit, stat: previous.character.stats[previous.test.suit] } }))}

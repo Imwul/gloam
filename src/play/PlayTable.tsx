@@ -1,4 +1,3 @@
-import GothicMark from "./GothicMarks";
 import type { GameState } from "../App";
 import { ARMOR, WEAPONS } from "../gameData";
 import { MAJOR_RANKS, SUITS, cardValue, carryingCapacity, effectiveArmorPoints, woundedSpeed, type Card, type Suit } from "../rules";
@@ -101,7 +100,7 @@ export default function PlayTable(props: PlayTableProps) {
           {incapacitated && <div className="notice warn">{character.dead ? "인물이 사망했습니다." : "머리 부상으로 의식을 잃었습니다."} <button type="button" onClick={() => onNavigate("character")}>인물 상태 확인</button></div>}
           <div className="play-suits" role="group" aria-label="판정에 사용할 능력치">
             {SUITS.map((suit) => <button type="button" key={suit} className={`play-suit${test.suit === suit ? " selected" : ""}`} aria-pressed={test.suit === suit} title={suits[suit].meaning} disabled={hasDrawn || state.combat.active} onClick={() => patchTest({ suit, stat: character.stats[suit] })}>
-              <span className="play-suit-top"><GothicMark kind={suit} className="suit-engraving" /><span>{suits[suit].name}</span><strong>{character.stats[suit]}</strong></span>
+              <span className="play-suit-top"><span>{suits[suit].name}</span><strong>{character.stats[suit]}</strong></span>
               <small>{suits[suit].use}</small>
             </button>)}
           </div>

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'gloam-v3-gothic-table-20261008'
+const CACHE_VERSION = 'gloam-v4-forms-20261010'
 const SHELL_CACHE = `${CACHE_VERSION}-shell`
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`
 const CACHE_PREFIX = 'gloam-v'
