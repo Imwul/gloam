@@ -1,0 +1,271 @@
+{
+  "date": "2026-10-15",
+  "base_commit": "556462aa5423622ffd6e4d0cae3e4a14d97a58db",
+  "workflow": {
+    "bmad_cis_problem_solving": "completed",
+    "bmad_cis_design_thinking": "completed",
+    "tea_formal_gate": "not run: modules.tea missing"
+  },
+  "tests": {
+    "command": "npm test -- --reporter=json",
+    "files": 5,
+    "passed": 58,
+    "failed": 0,
+    "per_file": [
+      {
+        "file": "src/App.integration.test.tsx",
+        "status": "passed",
+        "tests": 9
+      },
+      {
+        "file": "src/certification.test.ts",
+        "status": "passed",
+        "tests": 4
+      },
+      {
+        "file": "src/gameplay.test.ts",
+        "status": "passed",
+        "tests": 18
+      },
+      {
+        "file": "src/rules.test.ts",
+        "status": "passed",
+        "tests": 23
+      },
+      {
+        "file": "src/rulebook/referenceIndex.test.ts",
+        "status": "passed",
+        "tests": 4
+      }
+    ]
+  },
+  "build": {
+    "command": "npm run build",
+    "exit_code": 0
+  },
+  "lint": {
+    "command": "npm run lint",
+    "exit_code": 0
+  },
+  "sources": {
+    "main_pages": 60,
+    "combat_example_pages": 3,
+    "character_sheet_pages": 1,
+    "coverage_rows": 48,
+    "appendix_rows": 2,
+    "all_rules_automated": false
+  },
+  "manual_boundaries": [
+    "Referee interpretation and timing",
+    "Position, range and narrative consequences",
+    "Individual Talent and magick item effects",
+    "Possession, equipment confirmation and hireling wage schedule"
+  ],
+  "browser": {
+    "safari_local": "http://127.0.0.1:5191/",
+    "procedures_verified": [
+      "Mystic starting Talent",
+      "One initial spell word pair, retained after reload",
+      "Alchemy Watch, Wands Test, one dose and reload protection",
+      "Armor body-part options and Swords requirement",
+      "24-area map and live card retained after reload",
+      "Quick rules access"
+    ],
+    "viewports": [
+      {
+        "width": 390,
+        "height": 800,
+        "mode": "Safari responsive"
+      },
+      {
+        "width": 2560,
+        "height": 1440,
+        "mode": "Safari responsive"
+      },
+      {
+        "width": 3440,
+        "height": 1440,
+        "mode": "Safari native full screen"
+      }
+    ],
+    "spacing_follow_up": {
+      "wide": {
+        "buttonToHeading": 53,
+        "overflow": false,
+        "panel": {
+          "bottom": 1235.546875,
+          "height": 707.578125,
+          "width": 970,
+          "x": 732.5,
+          "y": 527.96875
+        },
+        "sectionGap": 28,
+        "selectHeights": [
+          44,
+          44
+        ],
+        "status": {
+          "bottom": 315.984375,
+          "height": 84,
+          "width": 1960,
+          "x": 732.5,
+          "y": 231.984375
+        },
+        "statusToButton": 16,
+        "viewport": {
+          "height": 1440,
+          "width": 3440
+        }
+      },
+      "mobile": {
+        "buttonToHeading": 53,
+        "overflow": false,
+        "sectionGap": 28,
+        "selectHeights": [
+          44,
+          44
+        ],
+        "statusLeft": 15,
+        "statusToButton": 16,
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      "pages": [
+        {
+          "page": "비술",
+          "clientWidth": 1265,
+          "formGaps": [
+            "18px 16px",
+            "18px 16px",
+            "18px 16px"
+          ],
+          "overflow": false,
+          "scrollWidth": 1265,
+          "shortControls": [
+            44,
+            44,
+            44,
+            44,
+            44,
+            44,
+            44,
+            44,
+            44
+          ],
+          "statusLeft": 25,
+          "width": 1280
+        },
+        {
+          "page": "전투",
+          "clientWidth": 1265,
+          "formGaps": [
+            "18px 16px",
+            "18px 16px"
+          ],
+          "overflow": false,
+          "scrollWidth": 1265,
+          "shortControls": [
+            44,
+            44,
+            44,
+            44,
+            44,
+            44,
+            44,
+            44,
+            44,
+            44,
+            44
+          ],
+          "statusLeft": 25,
+          "width": 1280
+        },
+        {
+          "page": "인물",
+          "clientWidth": 1265,
+          "formGaps": [],
+          "overflow": false,
+          "scrollWidth": 1265,
+          "shortControls": [],
+          "statusLeft": 25,
+          "width": 1280
+        },
+        {
+          "page": "플레이",
+          "clientWidth": 1265,
+          "formGaps": [],
+          "overflow": false,
+          "scrollWidth": 1265,
+          "shortControls": [
+            44
+          ],
+          "statusLeft": 25,
+          "width": 1280
+        }
+      ]
+    }
+  },
+  "not_retested": [
+    "Passphrase-protected rulebook decryption",
+    "Safari native JSON import could not be completed through the file picker",
+    "Previous 128/165 browser cases",
+    "Physical mobile touch devices and multi-user usability study"
+  ],
+  "screenshots": [
+    {
+      "path": "_bmad-output/validation/rulebook-audit-2026-10-15/safari-2560-magick.png",
+      "width": 4718592,
+      "height": 4292935744,
+      "sha256": "eccff4ef1b7a2e79df74432db5ef43debac8e2640a320dbcba75c04e716073f4"
+    },
+    {
+      "path": "_bmad-output/validation/rulebook-audit-2026-10-15/safari-3440-magick.png",
+      "width": 4718592,
+      "height": 4292935744,
+      "sha256": "750d60dd8e94e98fd1887267b005360c98669406b760cfbe85581a508a76bf0e"
+    },
+    {
+      "path": "_bmad-output/validation/rulebook-audit-2026-10-15/safari-390-magick.png",
+      "width": 4718592,
+      "height": 4292935744,
+      "sha256": "9518a9d27b616e704ae6c81397a7bd7cbf2e00e464d079078fa0c33f0b7be999"
+    },
+    {
+      "path": "_bmad-output/validation/rulebook-audit-2026-10-15/spacing-session-desktop.png",
+      "width": 65536,
+      "height": 4292542531,
+      "sha256": "22851d0c29bfa1d61d7036c2b59339135d2070ff0201e9da52e8146409d637ab"
+    },
+    {
+      "path": "_bmad-output/validation/rulebook-audit-2026-10-15/spacing-session-mobile.png",
+      "width": 65536,
+      "height": 4292542531,
+      "sha256": "ee9126448a5f6085065776463e7990f7b247859fb324212871f3de16950a2dec"
+    }
+  ],
+  "production_assets": [
+    {
+      "path": "assets/RulebookTransplant-vN72cPeG.js",
+      "sha256": "cec2047590dae80377429cf6ce30bd1227bec0619785ea1e0ca445e2d9ceb0c5"
+    },
+    {
+      "path": "assets/index-CYievcx4.css",
+      "sha256": "fd8b7ee89f5a4534dadeb431e9128fbbe1e2fe1220dc1a6bde2f37b9e2630c88"
+    },
+    {
+      "path": "assets/index-Ch1t8HDA.js",
+      "sha256": "637e34924aff43606e5b8b1dc13715687d78051807c9c35d492eb02b4a1125db"
+    },
+    {
+      "path": "assets/rolldown-runtime-D9-fqq9M.js",
+      "sha256": "a2b9cf4b963756dc2cae1ebdd1c0e51ef5780dd5bf64a55b90e21679c2b2434f"
+    },
+    {
+      "path": "assets/vendor-react-DXf8hR2M.js",
+      "sha256": "f8b3575cbbd79fbe458abea78b19ddd6d3e0d858f3d19d86775279aec57f0c6b"
+    }
+  ],
+  "delivery_verification": "Final commit and Production deployment are verified after committing; see delivery response and GitHub deployment status."
+}

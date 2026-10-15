@@ -1,0 +1,118 @@
+{
+  "wide": {
+    "buttonToHeading": 53,
+    "overflow": false,
+    "panel": {
+      "bottom": 1235.546875,
+      "height": 707.578125,
+      "width": 970,
+      "x": 732.5,
+      "y": 527.96875
+    },
+    "sectionGap": 28,
+    "selectHeights": [
+      44,
+      44
+    ],
+    "status": {
+      "bottom": 315.984375,
+      "height": 84,
+      "width": 1960,
+      "x": 732.5,
+      "y": 231.984375
+    },
+    "statusToButton": 16,
+    "viewport": {
+      "height": 1440,
+      "width": 3440
+    }
+  },
+  "mobile": {
+    "buttonToHeading": 53,
+    "overflow": false,
+    "sectionGap": 28,
+    "selectHeights": [
+      44,
+      44
+    ],
+    "statusLeft": 15,
+    "statusToButton": 16,
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  "pages": [
+    {
+      "page": "비술",
+      "clientWidth": 1265,
+      "formGaps": [
+        "18px 16px",
+        "18px 16px",
+        "18px 16px"
+      ],
+      "overflow": false,
+      "scrollWidth": 1265,
+      "shortControls": [
+        44,
+        44,
+        44,
+        44,
+        44,
+        44,
+        44,
+        44,
+        44
+      ],
+      "statusLeft": 25,
+      "width": 1280
+    },
+    {
+      "page": "전투",
+      "clientWidth": 1265,
+      "formGaps": [
+        "18px 16px",
+        "18px 16px"
+      ],
+      "overflow": false,
+      "scrollWidth": 1265,
+      "shortControls": [
+        44,
+        44,
+        44,
+        44,
+        44,
+        44,
+        44,
+        44,
+        44,
+        44,
+        44
+      ],
+      "statusLeft": 25,
+      "width": 1280
+    },
+    {
+      "page": "인물",
+      "clientWidth": 1265,
+      "formGaps": [],
+      "overflow": false,
+      "scrollWidth": 1265,
+      "shortControls": [],
+      "statusLeft": 25,
+      "width": 1280
+    },
+    {
+      "page": "플레이",
+      "clientWidth": 1265,
+      "formGaps": [],
+      "overflow": false,
+      "scrollWidth": 1265,
+      "shortControls": [
+        44
+      ],
+      "statusLeft": 25,
+      "width": 1280
+    }
+  ]
+}

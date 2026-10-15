@@ -11,7 +11,7 @@ const manifest = sourceManifest as SourceManifest;
 const documents = new Map(manifest.documents.map((document) => [document.id, document]));
 
 describe("Gloam personal rulebook transplant", () => {
-  it("covers every printed source page and both companion documents", () => {
+  it("indexes the three supplied documents with their expected page counts", () => {
     expect(manifest.encryption).toBe("AES-256-GCM");
     expect(documents.get("gloam-1.02")?.pages).toBe(60);
     expect(documents.get("combat-example")?.pages).toBe(3);
@@ -19,7 +19,7 @@ describe("Gloam personal rulebook transplant", () => {
     expect(RULEBOOK_SECTIONS).toHaveLength(44);
   });
 
-  it("locks the published transplant coverage metrics", () => {
+  it("tracks reference categories without treating their counts as runtime rule coverage", () => {
     expect({
       chapters: RULEBOOK_GROUPS.length,
       sections: RULEBOOK_SECTIONS.length,

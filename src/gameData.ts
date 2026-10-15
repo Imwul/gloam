@@ -929,3 +929,45 @@ export const LIFEPATH_EVENTS: { [suit: string]: { [cardRange: string]: LifepathE
     "K": { en: "Spent time in a noble court", ko: "귀족 궁정에서 지냄" }
   }
 };
+
+export const VOCATION_FROM_SUIT: Record<string, string> = {
+  cups: "Herald",
+  swords: "Knight-Errant",
+  wands: "Mystic",
+  coins: "Cutpurse",
+};
+
+export const TALENTS: Record<string, { name: string; textKo: string; starting?: boolean }[]> = {
+  Herald: [
+    { name: "Disarming Presence", textKo: "반응 판정에 +3을 더한다.", starting: true },
+    { name: "Academic", textKo: "문화·제도·역사에 관한 사실 하나를 심판의 재량에 따라 기억해 낸다." },
+    { name: "Duel of Wits", textKo: "청중이 보는 앞에서 논쟁에 이긴다. 상대의 마음까지 반드시 바뀌는 것은 아니다." },
+    { name: "Inspire", textKo: "누군가의 판정에 +3을 준다. 판정 전에 선언해야 한다." },
+    { name: "Parley", textKo: "말이 통하는 적대적 생물을 진정시킨다. 전투가 시작된 뒤에는 쓸 수 없다." },
+    { name: "Verity & Guile", textKo: "거짓을 알아차리거나, 컵 판정으로 자신의 거짓을 믿게 한다." },
+  ],
+  "Knight-Errant": [
+    { name: "Sally Forth", textKo: "전투 라운드마다 한 번, 전투 행동을 하나 더 한다.", starting: true },
+    { name: "Geas", textKo: "단순한 임무를 명한다. 대상은 저항 판정을 하며, 한 번에 하나만 유지된다." },
+    { name: "Itinerant Hospitality", textKo: "어느 장원이나 성에서든 숙소와 따뜻한 식사를 얻는다." },
+    { name: "Martial Dominance", textKo: "자신의 사거리로 들어오거나 빠져나가는 생물을 대응으로 공격한다." },
+    { name: "Oath-sworn", textKo: "맹세를 좇는 행동에 +3을 얻는다. 실패하면 서약 파기자로 낙인찍힌다." },
+    { name: "Trial by Combat", textKo: "결투를 청한다. 거절한 상대는 위축되어 1차례 동안 사회 판정에 +3을 허용한다." },
+  ],
+  Mystic: [
+    { name: "Magick", textKo: "두 단어로 된 비전 주문 하나를 알고 시작하며, 주문을 시전할 수 있다.", starting: true },
+    { name: "Augury", textKo: "행동 방침을 물으면 심판이 길함, 흉함, 둘 다, 또는 어느 쪽도 아님으로 답한다." },
+    { name: "Sixth Sense", textKo: "비술을 희미한 녹빛과 자줏빛 안개로 감지한다." },
+    { name: "Familiar", textKo: "임프나 고양이 하나를 부른다. 부상 하나를 입으면 사라진다." },
+    { name: "Undo Magick", textKo: "주문을 상쇄하거나 해제한다. 강력한 비술은 완드 판정이 필요할 수 있다." },
+    { name: "Bind Magick", textKo: "주문을 물건에 봉한다. 결의 1점마다 충전 하나를 얻는다." },
+  ],
+  Cutpurse: [
+    { name: "Nimble", textKo: "공격 대상이 된 뒤 손패 한 장과 선제권 카드를 맞바꾼다.", starting: true },
+    { name: "One with the Shadows", textKo: "어둠 속에 숨지만 냄새까지 감출 수는 없다." },
+    { name: "Sneak-Attack", textKo: "기습 근접 공격으로 갑옷을 무시한다." },
+    { name: "Poisoner", textKo: "먹으면 한 시간 안에 죽는 치명적인 독을 만든다." },
+    { name: "Impersonate", textKo: "인간의 모습·목소리·태도를 1경점 동안 모방한다." },
+    { name: "Split", textKo: "자신과 동료들이 코인 판정 없이 달아난다." },
+  ],
+};

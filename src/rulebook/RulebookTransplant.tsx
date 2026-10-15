@@ -435,7 +435,7 @@ export default function RulebookTransplant({
             ) : (
               <>
                 <section className="rulebook-coverage">
-                  <h3>이식 기록</h3>
+                  <h3>원문 색인 범위</h3>
                   <dl>
                     <div><dt>원문 쪽</dt><dd>64</dd></div>
                     <div><dt>절</dt><dd>{coverage.sections}</dd></div>
@@ -447,6 +447,7 @@ export default function RulebookTransplant({
                     <div><dt>맥락·참조</dt><dd>{coverage.references}</dd></div>
                     <div><dt>상호 연결</dt><dd>{coverage.crossLinks}</dd></div>
                   </dl>
+                  <p>원문을 찾아보기 위한 색인입니다. 판정과 자원은 플레이 도구에서 계산하고, 재능·비술·사건의 구체적 효과는 심판과 적용합니다.</p>
                 </section>
                 <section className="rulebook-current-context">
                   <h3>현재 장부</h3>

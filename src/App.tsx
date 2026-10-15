@@ -19,8 +19,15 @@ import {
   SETTLEMENT_EVENTS_KO,
   TRADE_GOODS,
   WEAPONS,
+  TALENTS,
+  VOCATION_FROM_SUIT,
   WILDERNESS_EVENTS_KO,
 } from "./gameData";
+import {
+  addMapRow, armorCoversPart, assignCreationVocation, beginAlchemy, canBeginAlchemy, canClaimAlchemyDose,
+  canDrawInitialWord, canPlayCombatCard, canUsePlayerArmor, claimAlchemyDose, createTestTracker,
+  createMapCell, isCombatDiscardAction, playerArmor, type AlchemyPreparation, type ArmorKey, type WoundPart,
+} from "./gameplay";
 import PlayTable from "./play/PlayTable";
 import QuickRules from "./play/QuickRules";
 import {
@@ -57,8 +64,6 @@ type Tab = "play" | "character" | "tests" | "magic" | "map" | "downtime" | "log"
 const RulebookTransplant = lazy(() => import("./rulebook/RulebookTransplant"));
 const RulebookOpenContext = createContext<(sectionId?: string) => void>(() => undefined);
 type MapType = "wilderness" | "dungeon" | "settlement";
-type WoundPart = "head" | "torso" | "leftArm" | "rightArm" | "leftLeg" | "rightLeg";
-type ArmorKey = "helmet" | "cuirass" | "gambeson" | "chainmail" | "leftGauntlet" | "rightGauntlet" | "leftGreave" | "rightGreave" | "shield";
 
 interface Goal {
   id: string;
@@ -245,6 +250,7 @@ interface TestTracker {
   result: TestResult | null;
   resolveSpent: number;
   disarmingPresenceUsed?: boolean;
+  alchemy?: { ingredient: string; concoction: string; doseRecorded: boolean };
 }
 
 export interface GameState {
@@ -301,32 +307,9 @@ const now = () => new Date().toLocaleString();
 const uid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-const emptyTest = (): TestTracker => ({
-  purpose: "",
-  suit: "cups",
-  stat: 1,
-  modifier: 0,
-  help: 0,
-  opposedPenalty: 0,
-  firstCard: null,
-  pushedCard: null,
-  result: null,
-  resolveSpent: 0,
-});
+const emptyTest = (): TestTracker => createTestTracker();
 
-const emptyMap = (): MapCell[] => Array.from({ length: 16 }, (_, index) => ({
-  x: index % 4,
-  y: Math.floor(index / 4),
-  card: null,
-  liveCard: false,
-  type: null,
-  label: "",
-  extraCards: [],
-  extraLabels: [],
-  visited: false,
-  notes: "",
-  history: [],
-}));
+const emptyMap = (): MapCell[] => Array.from({ length: 16 }, (_, index) => createMapCell(index % 4, Math.floor(index / 4)));
 
 const freshCharacter = (): Character => ({
   name: "",
@@ -551,7 +534,7 @@ export const sanitizeV2 = (candidate: GameState): GameState => {
     playerDiscard: cleanCards(candidate.playerDiscard),
     refereeDeck: cleanCards(candidate.refereeDeck),
     refereeDiscard: cleanCards(candidate.refereeDiscard),
-    mapCells: Array.isArray(candidate.mapCells) && candidate.mapCells.length === 16
+    mapCells: Array.isArray(candidate.mapCells) && candidate.mapCells.length > 0
       ? candidate.mapCells.map((cell) => ({ ...cell, extraCards: cleanCards(cell.extraCards), extraLabels: Array.isArray(cell.extraLabels) ? cell.extraLabels : [] }))
       : emptyMap(),
     logs: Array.isArray(candidate.logs) ? candidate.logs : [],
@@ -603,47 +586,6 @@ const loadBundle = (): SaveBundle => {
 const mapTable = (type: MapType) => type === "wilderness" ? MAP_WILDERNESS_KO : type === "dungeon" ? MAP_DUNGEON_KO : MAP_SETTLEMENT_KO;
 const eventTable = (type: MapType) => type === "wilderness" ? WILDERNESS_EVENTS_KO : type === "dungeon" ? DUNGEON_EVENTS_KO : SETTLEMENT_EVENTS_KO;
 
-const vocationFromSuit: Record<Suit, string> = {
-  cups: "Herald",
-  swords: "Knight-Errant",
-  wands: "Mystic",
-  coins: "Cutpurse",
-};
-
-const TALENTS: Record<string, { name: string; textKo: string; starting?: boolean }[]> = {
-  Herald: [
-    { name: "Disarming Presence", textKo: "반응 판정에 +3을 더한다.", starting: true },
-    { name: "Academic", textKo: "문화·제도·역사에 관한 사실 하나를 심판의 재량에 따라 기억해 낸다." },
-    { name: "Duel of Wits", textKo: "청중이 보는 앞에서 논쟁에 이긴다. 상대의 마음까지 반드시 바뀌는 것은 아니다." },
-    { name: "Inspire", textKo: "누군가의 판정에 +3을 준다. 판정 전에 선언해야 한다." },
-    { name: "Parley", textKo: "말이 통하는 적대적 생물을 진정시킨다. 전투가 시작된 뒤에는 쓸 수 없다." },
-    { name: "Verity & Guile", textKo: "거짓을 알아차리거나, 컵 판정으로 자신의 거짓을 믿게 한다." },
-  ],
-  "Knight-Errant": [
-    { name: "Sally Forth", textKo: "전투 라운드마다 한 번, 전투 행동을 하나 더 한다.", starting: true },
-    { name: "Geas", textKo: "단순한 임무를 명한다. 대상은 저항 판정을 하며, 한 번에 하나만 유지된다." },
-    { name: "Itinerant Hospitality", textKo: "어느 장원이나 성에서든 숙소와 따뜻한 식사를 얻는다." },
-    { name: "Martial Dominance", textKo: "자신의 사거리로 들어오거나 빠져나가는 생물을 대응으로 공격한다." },
-    { name: "Oath-sworn", textKo: "맹세를 좇는 행동에 +3을 얻는다. 실패하면 서약 파기자로 낙인찍힌다." },
-    { name: "Trial by Combat", textKo: "결투를 청한다. 거절한 상대는 위축되어 1차례 동안 사회 판정에 +3을 허용한다." },
-  ],
-  Mystic: [
-    { name: "Magick", textKo: "두 단어로 된 비전 주문 하나를 알고 시작하며, 주문을 시전할 수 있다.", starting: true },
-    { name: "Augury", textKo: "행동 방침을 물으면 심판이 길함, 흉함, 둘 다, 또는 어느 쪽도 아님으로 답한다." },
-    { name: "Sixth Sense", textKo: "비술을 희미한 녹빛과 자줏빛 안개로 감지한다." },
-    { name: "Familiar", textKo: "임프나 고양이 하나를 부른다. 부상 하나를 입으면 사라진다." },
-    { name: "Undo Magick", textKo: "주문을 상쇄하거나 해제한다. 강력한 비술은 완드 판정이 필요할 수 있다." },
-    { name: "Bind Magick", textKo: "주문을 물건에 봉한다. 결의 1점마다 충전 하나를 얻는다." },
-  ],
-  Cutpurse: [
-    { name: "Nimble", textKo: "공격 대상이 된 뒤 손패 한 장과 선제권 카드를 맞바꾼다.", starting: true },
-    { name: "One with the Shadows", textKo: "어둠 속에 숨지만 냄새까지 감출 수는 없다." },
-    { name: "Sneak-Attack", textKo: "기습 근접 공격으로 갑옷을 무시한다." },
-    { name: "Poisoner", textKo: "먹으면 한 시간 안에 죽는 치명적인 독을 만든다." },
-    { name: "Impersonate", textKo: "인간의 모습·목소리·태도를 1경점 동안 모방한다." },
-    { name: "Split", textKo: "자신과 동료들이 코인 판정 없이 달아난다." },
-  ],
-};
 
 const armorAp = (name: string) => {
   const armor = ARMOR.find((item) => item.name === name);
@@ -714,7 +656,7 @@ function App() {
   const [damageForm, setDamageForm] = useState({ target: "player", part: "torso" as WoundPart, incoming: 1, armor: "none" as ArmorKey | "none", armorLabel: "", monsterArmored: false });
   const [spellForm, setSpellForm] = useState({ minor: "", major: "", effect: "", resolve: 1 });
   const [folkForm, setFolkForm] = useState({ charm: "", goal: "", use: "", suit: "cups" as Suit, modifier: 0 });
-  const [alchemyForm, setAlchemyForm] = useState({ ingredient: "", concoction: "", hasPart: false, hasPot: false, hasKnowledge: false, hasVessel: false, doseRecorded: false });
+  const [alchemyForm, setAlchemyForm] = useState<AlchemyPreparation>({ ingredient: "", concoction: "", hasPart: false, hasPot: false, hasKnowledge: false, hasVessel: false });
   const [restForm, setRestForm] = useState({ part: "head" as WoundPart, placeConfirmed: false, mealConfirmed: false, rationId: "fiction" });
   const [contactDraft, setContactDraft] = useState({ name: "", location: "", connection: "" });
   const [inventoryDraft, setInventoryDraft] = useState({ name: "", category: "other" as InventoryItem["category"] });
@@ -1018,8 +960,8 @@ function App() {
     const cardIndex = previous.combat.playerHand.findIndex((card) => cardId(card) === combatAction.cardId);
     if (cardIndex < 0) return previous;
     const targetMonster = previous.combat.monsters.find((monster) => monster.id === (combatAction.monsterId || (previous.combat.monsters.length === 1 ? previous.combat.monsters[0].id : "")));
-    const freeDiscardActions = ["Move", "Draw/Sheathe", "Throw"];
-    if (!freeDiscardActions.includes(combatAction.action) && (!targetMonster || !targetMonster.initiative)) return previous;
+    const discardAction = isCombatDiscardAction(combatAction.action);
+    if (!discardAction && (!targetMonster || !targetMonster.initiative)) return previous;
     let working = previous;
     if (combatAction.action === "Cast a Spell") {
       const bound = previous.character.boundMagic.find(item => item.id === combatAction.spellSource);
@@ -1030,12 +972,12 @@ function App() {
       working = bound ? { ...spent, character: { ...spent.character, boundMagic: spent.character.boundMagic.map(item => item.id === bound.id ? { ...item, charges: item.charges - 1 } : item) } } : spent;
     }
     const card = previous.combat.playerHand[cardIndex];
-    if (card.rank === "0") return previous;
+    if (!canPlayCombatCard(card.rank, combatAction.action)) return previous;
     const hand = [...previous.combat.playerHand];
     hand.splice(cardIndex, 1);
     let playerDiscard = [...previous.playerDiscard, card];
     let bonus = 0;
-    if (combatAction.useFool) {
+    if (combatAction.useFool && !discardAction) {
       const foolIndex = hand.findIndex((item) => item.rank === "0");
       if (foolIndex >= 0) {
         const [fool] = hand.splice(foolIndex, 1);
@@ -1047,7 +989,7 @@ function App() {
     let target: number | null = null;
     let status = "카드 버림";
     let greatSuccess = false;
-    if (!freeDiscardActions.includes(combatAction.action)) {
+    if (!discardAction) {
       target = targetMonster?.initiative ? cardValue(targetMonster.initiative) : 0;
       const opposed = (combatAction.calledShot && combatAction.action === "Attack") || ["Grapple", "Shove", "Dodge", "Riposte", "Flee", "Cast a Spell", "Block Called Shot"].includes(combatAction.action);
       const result = evaluateTest({
@@ -1213,15 +1155,16 @@ function App() {
 
   const applyDamage = () => update((previous) => {
     if (damageForm.target === "player") {
-      const armorPoints = damageForm.armor === "none"
+      const armor = damageForm.armor !== "none" && canUsePlayerArmor(damageForm.armor, damageForm.part, previous.character.stats.swords) ? damageForm.armor : "none";
+      const armorPoints = armor === "none"
         ? 0
-        : effectiveArmorPoints(armorLimits[damageForm.armor].ap, previous.character.armorNotches[damageForm.armor]);
+        : effectiveArmorPoints(armorLimits[armor].ap, previous.character.armorNotches[armor]);
       const outcome = resolveArmor(damageForm.incoming, armorPoints);
       const wasWounded = previous.character.wounds[damageForm.part];
       const fatalHead = damageForm.part === "head" && isFatalHeadWound(wasWounded, outcome.wounds);
       const armorNotches = { ...previous.character.armorNotches };
-      if (damageForm.armor !== "none" && outcome.notchesArmor) {
-        armorNotches[damageForm.armor] = clamp(armorNotches[damageForm.armor] + 1, 0, armorLimits[damageForm.armor].ap);
+      if (armor !== "none" && outcome.notchesArmor) {
+        armorNotches[armor] = clamp(armorNotches[armor] + 1, 0, armorLimits[armor].ap);
       }
       const next = {
         ...previous,
@@ -1452,6 +1395,7 @@ function App() {
   });
 
   const drawMinorWord = () => update((previous) => {
+    if (!canDrawInitialWord(previous, "minor")) return previous;
     const drawn = drawPlayerForImmediateUse(previous);
     if (!drawn.card || drawn.fool || !drawn.card.suit) return drawn.state;
     const suit = `${drawn.card.suit[0].toUpperCase()}${drawn.card.suit.slice(1)}` as KnownMinorWord["suit"];
@@ -1464,6 +1408,7 @@ function App() {
   });
 
   const drawMajorWord = () => update((previous) => {
+    if (!canDrawInitialWord(previous, "major")) return previous;
     const drawn = drawRefereeToDiscard(previous);
     if (!drawn.card) return previous;
     const info = ARCANE_MAJOR_WORDS[drawn.card.rank];
@@ -1486,6 +1431,22 @@ function App() {
       personality: FOLK_ROAD_KO.personalities[index],
     };
     return { ...drawn.state, roadFolk, logs: [logEntry(drawn.state, "oracle", `[길 위의 사람] ${cardDisplayKo(drawn.card)}: ${roadFolk.occupation}; ${roadFolk.femaleName}/${roadFolk.maleName}; ${roadFolk.personality}.`), ...drawn.state.logs] };
+  });
+
+  const startAlchemy = () => {
+    if (!canBeginAlchemy(state, alchemyForm)) return;
+    update(previous => {
+      const next = beginAlchemy(previous, alchemyForm);
+      if (next === previous) return previous;
+      return { ...next, logs: [logEntry(next, "magic", `[연금술 시작] ${next.test.alchemy!.concoction}; 1경점이 지났습니다. 완드 판정 성공 뒤 1회분만 기록합니다. 재료·그릇의 소비는 소지품에 적습니다.`), ...next.logs] };
+    });
+    setTab("play");
+  };
+
+  const recordAlchemyDose = () => update(previous => {
+    const next = claimAlchemyDose(previous, uid());
+    if (next === previous) return previous;
+    return { ...next, logs: [logEntry(next, "magic", `[연금술 성공] ${next.test.alchemy!.concoction} 1회분을 기록했습니다. 효과는 심판과 해석합니다.`), ...next.logs] };
   });
 
   const saveSpell = () => {
@@ -1777,6 +1738,8 @@ function App() {
             setFolkForm={setFolkForm}
             alchemyForm={alchemyForm}
             setAlchemyForm={setAlchemyForm}
+            onStartAlchemy={startAlchemy}
+            onClaimAlchemyDose={recordAlchemyDose}
             drawMinorWord={drawMinorWord}
             drawMajorWord={drawMajorWord}
             saveSpell={saveSpell}
@@ -1952,6 +1915,7 @@ function CharacterTab(props: {
   const character = state.character;
   const statsValid = [...Object.values(character.stats)].sort((a, b) => a - b).join(",") === "1,2,3,4";
   const ownVocation = character.vocation;
+  const expectedVocation = statsValid ? VOCATION_FROM_SUIT[SUITS.find(key => character.stats[key] === 4)!] : undefined;
   const activeGoals = character.goals.filter((goal) => goal.status === "active").length;
   const addContact = (kind: "friends" | "foes" | "npcs") => {
     if (!props.contactDraft.name.trim()) return;
@@ -1982,7 +1946,7 @@ function CharacterTab(props: {
       <div className="form-grid four">
         <label>이름<input value={character.name} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, name: event.target.value } }))} /></label>
         <label>나이<input type="number" min={0} value={character.age} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, age: Math.max(0, Number(event.target.value)) } }))} /></label>
-        <label>천직<select value={character.vocation} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, vocation: event.target.value } }))}><option value="">고르기</option>{Object.keys(TALENTS).map((vocation) => <option key={vocation} value={vocation}>{vocation}</option>)}</select></label>
+        <label>천직<select value={character.vocation} onChange={(event) => update((previous) => expectedVocation ? assignCreationVocation(previous) : ({ ...previous, character: { ...previous.character, vocation: event.target.value } }))}><option value="">고르기</option>{Object.keys(TALENTS).map((vocation) => <option key={vocation} value={vocation} disabled={!!expectedVocation && vocation !== expectedVocation}>{vocation}</option>)}</select></label>
         <label>초상화 주소<input value={character.portrait} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, portrait: event.target.value } }))} /></label>
       </div>
       <div className="stats-row">
@@ -1992,8 +1956,7 @@ function CharacterTab(props: {
       <div className={`notice ${statsValid || Object.values(character.stats).some(stat => stat > 4) ? "ok" : "warn"}`}>생성 확인: 능력치가 {statsValid ? "1·2·3·4로 올바르게 배분되었습니다" : "성장 전에는 1·2·3·4로 배분하세요"}. 성장한 인물은 6까지 높일 수 있으므로 초기 배분 확인을 건너뜁니다.</div>
       <div className="button-row">
         <button onClick={() => {
-          const suit = SUITS.find((key) => character.stats[key] === 4);
-          if (suit && statsValid) update((previous) => { const vocation = vocationFromSuit[suit]; const starting = TALENTS[vocation].find(item => item.starting)!.name; return { ...previous, character: { ...previous.character, vocation, talents: previous.character.talents.includes(starting) ? previous.character.talents : [...previous.character.talents, starting] } }; });
+          update(assignCreationVocation);
         }} disabled={!statsValid}>천직 · 시작 재능 설정</button>
         <button onClick={() => update((previous) => props.gainResolve(previous))}>결의 +1 · 규칙 사건 확인</button>
         <button onClick={() => update((previous) => props.spendPlayerResolve(previous, 1) || previous)}>결의 1 쓰기</button>
@@ -2027,7 +1990,7 @@ function CharacterTab(props: {
       <p className="reference-note">새 인물은 물품 다섯 개를 값없이 고릅니다. 목록의 ‘소유로 기록’은 소지만 적으며, 구입은 곁의 코인 수정치 판정을 씁니다.</p>
       <div className="form-grid"><input placeholder="물품 이름" value={props.inventoryDraft.name} onChange={(event) => props.setInventoryDraft((draft) => ({ ...draft, name: event.target.value }))} /><select aria-label="물품 종류" value={props.inventoryDraft.category} onChange={(event) => props.setInventoryDraft((draft) => ({ ...draft, category: event.target.value as InventoryItem["category"] }))}>{(["weapon", "armor", "trade", "magic", "container", "other"] as InventoryItem["category"][]).map((category) => <option key={category} value={category}>{inventoryCategoryKo[category]}</option>)}</select><button onClick={() => addInventory()}>물품 기록</button></div>
       <div className="inventory-list">{character.inventory.map((item) => <article key={item.id} className={item.damaged ? "inventory-item damaged" : "inventory-item"}><input aria-label="물품 이름" value={item.name} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, inventory: previous.character.inventory.map((entry) => entry.id === item.id ? { ...entry, name: event.target.value } : entry) } }))} /><select aria-label={`${item.name} 종류`} value={item.category} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, inventory: previous.character.inventory.map((entry) => entry.id === item.id ? { ...entry, category: event.target.value as InventoryItem["category"] } : entry) } }))}>{(["weapon", "armor", "trade", "magic", "container", "other"] as InventoryItem["category"][]).map((category) => <option key={category} value={category}>{inventoryCategoryKo[category]}</option>)}</select><label>차지하는 칸<select value={item.slots} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, inventory: previous.character.inventory.map((entry) => entry.id === item.id ? { ...entry, slots: Number(event.target.value) as 0 | 1 } : entry) } }))}><option value={1}>1칸</option><option value={0}>0칸 · 인쇄된 예외</option></select></label><label><input type="checkbox" checked={item.damaged} onChange={() => update((previous) => ({ ...previous, character: { ...previous.character, inventory: previous.character.inventory.map((entry) => entry.id === item.id ? { ...entry, damaged: !entry.damaged } : entry) } }))} /> 파손</label><input type="number" placeholder="남은 사용 횟수" value={item.uses ?? ""} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, inventory: previous.character.inventory.map((entry) => entry.id === item.id ? { ...entry, uses: event.target.value === "" ? null : Math.max(0, Number(event.target.value)) } : entry) } }))} /><input placeholder="용기 안의 내용물" value={item.contents} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, inventory: previous.character.inventory.map((entry) => entry.id === item.id ? { ...entry, contents: event.target.value } : entry) } }))} /><input placeholder="파손 또는 물품 기록" value={item.notes} onChange={(event) => update((previous) => ({ ...previous, character: { ...previous.character, inventory: previous.character.inventory.map((entry) => entry.id === item.id ? { ...entry, notes: event.target.value } : entry) } }))} /><button className="icon danger" aria-label={`${item.name} 지우기`} onClick={() => update((previous) => ({ ...previous, character: { ...previous.character, inventory: previous.character.inventory.filter((entry) => entry.id !== item.id) } }))}>×</button></article>)}</div>
-      <details><summary>인쇄된 장비 목록</summary><div className="catalog">{WEAPONS.map((item) => <article className="catalog-item" key={item.name}><span>{item.nameKo} · 부상/사거리 {item.wounds}/{item.range} · 코인 {item.coins}</span><button onClick={() => preparePurchase(item.nameKo, item.coins)}>코인 판정 준비</button><button onClick={() => addInventory(item.nameKo, "weapon")}>소유로 기록</button></article>)}{ARMOR.map((item) => <article className="catalog-item" key={item.name}><span>{item.nameKo} · AP {item.ap} · 코인 {item.coins}</span><button onClick={() => preparePurchase(item.nameKo, item.coins)}>코인 판정 준비</button><button onClick={() => addInventory(item.nameKo, "armor")}>소유로 기록</button></article>)}{TRADE_GOODS.map((item) => <article className="catalog-item" key={item.name}><span>{item.nameKo} · 코인 {item.coins}</span><button onClick={() => preparePurchase(item.nameKo, item.coins)}>코인 판정 준비</button><button onClick={() => addInventory(item.nameKo, item.name.toLowerCase().includes("chest") || item.name.toLowerCase().includes("sack") || item.name.toLowerCase().includes("bottle") ? "container" : "trade", item.name === "Rations (7)" ? 7 : null)}>소유로 기록</button></article>)}</div></details>
+      <details><summary>인쇄된 장비 목록</summary><div className="catalog">{WEAPONS.map((item) => <article className="catalog-item" key={item.name}><span>{item.nameKo} · 부상/사거리 {item.wounds}/{item.range} · 소드 {item.swordsReq} 이상 · {item.tags.join(" · ")} · 코인 {item.coins}</span><button onClick={() => preparePurchase(item.nameKo, item.coins)}>코인 판정 준비</button><button onClick={() => addInventory(item.nameKo, "weapon")}>소유로 기록</button></article>)}{ARMOR.map((item) => <article className="catalog-item" key={item.name}><span>{item.nameKo} · AP {item.ap} · {item.bodyPartKo} · 소드 {item.swordsReq} 이상 · 코인 {item.coins}</span><button onClick={() => preparePurchase(item.nameKo, item.coins)}>코인 판정 준비</button><button onClick={() => addInventory(item.nameKo, "armor")}>소유로 기록</button></article>)}{TRADE_GOODS.map((item) => <article className="catalog-item" key={item.name}><span>{item.nameKo} · 코인 {item.coins}</span><button onClick={() => preparePurchase(item.nameKo, item.coins)}>코인 판정 준비</button><button onClick={() => addInventory(item.nameKo, item.name.toLowerCase().includes("chest") || item.name.toLowerCase().includes("sack") || item.name.toLowerCase().includes("bottle") ? "container" : "trade", item.name === "Rations (7)" ? 7 : null)}>소유로 기록</button></article>)}</div></details>
     </Panel>}
 
     {section === "contacts" && <Panel title="친구·적·등장인물" subtitle="이름과 위치, 인연과 내력만 적습니다. 없는 보너스나 불이익은 만들지 않습니다." className="span-2">
@@ -2089,13 +2052,13 @@ function TestsCombatTab(props: {
 
     <Panel title="플레이어 행동과 대응" className="combat-action-panel" subtitle="전투 판정은 손패와 대상의 선제권을 쓰며 밀어붙일 수 없습니다. 대항 행동은 상대 능력치를 뺍니다.">
       {props.combatAction.action === "Cast a Spell" && props.combatAction.spellName && <p className="notice">{props.combatAction.spellName} · 손패 카드를 고르고 대항 완드 판정을 합니다. 결의{props.combatAction.spellSource && props.combatAction.spellSource !== "undo" ? "와 충전" : ""}는 카드를 사용할 때 소비됩니다.</p>}
-      <div className="form-grid"><label>행동<select value={props.combatAction.action} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, action: event.target.value, ...(event.target.value !== "Cast a Spell" ? { spellSource: "", spellName: "" } : {}) }))}>{["Attack", "Cast a Spell", "Draw/Sheathe", "Flee", "Grapple", "Move", "Shove", "Throw", "Dodge", "Riposte", "Block Called Shot"].map((action) => <option key={action} value={action}>{combatActionKo[action]}</option>)}</select></label><label>대상<select value={props.combatAction.monsterId} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, monsterId: event.target.value }))}><option value="">고르기</option>{state.combat.monsters.map((monster) => <option key={monster.id} value={monster.id}>{monster.name}</option>)}</select></label><label>카드<select value={props.combatAction.cardId} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, cardId: event.target.value }))}><option value="">고르기</option>{state.combat.playerHand.filter((card) => card.rank !== "0").map((card) => <option key={cardId(card)} value={cardId(card)}>{cardDisplayKo(card)}</option>)}</select></label><label>수정치<input type="number" value={props.combatAction.modifier} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, modifier: Number(event.target.value) }))} /></label><label>무기 부상<input type="number" min={0} value={props.combatAction.rawWounds} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, rawWounds: Number(event.target.value) }))} /></label>{props.combatAction.action === "Cast a Spell" && <label>쓸 결의<input type="number" min={1} disabled={Boolean(props.combatAction.spellSource)} value={props.combatAction.resolveCost} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, resolveCost: Math.max(1, Number(event.target.value)) }))} /></label>}<label><input type="checkbox" disabled={props.combatAction.action !== "Attack"} checked={props.combatAction.calledShot && props.combatAction.action === "Attack"} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, calledShot: event.target.checked }))} /> 조준 공격 · 상대 능력치 차감</label><label><input type="checkbox" checked={props.combatAction.useFool} disabled={!state.combat.playerHand.some((card) => card.rank === "0")} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, useFool: event.target.checked }))} /> 광대 +3</label></div>
+      <div className="form-grid"><label>행동<select value={props.combatAction.action} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, action: event.target.value, cardId: state.combat.playerHand.some(card => cardId(card) === draft.cardId && canPlayCombatCard(card.rank, event.target.value)) ? draft.cardId : "", useFool: isCombatDiscardAction(event.target.value) ? false : draft.useFool, ...(event.target.value !== "Cast a Spell" ? { spellSource: "", spellName: "" } : {}) }))}>{["Attack", "Cast a Spell", "Draw/Sheathe", "Flee", "Grapple", "Move", "Shove", "Throw", "Dodge", "Riposte", "Block Called Shot"].map((action) => <option key={action} value={action}>{combatActionKo[action]}</option>)}</select></label><label>대상<select value={props.combatAction.monsterId} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, monsterId: event.target.value }))}><option value="">고르기</option>{state.combat.monsters.map((monster) => <option key={monster.id} value={monster.id}>{monster.name}</option>)}</select></label><label>카드<select value={props.combatAction.cardId} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, cardId: event.target.value }))}><option value="">고르기</option>{state.combat.playerHand.filter((card) => canPlayCombatCard(card.rank, props.combatAction.action)).map((card) => <option key={cardId(card)} value={cardId(card)}>{cardDisplayKo(card)}</option>)}</select></label><label>수정치<input type="number" value={props.combatAction.modifier} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, modifier: Number(event.target.value) }))} /></label><label>무기 부상<input type="number" min={0} value={props.combatAction.rawWounds} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, rawWounds: Number(event.target.value) }))} /></label>{props.combatAction.action === "Cast a Spell" && <label>쓸 결의<input type="number" min={1} disabled={Boolean(props.combatAction.spellSource)} value={props.combatAction.resolveCost} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, resolveCost: Math.max(1, Number(event.target.value)) }))} /></label>}<label><input type="checkbox" disabled={props.combatAction.action !== "Attack"} checked={props.combatAction.calledShot && props.combatAction.action === "Attack"} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, calledShot: event.target.checked }))} /> 조준 공격 · 상대 능력치 차감</label><label><input type="checkbox" checked={props.combatAction.useFool && !isCombatDiscardAction(props.combatAction.action)} disabled={isCombatDiscardAction(props.combatAction.action) || !state.combat.playerHand.some((card) => card.rank === "0")} onChange={(event) => props.setCombatAction((draft) => ({ ...draft, useFool: event.target.checked }))} /> 광대 +3</label></div>
       <div className="button-row">{state.character.talents.includes("Sally Forth") && <button disabled={!state.combat.active || state.combat.sallyForthUsed || state.character.resolve < 1} onClick={props.activateSallyForth}>{state.combat.sallyForthUsed ? "추가 행동 사용함" : "Sally Forth · 추가 행동 · 결의1"}</button>}<button onClick={props.playCombatAction} disabled={!props.combatAction.cardId || (!["Move", "Draw/Sheathe", "Throw"].includes(props.combatAction.action) && !state.combat.monsters.find((monster) => monster.id === props.combatAction.monsterId)?.initiative) || (props.combatAction.action === "Cast a Spell" && ((props.combatAction.spellSource === "undo" ? !state.character.talents.includes("Undo Magick") : props.combatAction.spellSource ? !state.character.boundMagic.some(item => item.id === props.combatAction.spellSource && item.charges > 0) : !state.character.talents.includes("Magick")) || state.character.resolve < props.combatAction.resolveCost))}>행동 카드 사용</button><button onClick={props.spendRefereeResolveOnLastTest} disabled={!state.combat.lastResult || state.combat.lastResult.actor === (state.character.name || "플레이어") || state.refereeResolve < 1}>심판 결의 1점 · 판정 +1</button><button onClick={props.spendPlayerResolveOnCombat} disabled={!state.combat.lastResult || state.combat.lastResult.actor !== (state.character.name || "플레이어") || state.character.resolve < 1 || state.combat.lastResult.total === null}>플레이어 결의 1점 · 판정 +1</button></div>
       {state.combat.lastResult && <div className="notice" aria-live="polite"><strong>{state.combat.lastResult.actor} · {combatActionLabel(state.combat.lastResult.action)}: {testStatusKo[state.combat.lastResult.status] || state.combat.lastResult.status}</strong><br />{state.combat.lastResult.total !== null && <>합계 {state.combat.lastResult.total} 대 {state.combat.lastResult.target}. </>}부상: {state.combat.lastResult.rawWounds}. <button disabled={state.combat.lastResult.rawWounds < 1} onClick={() => { props.setDamageForm(draft => ({ ...draft, incoming: state.combat.lastResult!.rawWounds, target: state.combat.lastResult!.actor === (state.character.name || "플레이어") ? state.combat.lastResult!.targetId || props.combatAction.monsterId : "player" })); focusPlayPanel(".combat-damage-panel"); }}>이 결과로 피해 준비 →</button></div>}
     </Panel>
 
-    <Panel title="부상과 갑옷 적용" className="combat-damage-panel" subtitle="갑옷 AP를 빼고, 타격이 AP를 넘으면 갑옷에 흠집을 냅니다. 신체 부위는 직접 고릅니다.">
-      <div className="form-grid"><label>대상<select value={props.damageForm.target} onChange={(event) => props.setDamageForm((draft) => ({ ...draft, target: event.target.value }))}><option value="player">플레이어</option>{state.combat.monsters.map((monster) => <option key={monster.id} value={monster.id}>{monster.name}</option>)}</select></label><label>신체 부위<select value={props.damageForm.part} onChange={(event) => props.setDamageForm((draft) => ({ ...draft, part: event.target.value as WoundPart }))}>{(Object.keys(woundLabels) as WoundPart[]).map((part) => <option key={part} value={part}>{woundLabels[part].split(" — ")[0]}</option>)}</select></label><label>들어온 부상<input type="number" min={0} value={props.damageForm.incoming} onChange={(event) => props.setDamageForm((draft) => ({ ...draft, incoming: Number(event.target.value) }))} /></label>{props.damageForm.target === "player" && <label>플레이어 갑옷<select value={props.damageForm.armor} onChange={(event) => props.setDamageForm((draft) => ({ ...draft, armor: event.target.value as ArmorKey | "none" }))}><option value="none">없음 · AP 0</option>{Object.entries(armorLimits).map(([key, armor]) => <option key={key} value={key}>{armor.label} · AP {armor.ap}</option>)}</select></label>}{props.damageForm.target !== "player" && <><label><input type="checkbox" checked={props.damageForm.monsterArmored} onChange={(event) => props.setDamageForm((draft) => ({ ...draft, monsterArmored: event.target.checked }))} /> 괴수 갑옷 적용 · AP 2</label><label>괴수 갑옷 이름<input value={props.damageForm.armorLabel} onChange={(event) => props.setDamageForm((draft) => ({ ...draft, armorLabel: event.target.value }))} /></label></>}</div><button onClick={props.applyDamage}>피해 적용</button>
+    <Panel title="부상과 갑옷 적용" className="combat-damage-panel" subtitle="맞은 부위와 소드 요구치에 맞는 착용 갑옷만 적용합니다. 일반 타격은 방어자가, 조준은 공격자가 부위를 고릅니다. 조준을 막았다면 돌린 부위를 고르세요.">
+      <div className="form-grid"><label>대상<select value={props.damageForm.target} onChange={(event) => props.setDamageForm((draft) => ({ ...draft, target: event.target.value }))}><option value="player">플레이어</option>{state.combat.monsters.map((monster) => <option key={monster.id} value={monster.id}>{monster.name}</option>)}</select></label><label>신체 부위<select value={props.damageForm.part} onChange={(event) => props.setDamageForm((draft) => ({ ...draft, part: event.target.value as WoundPart, armor: draft.armor !== "none" && canUsePlayerArmor(draft.armor, event.target.value as WoundPart, state.character.stats.swords) ? draft.armor : "none" }))}>{(Object.keys(woundLabels) as WoundPart[]).map((part) => <option key={part} value={part}>{woundLabels[part].split(" — ")[0]}</option>)}</select></label><label>들어온 부상<input type="number" min={0} value={props.damageForm.incoming} onChange={(event) => props.setDamageForm((draft) => ({ ...draft, incoming: Number(event.target.value) }))} /></label>{props.damageForm.target === "player" && <label>플레이어 갑옷<select value={props.damageForm.armor !== "none" && canUsePlayerArmor(props.damageForm.armor, props.damageForm.part, state.character.stats.swords) ? props.damageForm.armor : "none"} onChange={(event) => props.setDamageForm((draft) => ({ ...draft, armor: event.target.value as ArmorKey | "none" }))}><option value="none">없음 · AP 0</option>{(Object.entries(armorLimits) as [ArmorKey, { label: string; ap: number }][]).filter(([key]) => armorCoversPart(key, props.damageForm.part)).map(([key, armor]) => <option key={key} value={key} disabled={!canUsePlayerArmor(key, props.damageForm.part, state.character.stats.swords)}>{armor.label} · AP {effectiveArmorPoints(armor.ap, state.character.armorNotches[key])} · 소드 {playerArmor(key).swordsReq} 이상</option>)}</select></label>}{props.damageForm.target !== "player" && <><label><input type="checkbox" checked={props.damageForm.monsterArmored} onChange={(event) => props.setDamageForm((draft) => ({ ...draft, monsterArmored: event.target.checked }))} /> 괴수 갑옷 적용 · AP 2</label><label>괴수 갑옷 이름<input value={props.damageForm.armorLabel} onChange={(event) => props.setDamageForm((draft) => ({ ...draft, armorLabel: event.target.value }))} /></label></>}</div><button onClick={props.applyDamage}>피해 적용</button>
     </Panel>
 
     <Panel title="전투의 끝" subtitle="전투 목표의 결과와 다음 장면을 기록하세요.">
@@ -2117,8 +2080,10 @@ function MagicOracleTab(props: {
   setSpellForm: React.Dispatch<React.SetStateAction<{ minor: string; major: string; effect: string; resolve: number }>>;
   folkForm: { charm: string; goal: string; use: string; suit: Suit; modifier: number };
   setFolkForm: React.Dispatch<React.SetStateAction<{ charm: string; goal: string; use: string; suit: Suit; modifier: number }>>;
-  alchemyForm: { ingredient: string; concoction: string; hasPart: boolean; hasPot: boolean; hasKnowledge: boolean; hasVessel: boolean; doseRecorded: boolean };
-  setAlchemyForm: React.Dispatch<React.SetStateAction<{ ingredient: string; concoction: string; hasPart: boolean; hasPot: boolean; hasKnowledge: boolean; hasVessel: boolean; doseRecorded: boolean }>>;
+  alchemyForm: AlchemyPreparation;
+  setAlchemyForm: React.Dispatch<React.SetStateAction<AlchemyPreparation>>;
+  onStartAlchemy: () => void;
+  onClaimAlchemyDose: () => void;
   castBoundSpell: (binding: BoundMagic) => void; undoMagick: (testRequired: boolean) => void;
   drawMinorWord: () => void; drawMajorWord: () => void; saveSpell: () => void; castSpell: (spell: Spell, cost: number) => void; bindSpell: (spell: Spell) => void;
   startTest: (purpose: string, suit: Suit, modifier?: number, opposedPenalty?: number) => void;
@@ -2154,7 +2119,7 @@ function MagicOracleTab(props: {
 
     <Panel title="비전 비술" subtitle="첫 주문의 두 단어는 카드로 뽑습니다. 그 뒤의 단어는 임무를 마친 뒤에만 기록합니다. 주문 효과의 해석은 심판에게 남습니다.">
       {!state.character.talents.includes("Magick") && <div className="notice warn">주문 시전에는 비술사의 시작 재능 ‘비술’이 필요합니다.</div>}
-      <div className="button-row"><button onClick={props.drawMinorWord}>첫 준비 · 소 아르카나 단어 뽑기</button><button onClick={props.drawMajorWord}>첫 준비 · 대 아르카나 단어 뽑기</button><button disabled={!minorOptions.length || !majorOptions.length} onClick={drawFromKnownWords}>아는 단어에서 뽑기</button></div>
+      <div className="button-row"><button disabled={!canDrawInitialWord(state, "minor")} onClick={props.drawMinorWord}>첫 준비 · 소 아르카나 단어 뽑기</button><button disabled={!canDrawInitialWord(state, "major")} onClick={props.drawMajorWord}>첫 준비 · 대 아르카나 단어 뽑기</button><button disabled={!minorOptions.length || !majorOptions.length} onClick={drawFromKnownWords}>아는 단어에서 뽑기</button></div>
       <details><summary>아는 단어 · 표로 확인한 임무 뒤에만 더하기</summary><div className="form-grid"><label>소 아르카나 단어<select value={knownMinorDraft} onChange={(event) => setKnownMinorDraft(event.target.value)}>{Object.entries(ARCANE_MINOR_WORDS).flatMap(([suit, words]) => Object.entries(words).map(([key, word]) => <option key={`${suit}:${key}`} value={`${suit}:${key}`}>{suit} {key} · {word.en}</option>))}</select></label><button onClick={addKnownMinor}>아는 단어로 기록</button><label>대 아르카나 단어<select value={knownMajorDraft} onChange={(event) => setKnownMajorDraft(event.target.value)}>{Object.entries(ARCANE_MAJOR_WORDS).flatMap(([key, word]) => [<option key={`${key}:false`} value={`${key}:false`}>{key} · {word.en}</option>, <option key={`${key}:true`} value={`${key}:true`}>{key} 역방향 · {word.revEn}</option>])}</select></label><button onClick={addKnownMajor}>아는 단어로 기록</button></div><ul className="history-list">{minorOptions.map((word) => <li key={word.value}>{word.label}</li>)}{majorOptions.map((word) => <li key={word.value}>{word.label}</li>)}</ul></details>
       <div className="form-grid"><label>아는 소 아르카나 단어<select value={props.spellForm.minor} onChange={(event) => props.setSpellForm((draft) => ({ ...draft, minor: event.target.value }))}><option value="">고르기</option>{minorOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label><label>아는 대 아르카나 단어<select value={props.spellForm.major} onChange={(event) => props.setSpellForm((draft) => ({ ...draft, major: event.target.value }))}><option value="">고르기</option>{majorOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label><label className="span-2">심판의 효과 기록<textarea value={props.spellForm.effect} onChange={(event) => props.setSpellForm((draft) => ({ ...draft, effect: event.target.value }))} placeholder="해석은 직접 기록합니다" /></label></div><button onClick={props.saveSpell} disabled={!props.spellForm.minor || !props.spellForm.major}>주문서에 새기기</button>
       <div className="record-list">{state.character.spells.map((spell) => <article className="compact-card" key={spell.id}><strong>{spell.name}</strong><p>{spell.effectNote || "효과 기록 없음 — 심판의 해석을 기다립니다"}</p><div className="button-row"><label>결의<input aria-label={`${spell.name}에 쓸 결의`} type="number" min={1} value={props.spellForm.resolve} onChange={(event) => props.setSpellForm((draft) => ({ ...draft, resolve: Math.max(1, Number(event.target.value)) }))} /></label><button disabled={!state.character.talents.includes("Magick") || state.character.resolve < props.spellForm.resolve} onClick={() => props.castSpell(spell, props.spellForm.resolve)}>{state.combat.active ? "전투 손패로 시전 →" : "시전 · 결의 쓰기"}</button><button disabled={!state.character.talents.includes("Bind Magick")} onClick={() => props.bindSpell(spell)}>물건에 봉인</button><button className="danger" aria-label={`${spell.name} 주문 지우기`} onClick={() => update((previous) => ({ ...previous, character: { ...previous.character, spells: previous.character.spells.filter((item) => item.id !== spell.id) } }))}>×</button></div></article>)}</div>
@@ -2163,7 +2128,8 @@ function MagicOracleTab(props: {
     </Panel>
 
     <Panel title="연금술" subtitle="괴수의 일부나 정수, 끓일 솥, 실용 지식과 담을 그릇이 필요합니다. 제조에는 1경점이 걸리며, 원하는 조제물은 플레이어와 심판이 적습니다.">
-      <div className="form-grid"><label>괴수의 일부·정수<input value={props.alchemyForm.ingredient} onChange={(event) => props.setAlchemyForm((draft) => ({ ...draft, ingredient: event.target.value, doseRecorded: false }))} /></label><label>원하는 조제물<input value={props.alchemyForm.concoction} onChange={(event) => props.setAlchemyForm((draft) => ({ ...draft, concoction: event.target.value, doseRecorded: false }))} /></label><label><input type="checkbox" checked={props.alchemyForm.hasPart} onChange={(event) => props.setAlchemyForm((draft) => ({ ...draft, hasPart: event.target.checked }))} /> 일부·정수 확인</label><label><input type="checkbox" checked={props.alchemyForm.hasPot} onChange={(event) => props.setAlchemyForm((draft) => ({ ...draft, hasPot: event.target.checked }))} /> 끓일 솥 확인</label><label><input type="checkbox" checked={props.alchemyForm.hasKnowledge} onChange={(event) => props.setAlchemyForm((draft) => ({ ...draft, hasKnowledge: event.target.checked }))} /> 실용 지식 확인</label><label><input type="checkbox" checked={props.alchemyForm.hasVessel} onChange={(event) => props.setAlchemyForm((draft) => ({ ...draft, hasVessel: event.target.checked }))} /> 병·그릇 확인</label></div><div className="button-row"><button disabled={!props.alchemyForm.ingredient || !props.alchemyForm.concoction || !props.alchemyForm.hasPart || !props.alchemyForm.hasPot || !props.alchemyForm.hasKnowledge || !props.alchemyForm.hasVessel} onClick={() => { props.setAlchemyForm((draft) => ({ ...draft, doseRecorded: false })); props.startTest(`연금술 — ${props.alchemyForm.concoction}; 재료: ${props.alchemyForm.ingredient}; 1경점`, "wands"); update((previous) => ({ ...previous, ...advanceWatch(previous), logs: [logEntry(previous, "downtime", `[연금술 시작] ${props.alchemyForm.concoction}; 1경점이 지났습니다. 재료와 그릇의 소비는 소지품 장부에 남깁니다.`), ...previous.logs] })); }}>완드 판정 마련 · 1경점 보내기</button><button disabled={props.alchemyForm.doseRecorded || !state.test.purpose.startsWith("연금술 —") || !state.test.result?.success} onClick={() => { update((previous) => ({ ...previous, character: { ...previous.character, inventory: [...previous.character.inventory, { id: uid(), name: `${props.alchemyForm.concoction} · 1회분`, category: "other", slots: 1, damaged: false, uses: 1, notes: `${props.alchemyForm.ingredient}에서 제조`, contents: "" }] }, logs: [logEntry(previous, "magic", `[연금술 성공] ${props.alchemyForm.concoction} 1회분을 기록했습니다. 효과는 확인한 표와 심판의 해석으로 남습니다.`), ...previous.logs] })); props.setAlchemyForm((draft) => ({ ...draft, doseRecorded: true })); }}>성공 뒤 1회분 기록</button></div>
+      {state.test.alchemy && <p className="notice" role="status">진행한 조제: {state.test.alchemy.concoction} · 재료 {state.test.alchemy.ingredient}. {state.test.alchemy.doseRecorded ? "1회분 기록 완료" : state.test.result?.success ? "성공 · 1회분을 기록할 수 있습니다" : "완드 판정 결과를 기다립니다"}.</p>}
+      <div className="form-grid"><label>괴수의 일부·정수<input value={props.alchemyForm.ingredient} onChange={(event) => props.setAlchemyForm((draft) => ({ ...draft, ingredient: event.target.value }))} /></label><label>원하는 조제물<input value={props.alchemyForm.concoction} onChange={(event) => props.setAlchemyForm((draft) => ({ ...draft, concoction: event.target.value }))} /></label><label><input type="checkbox" checked={props.alchemyForm.hasPart} onChange={(event) => props.setAlchemyForm((draft) => ({ ...draft, hasPart: event.target.checked }))} /> 일부·정수 확인</label><label><input type="checkbox" checked={props.alchemyForm.hasPot} onChange={(event) => props.setAlchemyForm((draft) => ({ ...draft, hasPot: event.target.checked }))} /> 끓일 솥 확인</label><label><input type="checkbox" checked={props.alchemyForm.hasKnowledge} onChange={(event) => props.setAlchemyForm((draft) => ({ ...draft, hasKnowledge: event.target.checked }))} /> 실용 지식 확인</label><label><input type="checkbox" checked={props.alchemyForm.hasVessel} onChange={(event) => props.setAlchemyForm((draft) => ({ ...draft, hasVessel: event.target.checked }))} /> 병·그릇 확인</label></div><div className="button-row"><button disabled={!canBeginAlchemy(state, props.alchemyForm)} onClick={props.onStartAlchemy}>완드 판정 마련 · 1경점 보내기</button><button disabled={!canClaimAlchemyDose(state)} onClick={props.onClaimAlchemyDose}>성공 뒤 1회분 기록</button></div>
     </Panel>
 
     <Panel title="마법 물품표" subtitle="참조와 카드 찾기만 돕습니다. 물품의 발동과 해석은 직접 처리합니다." className="span-2">
@@ -2177,7 +2143,7 @@ function MapEventsTab(props: { state: GameState; update: Update; drawMapCell: (i
   return <div className="page-grid">
     <p className="section-note span-2">새 장소로 이동하면 플레이 화면에서 사건을 확인하세요. 인접한 야외 구역으로 여행할 때는 1경점이 걸립니다. 지도는 심판 카드로 장소를 배치합니다.</p>
     <Panel title="지도 펼치기" subtitle="야외 한 구역은 5마일, 이웃 구역 이동은 1경점입니다. 정착지는 지형 카드를 추가합니다." className="span-2">
-      <div className="button-row"><select aria-label="지도 종류" value={state.mapType} onChange={(event) => update((previous) => ({ ...previous, mapType: event.target.value as MapType }))}><option value="wilderness">야외 · 5마일 구역 · 이웃 구역 이동 1경점</option><option value="dungeon">던전 · 복도와 방</option><option value="settlement">정착지 · 건물과 눈여겨볼 곳</option></select><button className="danger" onClick={props.clearMap}>지도 비우기 · 카드 거두기</button></div>
+      <div className="button-row"><select aria-label="지도 종류" value={state.mapType} onChange={(event) => update((previous) => ({ ...previous, mapType: event.target.value as MapType }))}><option value="wilderness">야외 · 5마일 구역 · 이웃 구역 이동 1경점</option><option value="dungeon">던전 · 복도와 방</option><option value="settlement">정착지 · 건물과 눈여겨볼 곳</option></select><button onClick={() => update(addMapRow)}>구역 4개 추가</button><button className="danger" onClick={props.clearMap}>지도 비우기 · 카드 거두기</button></div>
       <div className="map-grid">{state.mapCells.map((cell, index) => <article key={`${cell.x}-${cell.y}`} className={cell.visited ? "map-cell visited" : "map-cell"}><header><span>{cell.x + 1},{cell.y + 1}</span><label><input type="checkbox" checked={cell.visited} onChange={() => update((previous) => ({ ...previous, mapCells: previous.mapCells.map((item, itemIndex) => itemIndex === index ? { ...item, visited: !item.visited } : item) }))} /> 다녀간 곳</label></header>{cell.card ? <><CardView card={cell.card} /><strong>{cell.label}</strong>{cell.extraCards.map((card, extraIndex) => <div className="map-extra" key={cardId(card)}><CardView card={card} /><span>정착지 지형: {cell.extraLabels[extraIndex]}</span></div>)}{cell.liveCard && cell.type === "wilderness" && cell.label.startsWith("정착지") && cell.extraCards.length === 0 && <button onClick={() => props.drawWildernessTerrain(index)}>필요한 지형 카드 뽑기</button>}{!cell.liveCard && <small>지난 카드 · 덱으로 돌아감</small>}</> : <button onClick={() => props.drawMapCell(index)}>심판 카드 뽑기</button>}<textarea aria-label={`${cell.x + 1},${cell.y + 1} 심판 기록`} placeholder="심판 기록" value={cell.notes} onChange={(event) => update((previous) => ({ ...previous, mapCells: previous.mapCells.map((item, itemIndex) => itemIndex === index ? { ...item, notes: event.target.value } : item) }))} /><details><summary>카드 내력 · {cell.history.length}</summary><ul>{cell.history.map((record) => <li key={record.id}>{record.at} · {mapTypeKo[record.type]} · {cardDisplayKo(record.card)} · {record.label}</li>)}</ul></details></article>)}</div>
     </Panel>
 
@@ -2203,17 +2169,21 @@ function DowntimeTab(props: {
   const selectedRestPart = woundedParts.includes(props.restForm.part) ? props.restForm.part : (woundedParts[0] || props.restForm.part);
   return <div className="page-grid">
     <Panel title="시간과 회차" subtitle="세션 시작의 결의와 종료의 경험치를 한 번씩 기록합니다.">
+      <div className="session-start">
       <div className="time-display"><strong>{state.day}일째 · {state.watch}/3경점</strong><strong>세션 {state.sessionNumber} · {state.sessionStarted ? "진행 중" : "시작 전 / 정산 완료"}</strong></div>
       <button disabled={Boolean(state.sessionStarted)} onClick={() => { setXpCriteria({ participated: true, goal: false, danger: false }); props.startSession(); }}>세션 시작 · 결의 +1</button>
       {Boolean(state.pendingDowntimeGoalResolve) && <p className="notice">막간에 완수한 목표의 결의 {state.pendingDowntimeGoalResolve}점을 다음 세션 시작에 받습니다.</p>}
-      <div className="session-xp"><h3>세션을 마쳤나요?</h3><p className="reference-note">각 조건을 한 번씩 세어 경험치 1–3점을 얻습니다.</p>
+      </div>
+      <section className="session-xp" aria-labelledby="session-xp-heading"><h3 id="session-xp-heading">세션을 마쳤나요?</h3><p className="reference-note">각 조건을 한 번씩 세어 경험치 1–3점을 얻습니다.</p>
+        <div className="session-checks">
         <label><input type="checkbox" checked={xpCriteria.participated} onChange={event => setXpCriteria(draft => ({ ...draft, participated: event.target.checked }))} /> 이번 세션에 참여했다 · XP 1</label>
         <label><input type="checkbox" checked={xpCriteria.goal} onChange={event => setXpCriteria(draft => ({ ...draft, goal: event.target.checked }))} /> 목표를 하나 이상 완수했다 · XP 1</label>
         <label><input type="checkbox" checked={xpCriteria.danger} onChange={event => setXpCriteria(draft => ({ ...draft, danger: event.target.checked }))} /> 생명을 위협하는 상황을 겪었다 · XP 1</label>
+        </div>
         <label>막간에 하려는 일<textarea value={state.downtimePlan || ""} placeholder="수련, 조사, 휴식, 고용… 심판에게 선언할 계획" onChange={event => update(previous => ({ ...previous, downtimePlan: event.target.value }))} /></label>
         <button disabled={!state.sessionStarted || !xpCriteria.participated} onClick={() => props.settleSession(xpCriteria)}>세션 정산 · XP {Number(xpCriteria.participated) + Number(xpCriteria.goal) + Number(xpCriteria.danger)}</button>
         {state.settledSession === state.sessionNumber && state.sessionNumber > 0 && <p className="reference-note">이 세션의 경험치를 기록했습니다. 다음 세션을 시작하세요.</p>}
-      </div>
+      </section>
     </Panel>
 
     <Panel title="휴식과 회복" subtitle="야영지나 정착지에서 식사와 함께 밤을 온전히 보내면 부상 하나를 회복합니다. 두 조건은 플레이 자리에서 확인합니다.">
