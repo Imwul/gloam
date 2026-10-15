@@ -1654,11 +1654,26 @@ function App() {
         ))}
       </nav>
       <div className="table-status" aria-label="현재 인물과 모험 상태">
-        <div className="status-character"><strong>{state.character.name || "새 모험가"}</strong><span>{state.character.vocation || "천직 미정"}</span></div>
-        <button className="status-resolve" onClick={() => setQuickRule("resolve")}><span>결의</span><strong>{state.character.resolve}<small>/10</small></strong><span>심판 {state.refereeResolve}</span></button>
-        <button onClick={() => setQuickRule("wounds")}><span>이동력</span><strong>{speed}</strong><span>{state.character.dead ? "사망" : state.character.wounds.head ? "의식불명" : state.character.wounds.torso ? "모든 판정 −3" : Object.values(state.character.wounds).some(Boolean) ? "부상 있음" : "부상 없음"}</span></button>
-        <button onClick={() => setQuickRule("time-downtime")}><span>{state.day}일째</span><strong>{state.watch}<small>/3 경점</small></strong><span>세션 {state.sessionNumber}</span></button>
-        <span className="autosave" role="status">{saveError ? "저장 오류" : "● 자동 저장"}</span>
+        <div className="status-character">
+          <strong>{state.character.name || "새 모험가"}</strong>
+          <span className="status-vocation">{state.character.vocation || "천직 미정"}</span>
+          <span className="autosave" role="status">{saveError ? "저장 오류" : "자동 저장"}</span>
+        </div>
+        <button className="status-metric" onClick={() => setQuickRule("resolve")}>
+          <span className="status-label">결의</span>
+          <strong className="status-value">{state.character.resolve}<small>/10</small></strong>
+          <span className="status-detail">심판 {state.refereeResolve}</span>
+        </button>
+        <button className="status-metric" onClick={() => setQuickRule("wounds")}>
+          <span className="status-label">이동력</span>
+          <strong className="status-value">{speed}</strong>
+          <span className="status-detail">{state.character.dead ? "사망" : state.character.wounds.head ? "의식불명" : state.character.wounds.torso ? "모든 판정 −3" : Object.values(state.character.wounds).some(Boolean) ? "부상 있음" : "부상 없음"}</span>
+        </button>
+        <button className="status-metric" onClick={() => setQuickRule("time-downtime")}>
+          <span className="status-label">모험 시간</span>
+          <strong className="status-value">{state.day}<small>일째</small></strong>
+          <span className="status-detail"><span>{state.watch}번째 경점</span><span className="status-time-unit">8시간 단위 · 세션 {state.sessionNumber}</span></span>
+        </button>
       </div>
       <main id="play-content" className={`chapter chapter-${tab}`}>
         <div className="chapter-heading"><div><span className="eyebrow">{state.campaignName || "THE ADVENTURER’S TABLE"}</span><span className="chapter-title" aria-hidden="true">{({ play: "Play", tests: "Combat", character: "Character", map: "Exploration", magic: "Magick", downtime: "Downtime", log: "Chronicle" } as Record<Tab, string>)[tab]}</span><h2>{({ play: "다음 행동을 이야기하세요", tests: "전투", character: "인물 기록", map: "탐사와 지도", magic: "비술", downtime: "휴식과 세션 정산", log: "모험 기록" } as Record<Tab, string>)[tab]}</h2></div><button className="text-button" onClick={() => setQuickRule(({ play: "tests", tests: "combat", character: "create-character", map: "generating-maps", magic: "arcane-magick", downtime: "resting", log: "goals" } as Record<Tab, string>)[tab])}>이 화면의 규칙 ↗</button></div>
@@ -2170,7 +2185,7 @@ function DowntimeTab(props: {
   return <div className="page-grid">
     <Panel title="시간과 회차" subtitle="세션 시작의 결의와 종료의 경험치를 한 번씩 기록합니다.">
       <div className="session-start">
-      <div className="time-display"><strong>{state.day}일째 · {state.watch}/3경점</strong><strong>세션 {state.sessionNumber} · {state.sessionStarted ? "진행 중" : "시작 전 / 정산 완료"}</strong></div>
+      <div className="time-display"><strong>{state.day}일째 · {state.watch}번째 경점</strong><span>1경점 = 8시간 · 하루 3경점</span><strong>세션 {state.sessionNumber} · {state.sessionStarted ? "진행 중" : "시작 전 / 정산 완료"}</strong></div>
       <button disabled={Boolean(state.sessionStarted)} onClick={() => { setXpCriteria({ participated: true, goal: false, danger: false }); props.startSession(); }}>세션 시작 · 결의 +1</button>
       {Boolean(state.pendingDowntimeGoalResolve) && <p className="notice">막간에 완수한 목표의 결의 {state.pendingDowntimeGoalResolve}점을 다음 세션 시작에 받습니다.</p>}
       </div>
@@ -2209,7 +2224,7 @@ function LogTab(props: { state: GameState; update: Update; newLog: string; setNe
   return <div className="page-grid">
     <Panel title="캠페인 연대기" subtitle="목표와 본능, 결의, 인연, 등장인물, 비술 단어, 임무, 전투와 막간을 한 장부에 이어 적습니다." className="span-2">
       <div className="form-grid"><label>캠페인 이름<input value={state.campaignName} onChange={(event) => update((previous) => ({ ...previous, campaignName: event.target.value }))} /></label><input aria-label="연대기에 적을 기록" placeholder="직접 쓰는 기록 · 장부는 이야기를 만들지 않습니다" value={props.newLog} onChange={(event) => props.setNewLog(event.target.value)} /><button onClick={() => { if (props.newLog.trim()) props.addLog("note", props.newLog.trim()); props.setNewLog(""); }}>기록 더하기</button></div>
-      <div className="log-list">{state.logs.map((entry) => <article key={entry.id}><header><strong>{categoryKo[entry.category]}</strong><span>{entry.day}일째 · {entry.watch}경점 · {entry.at}</span><button className="icon danger" aria-label="연대기 기록 지우기" onClick={() => update((previous) => ({ ...previous, logs: previous.logs.filter((item) => item.id !== entry.id) }))}>×</button></header><p>{entry.text}</p></article>)}</div>
+      <div className="log-list">{state.logs.map((entry) => <article key={entry.id}><header><strong>{categoryKo[entry.category]}</strong><span>{entry.day}일째 · {entry.watch}번째 경점 · {entry.at}</span><button className="icon danger" aria-label="연대기 기록 지우기" onClick={() => update((previous) => ({ ...previous, logs: previous.logs.filter((item) => item.id !== entry.id) }))}>×</button></header><p>{entry.text}</p></article>)}</div>
     </Panel>
     <Panel title="임무와 인연의 현황"><h3>이어 가는 목표</h3><ul>{state.character.goals.filter((goal) => goal.status === "active").map((goal) => <li key={goal.id}>{goal.text}</li>)}</ul><h3>친구</h3><p>{state.character.friends.map((contact) => contact.name).join(", ") || "없음"}</p><h3>적</h3><p>{state.character.foes.map((contact) => contact.name).join(", ") || "없음"}</p><h3>등장인물</h3><p>{state.character.npcs.map((contact) => contact.name).join(", ") || "없음"}</p><h3>아는 비술 단어</h3><p>소 아르카나 {state.character.knownMinorWords.length} · 대 아르카나 {state.character.knownMajorWords.length}</p></Panel>
     <Panel title="보존 무결성" subtitle="자동 보존에는 캠페인 상태와 되돌리기 내력이 함께 듭니다. 가져올 때 불가능한 카드 수는 고치되, 서사 기록은 보존합니다."><div className={`notice ${props.integrity.player && props.integrity.referee ? "ok" : "bad"}`}>플레이어 덱: {props.integrity.player ? "통과 · 사용 중인 고유 카드 57장" : "실패"}<br />심판 덱: {props.integrity.referee ? "통과 · 사용 중인 고유 카드 21장" : "실패"}</div><button onClick={props.exportSave}>온전한 JSON 장부 내려받기</button><p className="reference-note">연대기, 지도 내력, 사건 내력, 징조 내력의 카드는 지난 상태를 적은 표본이므로 사용 중인 덱 수에 넣지 않습니다.</p></Panel>

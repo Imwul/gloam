@@ -1,0 +1,1142 @@
+[
+  {
+    "width": 320,
+    "tab": "play",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "17px",
+    "client": 305,
+    "labelSize": "15px",
+    "metrics": [
+      {
+        "height": 188.09375,
+        "text": "결의0/10심판 0",
+        "width": 85,
+        "x": 15,
+        "y": 307.6875
+      },
+      {
+        "height": 188.09375,
+        "text": "이동력4부상 없음",
+        "width": 85,
+        "x": 110,
+        "y": 307.6875
+      },
+      {
+        "height": 188.09375,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 85,
+        "x": 205,
+        "y": 307.6875
+      }
+    ],
+    "offscreen": [],
+    "scroll": 305,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      }
+    ],
+    "valueSize": "28px"
+  },
+  {
+    "width": 320,
+    "tab": "tests",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "17px",
+    "client": 305,
+    "labelSize": "15px",
+    "metrics": [
+      {
+        "height": 188.09375,
+        "text": "결의0/10심판 0",
+        "width": 85,
+        "x": 15,
+        "y": 307.6875
+      },
+      {
+        "height": 188.09375,
+        "text": "이동력4부상 없음",
+        "width": 85,
+        "x": 110,
+        "y": 307.6875
+      },
+      {
+        "height": 188.09375,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 85,
+        "x": 205,
+        "y": 307.6875
+      }
+    ],
+    "offscreen": [],
+    "scroll": 305,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      }
+    ],
+    "valueSize": "28px"
+  },
+  {
+    "width": 320,
+    "tab": "character",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "17px",
+    "client": 305,
+    "labelSize": "15px",
+    "metrics": [
+      {
+        "height": 188.09375,
+        "text": "결의0/10심판 0",
+        "width": 85,
+        "x": 15,
+        "y": 307.6875
+      },
+      {
+        "height": 188.09375,
+        "text": "이동력4부상 없음",
+        "width": 85,
+        "x": 110,
+        "y": 307.6875
+      },
+      {
+        "height": 188.09375,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 85,
+        "x": 205,
+        "y": 307.6875
+      }
+    ],
+    "offscreen": [],
+    "scroll": 305,
+    "selects": [],
+    "valueSize": "28px"
+  },
+  {
+    "width": 320,
+    "tab": "map",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "17px",
+    "client": 305,
+    "labelSize": "15px",
+    "metrics": [
+      {
+        "height": 188.09375,
+        "text": "결의0/10심판 0",
+        "width": 85,
+        "x": 15,
+        "y": 307.6875
+      },
+      {
+        "height": 188.09375,
+        "text": "이동력4부상 없음",
+        "width": 85,
+        "x": 110,
+        "y": 307.6875
+      },
+      {
+        "height": 188.09375,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 85,
+        "x": 205,
+        "y": 307.6875
+      }
+    ],
+    "offscreen": [],
+    "scroll": 305,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      }
+    ],
+    "valueSize": "28px"
+  },
+  {
+    "width": 320,
+    "tab": "magic",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "17px",
+    "client": 305,
+    "labelSize": "15px",
+    "metrics": [
+      {
+        "height": 188.09375,
+        "text": "결의0/10심판 0",
+        "width": 85,
+        "x": 15,
+        "y": 307.6875
+      },
+      {
+        "height": 188.09375,
+        "text": "이동력4부상 없음",
+        "width": 85,
+        "x": 110,
+        "y": 307.6875
+      },
+      {
+        "height": 188.09375,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 85,
+        "x": 205,
+        "y": 307.6875
+      }
+    ],
+    "offscreen": [],
+    "scroll": 305,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      }
+    ],
+    "valueSize": "28px"
+  },
+  {
+    "width": 320,
+    "tab": "downtime",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "17px",
+    "client": 305,
+    "labelSize": "15px",
+    "metrics": [
+      {
+        "height": 188.09375,
+        "text": "결의0/10심판 0",
+        "width": 85,
+        "x": 15,
+        "y": 307.6875
+      },
+      {
+        "height": 188.09375,
+        "text": "이동력4부상 없음",
+        "width": 85,
+        "x": 110,
+        "y": 307.6875
+      },
+      {
+        "height": 188.09375,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 85,
+        "x": 205,
+        "y": 307.6875
+      }
+    ],
+    "offscreen": [],
+    "scroll": 305,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      }
+    ],
+    "valueSize": "28px"
+  },
+  {
+    "width": 390,
+    "tab": "play",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "17px",
+    "client": 375,
+    "labelSize": "15px",
+    "metrics": [
+      {
+        "height": 165.59375,
+        "text": "결의0/10심판 0",
+        "width": 108.328125,
+        "x": 15,
+        "y": 242.59375
+      },
+      {
+        "height": 165.59375,
+        "text": "이동력4부상 없음",
+        "width": 108.328125,
+        "x": 133.328125,
+        "y": 242.59375
+      },
+      {
+        "height": 165.59375,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 108.34375,
+        "x": 251.65625,
+        "y": 242.59375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 375,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      }
+    ],
+    "valueSize": "28px"
+  },
+  {
+    "width": 390,
+    "tab": "tests",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "17px",
+    "client": 375,
+    "labelSize": "15px",
+    "metrics": [
+      {
+        "height": 165.59375,
+        "text": "결의0/10심판 0",
+        "width": 108.328125,
+        "x": 15,
+        "y": 242.59375
+      },
+      {
+        "height": 165.59375,
+        "text": "이동력4부상 없음",
+        "width": 108.328125,
+        "x": 133.328125,
+        "y": 242.59375
+      },
+      {
+        "height": 165.59375,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 108.34375,
+        "x": 251.65625,
+        "y": 242.59375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 375,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      }
+    ],
+    "valueSize": "28px"
+  },
+  {
+    "width": 390,
+    "tab": "character",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "17px",
+    "client": 375,
+    "labelSize": "15px",
+    "metrics": [
+      {
+        "height": 165.59375,
+        "text": "결의0/10심판 0",
+        "width": 108.328125,
+        "x": 15,
+        "y": 242.59375
+      },
+      {
+        "height": 165.59375,
+        "text": "이동력4부상 없음",
+        "width": 108.328125,
+        "x": 133.328125,
+        "y": 242.59375
+      },
+      {
+        "height": 165.59375,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 108.34375,
+        "x": 251.65625,
+        "y": 242.59375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 375,
+    "selects": [],
+    "valueSize": "28px"
+  },
+  {
+    "width": 390,
+    "tab": "map",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "17px",
+    "client": 375,
+    "labelSize": "15px",
+    "metrics": [
+      {
+        "height": 165.59375,
+        "text": "결의0/10심판 0",
+        "width": 108.328125,
+        "x": 15,
+        "y": 242.59375
+      },
+      {
+        "height": 165.59375,
+        "text": "이동력4부상 없음",
+        "width": 108.328125,
+        "x": 133.328125,
+        "y": 242.59375
+      },
+      {
+        "height": 165.59375,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 108.34375,
+        "x": 251.65625,
+        "y": 242.59375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 375,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      }
+    ],
+    "valueSize": "28px"
+  },
+  {
+    "width": 390,
+    "tab": "magic",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "17px",
+    "client": 375,
+    "labelSize": "15px",
+    "metrics": [
+      {
+        "height": 165.59375,
+        "text": "결의0/10심판 0",
+        "width": 108.328125,
+        "x": 15,
+        "y": 242.59375
+      },
+      {
+        "height": 165.59375,
+        "text": "이동력4부상 없음",
+        "width": 108.328125,
+        "x": 133.328125,
+        "y": 242.59375
+      },
+      {
+        "height": 165.59375,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 108.34375,
+        "x": 251.65625,
+        "y": 242.59375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 375,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      }
+    ],
+    "valueSize": "28px"
+  },
+  {
+    "width": 390,
+    "tab": "downtime",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "17px",
+    "client": 375,
+    "labelSize": "15px",
+    "metrics": [
+      {
+        "height": 165.59375,
+        "text": "결의0/10심판 0",
+        "width": 108.328125,
+        "x": 15,
+        "y": 242.59375
+      },
+      {
+        "height": 165.59375,
+        "text": "이동력4부상 없음",
+        "width": 108.328125,
+        "x": 133.328125,
+        "y": 242.59375
+      },
+      {
+        "height": 165.59375,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 108.34375,
+        "x": 251.65625,
+        "y": 242.59375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 375,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "17px"
+      }
+    ],
+    "valueSize": "28px"
+  },
+  {
+    "width": 1280,
+    "tab": "play",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "18px",
+    "client": 1265,
+    "labelSize": "16px",
+    "metrics": [
+      {
+        "height": 126,
+        "text": "결의0/10심판 0",
+        "width": 284.09375,
+        "x": 363.703125,
+        "y": 249.59375
+      },
+      {
+        "height": 126,
+        "text": "이동력4부상 없음",
+        "width": 284.09375,
+        "x": 659.796875,
+        "y": 249.59375
+      },
+      {
+        "height": 126,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 284.09375,
+        "x": 955.890625,
+        "y": 249.59375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 1265,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "18px"
+      }
+    ],
+    "valueSize": "30px"
+  },
+  {
+    "width": 1280,
+    "tab": "tests",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "18px",
+    "client": 1265,
+    "labelSize": "16px",
+    "metrics": [
+      {
+        "height": 126,
+        "text": "결의0/10심판 0",
+        "width": 284.09375,
+        "x": 363.703125,
+        "y": 249.59375
+      },
+      {
+        "height": 126,
+        "text": "이동력4부상 없음",
+        "width": 284.09375,
+        "x": 659.796875,
+        "y": 249.59375
+      },
+      {
+        "height": 126,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 284.09375,
+        "x": 955.890625,
+        "y": 249.59375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 1265,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "18px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "18px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "18px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "18px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "18px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "18px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "18px"
+      }
+    ],
+    "valueSize": "30px"
+  },
+  {
+    "width": 1280,
+    "tab": "character",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "18px",
+    "client": 1265,
+    "labelSize": "16px",
+    "metrics": [
+      {
+        "height": 126,
+        "text": "결의0/10심판 0",
+        "width": 284.09375,
+        "x": 363.703125,
+        "y": 249.59375
+      },
+      {
+        "height": 126,
+        "text": "이동력4부상 없음",
+        "width": 284.09375,
+        "x": 659.796875,
+        "y": 249.59375
+      },
+      {
+        "height": 126,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 284.09375,
+        "x": 955.890625,
+        "y": 249.59375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 1265,
+    "selects": [],
+    "valueSize": "30px"
+  },
+  {
+    "width": 1280,
+    "tab": "map",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "18px",
+    "client": 1265,
+    "labelSize": "16px",
+    "metrics": [
+      {
+        "height": 126,
+        "text": "결의0/10심판 0",
+        "width": 284.09375,
+        "x": 363.703125,
+        "y": 249.59375
+      },
+      {
+        "height": 126,
+        "text": "이동력4부상 없음",
+        "width": 284.09375,
+        "x": 659.796875,
+        "y": 249.59375
+      },
+      {
+        "height": 126,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 284.09375,
+        "x": 955.890625,
+        "y": 249.59375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 1265,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "18px"
+      }
+    ],
+    "valueSize": "30px"
+  },
+  {
+    "width": 1280,
+    "tab": "magic",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "18px",
+    "client": 1265,
+    "labelSize": "16px",
+    "metrics": [
+      {
+        "height": 126,
+        "text": "결의0/10심판 0",
+        "width": 284.09375,
+        "x": 363.703125,
+        "y": 249.59375
+      },
+      {
+        "height": 126,
+        "text": "이동력4부상 없음",
+        "width": 284.09375,
+        "x": 659.796875,
+        "y": 249.59375
+      },
+      {
+        "height": 126,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 284.09375,
+        "x": 955.890625,
+        "y": 249.59375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 1265,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "18px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "18px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "18px"
+      }
+    ],
+    "valueSize": "30px"
+  },
+  {
+    "width": 1280,
+    "tab": "downtime",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "18px",
+    "client": 1265,
+    "labelSize": "16px",
+    "metrics": [
+      {
+        "height": 126,
+        "text": "결의0/10심판 0",
+        "width": 284.09375,
+        "x": 363.703125,
+        "y": 249.59375
+      },
+      {
+        "height": 126,
+        "text": "이동력4부상 없음",
+        "width": 284.09375,
+        "x": 659.796875,
+        "y": 249.59375
+      },
+      {
+        "height": 126,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 284.09375,
+        "x": 955.890625,
+        "y": 249.59375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 1265,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "18px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "18px"
+      }
+    ],
+    "valueSize": "30px"
+  },
+  {
+    "width": 3440,
+    "tab": "play",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "21px",
+    "client": 3425,
+    "labelSize": "18px",
+    "metrics": [
+      {
+        "height": 147.1875,
+        "text": "결의0/10심판 0",
+        "width": 457.828125,
+        "x": 1279,
+        "y": 278.375
+      },
+      {
+        "height": 147.1875,
+        "text": "이동력4부상 없음",
+        "width": 457.828125,
+        "x": 1756.828125,
+        "y": 278.375
+      },
+      {
+        "height": 147.1875,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 457.84375,
+        "x": 2234.65625,
+        "y": 278.375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 3425,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "20px"
+      }
+    ],
+    "valueSize": "36px"
+  },
+  {
+    "width": 3440,
+    "tab": "tests",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "21px",
+    "client": 3425,
+    "labelSize": "18px",
+    "metrics": [
+      {
+        "height": 147.1875,
+        "text": "결의0/10심판 0",
+        "width": 457.828125,
+        "x": 1279,
+        "y": 278.375
+      },
+      {
+        "height": 147.1875,
+        "text": "이동력4부상 없음",
+        "width": 457.828125,
+        "x": 1756.828125,
+        "y": 278.375
+      },
+      {
+        "height": 147.1875,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 457.84375,
+        "x": 2234.65625,
+        "y": 278.375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 3425,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "20px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "20px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "20px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "20px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "20px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "20px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "20px"
+      }
+    ],
+    "valueSize": "36px"
+  },
+  {
+    "width": 3440,
+    "tab": "character",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "21px",
+    "client": 3440,
+    "labelSize": "18px",
+    "metrics": [
+      {
+        "height": 147.1875,
+        "text": "결의0/10심판 0",
+        "width": 457.828125,
+        "x": 1286.5,
+        "y": 278.375
+      },
+      {
+        "height": 147.1875,
+        "text": "이동력4부상 없음",
+        "width": 457.828125,
+        "x": 1764.328125,
+        "y": 278.375
+      },
+      {
+        "height": 147.1875,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 457.84375,
+        "x": 2242.15625,
+        "y": 278.375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 3440,
+    "selects": [],
+    "valueSize": "36px"
+  },
+  {
+    "width": 3440,
+    "tab": "map",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "21px",
+    "client": 3425,
+    "labelSize": "18px",
+    "metrics": [
+      {
+        "height": 147.1875,
+        "text": "결의0/10심판 0",
+        "width": 457.828125,
+        "x": 1279,
+        "y": 278.375
+      },
+      {
+        "height": 147.1875,
+        "text": "이동력4부상 없음",
+        "width": 457.828125,
+        "x": 1756.828125,
+        "y": 278.375
+      },
+      {
+        "height": 147.1875,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 457.84375,
+        "x": 2234.65625,
+        "y": 278.375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 3425,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "20px"
+      }
+    ],
+    "valueSize": "36px"
+  },
+  {
+    "width": 3440,
+    "tab": "magic",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "21px",
+    "client": 3425,
+    "labelSize": "18px",
+    "metrics": [
+      {
+        "height": 147.1875,
+        "text": "결의0/10심판 0",
+        "width": 457.828125,
+        "x": 1279,
+        "y": 278.375
+      },
+      {
+        "height": 147.1875,
+        "text": "이동력4부상 없음",
+        "width": 457.828125,
+        "x": 1756.828125,
+        "y": 278.375
+      },
+      {
+        "height": 147.1875,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 457.84375,
+        "x": 2234.65625,
+        "y": 278.375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 3425,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "20px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "20px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "20px"
+      }
+    ],
+    "valueSize": "36px"
+  },
+  {
+    "width": 3440,
+    "tab": "downtime",
+    "bodyFont": "Hahmlet, Georgia, serif",
+    "bodySize": "21px",
+    "client": 3425,
+    "labelSize": "18px",
+    "metrics": [
+      {
+        "height": 147.1875,
+        "text": "결의0/10심판 0",
+        "width": 457.828125,
+        "x": 1279,
+        "y": 278.375
+      },
+      {
+        "height": 147.1875,
+        "text": "이동력4부상 없음",
+        "width": 457.828125,
+        "x": 1756.828125,
+        "y": 278.375
+      },
+      {
+        "height": 147.1875,
+        "text": "모험 시간1일째1번째 경점8시간 단위 · 세션 0",
+        "width": 457.84375,
+        "x": 2234.65625,
+        "y": 278.375
+      }
+    ],
+    "offscreen": [],
+    "scroll": 3425,
+    "selects": [
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "20px"
+      },
+      {
+        "font": "Hahmlet, Georgia, serif",
+        "height": 44,
+        "size": "20px"
+      }
+    ],
+    "valueSize": "36px"
+  }
+]

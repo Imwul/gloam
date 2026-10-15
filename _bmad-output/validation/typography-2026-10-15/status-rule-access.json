@@ -1,0 +1,38 @@
+[
+  {
+    "width": 390,
+    "title": "결의",
+    "clicks": 1,
+    "visible": true
+  },
+  {
+    "width": 390,
+    "title": "부상 효과",
+    "clicks": 1,
+    "visible": true
+  },
+  {
+    "width": 390,
+    "title": "시간 단위",
+    "clicks": 1,
+    "visible": true
+  },
+  {
+    "width": 3440,
+    "title": "결의",
+    "clicks": 1,
+    "visible": true
+  },
+  {
+    "width": 3440,
+    "title": "부상 효과",
+    "clicks": 1,
+    "visible": true
+  },
+  {
+    "width": 3440,
+    "title": "시간 단위",
+    "clicks": 1,
+    "visible": true
+  }
+]

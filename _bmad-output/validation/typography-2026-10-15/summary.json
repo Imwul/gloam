@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-15",
+  "baseCommit": "c13bd13f7d99f5a18fb4b8f8663375dc2d4f8624",
+  "workflow": "bmad-cis-design-thinking",
+  "automated": {
+    "tests": 58,
+    "files": 5,
+    "build": "passed",
+    "lint": "passed",
+    "diffCheck": "passed"
+  },
+  "browser": {
+    "viewportWidths": [
+      320,
+      390,
+      1280,
+      3440
+    ],
+    "tabsPerWidth": 6,
+    "combinations": 24,
+    "horizontalOverflow": false,
+    "offscreenControls": false,
+    "selectHeight": 44,
+    "fontFamily": "Hahmlet, Georgia, serif",
+    "bodySizes": [
+      17,
+      17,
+      18,
+      21
+    ],
+    "statusValueSizes": [
+      28,
+      28,
+      30,
+      36
+    ],
+    "statusRuleAccess": {
+      "cases": 6,
+      "clicksEach": 1,
+      "passed": true
+    },
+    "consoleErrors": []
+  },
+  "limits": [
+    "No new multi-participant usability study; post-change user satisfaction and reading speed are unmeasured.",
+    "Checks use an empty campaign and existing gameplay integration fixtures; no new full playthrough."
+  ],
+  "sources": {
+    "src/App.tsx": "69a6d25707e12d37a69db533fa639dd90459a8a73553e19216e6428151935ae1",
+    "src/index.css": "1834a432d7a147d6347908d717dcb0dc525de04dc8116b0db73674454fabc283",
+    "src/play/PlayTable.tsx": "e3d930c869b7a133c42ca85fd9e64e4ccffed4d36abb572641a0412ef6bb252a",
+    "public/sw.js": "b25fa73b1bb31849ae266c26a7bdb94f54d69c5b4d3136bb500c59099b7220e5"
+  },
+  "screenshots": {
+    "downtime-320.png": "cf6cf6dda199026891a65660395dd72abd85863f0db337521e10dfbfc38c4cf1",
+    "downtime-390.png": "f54344bf2abdf6c9f6f81ca8df93b968ca554c2cf83205e5e555913419a7e1c6",
+    "play-3440.png": "11b8c1b28339268fd7881002f4b322b53a0d3b4c40214b99293f642eea428d6c",
+    "downtime-1280.png": "4feae60be89f2191a22b9d2925fb6d21516ab1e8b1faca68b46a17c145ace96d",
+    "downtime-3440.png": "4d27e9f3d536ab6f7ce182b1917e87c89cb0918bae5fa0f4d51dc57489442e62"
+  }
+}

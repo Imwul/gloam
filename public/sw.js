@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'gloam-v5-rule-audit-20261015'
+const CACHE_VERSION = 'gloam-v6-typography-20261015'
 const SHELL_CACHE = `${CACHE_VERSION}-shell`
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`
 const CACHE_PREFIX = 'gloam-v'
